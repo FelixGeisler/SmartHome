@@ -1,0 +1,15 @@
+[Unit]
+Description=SmartHome sensor publisher (SCD41 + BME690 -> MQTT)
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=raspberry
+WorkingDirectory=/home/raspberry
+ExecStart=/home/raspberry/sensors/bin/python3 /home/raspberry/publish_sensors.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

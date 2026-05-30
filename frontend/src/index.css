@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 222 20% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 93%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 93%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 90%;
+    --destructive: 0 84% 60%;
+    --border: 214 32% 88%;
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 20%;
+    --destructive: 0 63% 45%;
+    --border: 217 33% 20%;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    margin: 0;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* react-grid-layout drag/resize styles */
+.react-grid-layout { position: relative; }
+.react-grid-item { transition: none; }
+.react-grid-item.cssTransforms { transition-property: transform; }
+.react-grid-item.react-draggable-dragging { transition: none; z-index: 100; }
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--primary) / 0.12);
+  border: 2px dashed hsl(var(--primary) / 0.5);
+  border-radius: calc(var(--radius) + 2px);
+  opacity: 1;
+  transition-duration: 100ms;
+  z-index: 2;
+}
+/* Resize handle: always show in edit-mode, visible on hover otherwise.
+   Uses !important to beat react-grid-layout/css/styles.css (same specificity, loads later). */
+.react-grid-item.edit-mode-item > .react-resizable-handle,
+.edit-mode .react-resizable-handle {
+  opacity: 1 !important;
+}
+.edit-mode .react-resizable-handle::after {
+  border-right-color: hsl(var(--primary)) !important;
+  border-bottom-color: hsl(var(--primary)) !important;
+}
