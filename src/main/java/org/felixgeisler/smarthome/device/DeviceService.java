@@ -2,7 +2,6 @@ package org.felixgeisler.smarthome.device;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.springframework.stereotype.Service;
 
@@ -34,28 +33,31 @@ public class DeviceService {
   }
 
   /**
-   * Finds a device by id.
+   * Returns a device by id.
    *
    * @param id the device id
-   * @return the device, if present
+   * @return the device
+   * @throws DeviceNotFoundException if no device has the given id
    */
-  public Optional<Device> findById(Long id) {
-    return devices.findById(id);
+  public Device getById(Long id) {
+    return getOrThrow(id);
   }
 
   /**
-   * Registers a device, or returns the existing one with the same external id.
+   * Registers a new device.
    *
    * @param externalId the device's address within its integration
    * @param name human-readable device name
    * @param type the device category
    * @param adapterType identifier of the adapter that handles this device
    * @return the persisted device
+   * @throws DeviceAlreadyExistsException if a device with the external id already exists
    */
   public Device register(String externalId, String name, DeviceType type, String adapterType) {
-    return devices
-        .findByExternalId(externalId)
-        .orElseGet(() -> devices.save(new Device(externalId, name, type, adapterType)));
+    if (devices.findByExternalId(externalId).isPresent()) {
+      throw new DeviceAlreadyExistsException(externalId);
+    }
+    return devices.save(new Device(externalId, name, type, adapterType));
   }
 
   /**
@@ -66,11 +68,15 @@ public class DeviceService {
    * @throws DeviceNotFoundException if no device has the given id
    */
   public Device toggle(Long id) {
-    Device device = devices.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
+    Device device = getOrThrow(id);
     boolean desired = !device.isOn();
     Map<String, Object> command = Map.of("on", desired);
     adapters.get(device.getAdapterType()).sendCommand(device.getExternalId(), command);
     device.setOn(desired);
     return devices.save(device);
+  }
+
+  private Device getOrThrow(Long id) {
+    return devices.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
   }
 }

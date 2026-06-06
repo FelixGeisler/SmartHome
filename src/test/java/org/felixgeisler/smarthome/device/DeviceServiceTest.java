@@ -76,14 +76,32 @@ class DeviceServiceTest {
   }
 
   @Test
-  void register_returnsExistingDeviceWithoutSaving() {
+  void register_throwsWhenDeviceAlreadyExists() {
     Device existing = new Device("ext-1", "Existing", DeviceType.SHELLY_PLUG, "shelly");
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.of(existing));
 
-    Device result = service.register("ext-1", "New", DeviceType.SHELLY_PLUG, "shelly");
+    assertThrows(
+        DeviceAlreadyExistsException.class,
+        () -> service.register("ext-1", "New", DeviceType.SHELLY_PLUG, "shelly"));
 
-    assertSame(existing, result);
     verify(devices, never()).save(any());
+  }
+
+  @Test
+  void getById_returnsDevice() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    Device result = service.getById(1L);
+
+    assertSame(device, result);
+  }
+
+  @Test
+  void getById_throwsWhenDeviceMissing() {
+    when(devices.findById(99L)).thenReturn(Optional.empty());
+
+    assertThrows(DeviceNotFoundException.class, () -> service.getById(99L));
   }
 
   @Test

@@ -28,12 +28,12 @@ public class DeviceAdapterRegistry {
    *
    * @param adapterType the adapter identifier
    * @return the matching adapter
-   * @throws IllegalArgumentException if no adapter handles the type
+   * @throws UnknownAdapterException if no adapter handles the type
    */
   public DeviceAdapter get(String adapterType) {
     DeviceAdapter adapter = adaptersByType.get(adapterType);
     if (adapter == null) {
-      throw new IllegalArgumentException("No adapter registered for type: " + adapterType);
+      throw new UnknownAdapterException(adapterType);
     }
     return adapter;
   }

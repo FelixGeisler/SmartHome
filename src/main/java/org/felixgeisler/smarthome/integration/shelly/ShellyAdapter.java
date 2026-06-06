@@ -1,8 +1,10 @@
 package org.felixgeisler.smarthome.integration.shelly;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -14,11 +16,16 @@ import org.springframework.web.client.RestClient;
 @Component
 public class ShellyAdapter implements DeviceAdapter {
 
+  private static final Duration TIMEOUT = Duration.ofSeconds(2);
+
   private final RestClient restClient;
 
-  /** Creates the adapter with a default REST client. */
+  /** Creates the adapter with a REST client that has bounded connect and read timeouts. */
   public ShellyAdapter() {
-    this.restClient = RestClient.create();
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout(TIMEOUT);
+    requestFactory.setReadTimeout(TIMEOUT);
+    this.restClient = RestClient.builder().requestFactory(requestFactory).build();
   }
 
   @Override

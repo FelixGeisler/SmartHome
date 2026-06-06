@@ -1,15 +1,16 @@
 package org.felixgeisler.smarthome.device;
 
 import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /** REST API for listing, registering, and controlling devices. */
 @RestController
@@ -38,18 +39,31 @@ public class DeviceController {
   }
 
   /**
-   * Registers a device.
+   * Returns a single device.
+   *
+   * @param id the device id
+   * @return the device as a response view
+   */
+  @GetMapping("/{id}")
+  public DeviceResponse get(@PathVariable Long id) {
+    return DeviceResponse.from(service.getById(id));
+  }
+
+  /**
+   * Registers a new device.
    *
    * @param request the device to register
-   * @return the persisted device as a response view
+   * @param uriBuilder builder for the created resource's location
+   * @return 201 with the persisted device and its {@code Location}
    */
   @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  public DeviceResponse register(@Valid @RequestBody DeviceRegistrationRequest request) {
+  public ResponseEntity<DeviceResponse> register(
+      @Valid @RequestBody DeviceRegistrationRequest request, UriComponentsBuilder uriBuilder) {
     Device device =
         service.register(
             request.externalId(), request.name(), request.type(), request.adapterType());
-    return DeviceResponse.from(device);
+    URI location = uriBuilder.path("/api/devices/{id}").buildAndExpand(device.getId()).toUri();
+    return ResponseEntity.created(location).body(DeviceResponse.from(device));
   }
 
   /**

@@ -22,7 +22,7 @@ class DeviceAdapterRegistryTest {
   void get_throwsForUnknownType() {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
 
-    assertThrows(IllegalArgumentException.class, () -> registry.get("mqtt"));
+    assertThrows(UnknownAdapterException.class, () -> registry.get("mqtt"));
   }
 
   private static final class StubAdapter implements DeviceAdapter {
