@@ -20,6 +20,8 @@
         <pmd.plugin.version>3.28.0</pmd.plugin.version>
         <pmd.version>7.25.0</pmd.version>
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
+        <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
+        <wiremock.version>3.13.1</wiremock.version>
         <!-- Seam for test-JVM agents (Mockito now, JaCoCo later); surefire reads it via @{argLine}. -->
         <argLine/>
     </properties>
@@ -32,7 +34,45 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Boot 4 moved the @WebMvcTest / @DataJpaTest slices into dedicated test modules. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Stubs a real HTTP server so the HTTP device adapter is tested over actual sockets.
+             The standalone jar shades its own Jetty, avoiding conflicts with Boot's managed one. -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -78,6 +118,56 @@
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
+            </plugin>
+
+            <!-- JaCoCo: measure test coverage and fail the build under 70% line coverage.
+                 prepare-agent sets the argLine property that surefire composes via @{argLine}. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <!-- Bootstrap class: a main() launcher has no behavior worth covering. -->
+                        <exclude>org/felixgeisler/smarthome/SmartHomeApplication.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- CheckStyle: Google Java Style, enforced at warning severity (tests included). -->
