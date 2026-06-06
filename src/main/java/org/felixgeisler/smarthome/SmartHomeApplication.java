@@ -3,11 +3,19 @@ package org.felixgeisler.smarthome;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * Entry point for the SmartHome Spring Boot application.
+ */
 @SpringBootApplication
 public class SmartHomeApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SmartHomeApplication.class, args);
-    }
+  /**
+   * Starts the SmartHome application.
+   *
+   * @param args command-line arguments
+   */
+  public static void main(String[] args) {
+    SpringApplication.run(SmartHomeApplication.class, args);
+  }
 
 }
