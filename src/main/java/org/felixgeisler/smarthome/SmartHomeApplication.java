@@ -14,7 +14,7 @@ public class SmartHomeApplication {
    *
    * @param args command-line arguments
    */
-  static void main(String[] args) {
+  public static void main(String[] args) {
     SpringApplication.run(SmartHomeApplication.class, args);
   }
 
