@@ -59,6 +59,19 @@ class ShellyAdapterTest {
   }
 
   @Test
+  void sendCommand_ignoresPathAndQueryInjectedViaExternalId() {
+    server.stubFor(
+        get(urlPathEqualTo("/relay/0"))
+            .withQueryParam("turn", equalTo("on"))
+            .willReturn(aResponse().withStatus(200)));
+
+    adapter.sendCommand("localhost:" + server.port() + "/evil?turn=off", Map.of("on", true));
+
+    server.verify(
+        getRequestedFor(urlPathEqualTo("/relay/0")).withQueryParam("turn", equalTo("on")));
+  }
+
+  @Test
   void getState_readsRelayStatus() {
     server.stubFor(get(urlPathEqualTo("/relay/0")).willReturn(okJson("{\"ison\":true}")));
 

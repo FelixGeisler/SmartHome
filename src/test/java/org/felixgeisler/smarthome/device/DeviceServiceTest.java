@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class DeviceServiceTest {
@@ -88,6 +89,17 @@ class DeviceServiceTest {
   }
 
   @Test
+  void register_throwsAlreadyExistsWhenSaveHitsUniqueConstraint() {
+    when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
+    when(devices.save(any(Device.class)))
+        .thenThrow(new DataIntegrityViolationException("duplicate externalId"));
+
+    assertThrows(
+        DeviceAlreadyExistsException.class,
+        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly"));
+  }
+
+  @Test
   void getById_returnsDevice() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
     when(devices.findById(1L)).thenReturn(Optional.of(device));
@@ -112,6 +124,6 @@ class DeviceServiceTest {
     List<Device> result = service.getAllDevices();
 
     assertEquals(1, result.size());
-    assertSame(device, result.get(0));
+    assertSame(device, result.getFirst());
   }
 }

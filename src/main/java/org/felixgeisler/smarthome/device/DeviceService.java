@@ -3,6 +3,7 @@ package org.felixgeisler.smarthome.device;
 import java.util.List;
 import java.util.Map;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /** Registers devices and dispatches commands to the adapter that handles each one. */
@@ -57,7 +58,12 @@ public class DeviceService {
     if (devices.findByExternalId(externalId).isPresent()) {
       throw new DeviceAlreadyExistsException(externalId);
     }
-    return devices.save(new Device(externalId, name, type, adapterType));
+    try {
+      return devices.save(new Device(externalId, name, type, adapterType));
+    } catch (DataIntegrityViolationException ex) {
+      // Lost a race: another request inserted the same externalId between the check and the save.
+      throw new DeviceAlreadyExistsException(externalId, ex);
+    }
   }
 
   /**
