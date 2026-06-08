@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'supplemental-ui/**'
       - 'antora-playbook.yml'
       - 'package.json'
       - 'package-lock.json'
