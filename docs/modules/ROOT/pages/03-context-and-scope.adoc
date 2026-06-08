@@ -1,0 +1,27 @@
+= 3. Context and Scope
+
+== Business context
+
+[plantuml,context-diagram,svg]
+----
+@startuml
+left to right direction
+actor "API client" as client
+rectangle "SmartHome Hub" as hub
+node "Smart device" as device
+client --> hub : REST / JSON
+hub --> device : on/off + state
+@enduml
+----
+
+[cols="1,2,2",options="header"]
+|===
+| Partner | Sends | Receives
+| API client | Registrations, toggle commands | Device views, state, problem responses
+| Smart device | State | On/off commands
+|===
+
+== Scope
+
+Register, list, read, and toggle devices. Supported device types are listed in the Building
+Block View.

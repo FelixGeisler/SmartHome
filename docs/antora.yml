@@ -1,0 +1,6 @@
+name: smarthome
+title: SmartHome
+version: ~
+start_page: ROOT:01-introduction-and-goals.adoc
+nav:
+  - modules/ROOT/nav.adoc

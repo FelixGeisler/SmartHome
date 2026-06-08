@@ -1,0 +1,22 @@
+= 7. Deployment View
+
+[plantuml,deployment,svg]
+----
+@startuml
+node "Host" {
+  artifact "smarthome.jar" as app
+  database "H2\n(embedded, in-memory)" as h2
+  app --> h2
+}
+node "Smart device" as dev
+app --> dev : HTTP (LAN)
+@enduml
+----
+
+[cols="1,3",options="header"]
+|===
+| Aspect | Current state
+| Packaging | Single executable Spring Boot JAR
+| Datastore | Embedded in-memory H2 — not retained across restarts
+| Device access | HTTP over the LAN, addressed by host
+|===

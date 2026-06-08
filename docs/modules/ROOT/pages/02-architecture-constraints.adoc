@@ -1,0 +1,13 @@
+= 2. Architecture Constraints
+
+== Technical
+
+[cols="1,3",options="header"]
+|===
+| Constraint | Detail
+| Language | Java
+| Framework | Spring Boot, Spring Data JPA
+| Build | Maven
+| Persistence | Embedded H2
+| HTTP client | Spring `RestClient`
+|===

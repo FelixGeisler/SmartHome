@@ -1,3 +1,6 @@
 spring:
   application:
     name: SmartHome
+  jpa:
+    # REST API: no view rendering, so don't hold a DB session open per request.
+    open-in-view: false

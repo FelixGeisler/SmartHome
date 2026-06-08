@@ -1,0 +1,10 @@
+= 10. Quality Requirements
+
+[cols="1,2,2",options="header"]
+|===
+| Quality | Scenario | Measure
+| Extensibility | Add support for a new device technology | A new `DeviceAdapter` `@Component`, auto-discovered by the registry; controller, service, and `web` unchanged. (A new device category also adds a `DeviceType` value.)
+| Maintainability | A change is submitted | `./mvnw clean verify` passes: 0 Checkstyle / PMD / SpotBugs findings, >= 70% line coverage.
+| Reliability | A registered device is offline when toggled | The call fails within the adapter's timeout (2s) instead of blocking the request.
+| Correctness | An invalid, missing, or duplicate request arrives | *400* (invalid), *404* (missing), *409* (duplicate) — each pinned by a test.
+|===
