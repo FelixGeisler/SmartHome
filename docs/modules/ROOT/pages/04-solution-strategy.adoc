@@ -9,4 +9,4 @@
 | Correctness | Behavior is covered by tests; a `@RestControllerAdvice` maps exceptions to RFC 9457 `ProblemDetail` responses, so the API answers predictably.
 |===
 
-The `device` core never depends on a concrete adapter it reaches devices through the `DeviceAdapter` port, resolved by the registry.
+The `device` core never depends on a concrete adapter; it reaches devices through the `DeviceAdapter` port, resolved by the registry.
