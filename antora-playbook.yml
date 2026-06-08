@@ -1,0 +1,30 @@
+site:
+  title: SmartHome Architecture
+  start_page: smarthome::01-introduction-and-goals.adoc
+
+content:
+  sources:
+    - url: .
+      branches: HEAD
+      start_path: docs
+      edit_url: https://github.com/FelixGeisler/SmartHome/edit/{refname}/{path}
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  # Trim the stock UI's placeholder navbar (Home/Products/Services/Download).
+  supplemental_files: ./supplemental-ui
+
+asciidoc:
+  attributes:
+    kroki-fetch-diagram: false
+  extensions:
+    - asciidoctor-kroki
+
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+
+output:
+  dir: ./build/site

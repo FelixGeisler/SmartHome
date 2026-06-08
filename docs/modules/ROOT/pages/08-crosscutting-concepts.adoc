@@ -1,0 +1,7 @@
+= 8. Cross-cutting Concepts
+
+[cols="1,3",options="header"]
+|===
+| Concern | How it is handled
+| Logging | SLF4J
+|===

@@ -1,0 +1,33 @@
+= 5. Building Block View
+
+[plantuml,building-blocks,svg]
+----
+@startuml
+skinparam componentStyle rectangle
+
+[web]
+[device]
+package "integration" {
+  interface "DeviceAdapter\n(port)" as port
+  [registry]
+  [adapter]
+}
+database "H2" as h2
+node "Device" as dev
+
+[web] ..> [device] : maps errors
+[device] --> h2 : JPA
+[device] --> [registry] : route command
+[registry] --> port
+[adapter] ..|> port
+[adapter] --> dev
+@enduml
+----
+
+[cols="1,3",options="header"]
+|===
+| Block | Responsibility
+| `web` | Maps exceptions to RFC 9457 `ProblemDetail` responses.
+| `device` | Application core: the REST API plus register / list / toggle logic and persistence.
+| `integration` | The `DeviceAdapter` port and the registry that routes to it; one adapter per device technology plugs in here.
+|===

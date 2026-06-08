@@ -1,0 +1,42 @@
+= 6. Runtime View
+
+== Toggle a device
+
+[plantuml,toggle-sequence,svg]
+----
+@startuml
+actor Client
+participant DeviceController as C
+participant DeviceService as S
+participant DeviceRepository as R
+participant DeviceAdapterRegistry as Reg
+participant DeviceAdapter as A
+participant "Smart device" as D
+
+Client -> C : POST /api/devices/{id}/toggle
+C -> S : toggle(id)
+S -> R : findById(id)
+R --> S : Device
+S -> Reg : get(device.adapterType)
+Reg --> S : DeviceAdapter
+S -> A : sendCommand(externalId, {on: !current})
+A -> D : send command
+A --> S : ok
+S -> R : save(device)
+S --> C : Device
+C --> Client : 200 DeviceResponse
+@enduml
+----
+
+Error cases:
+
+* Unknown `id` -> `DeviceNotFoundException` -> *404*.
+* `adapterType` with no registered adapter -> `UnknownAdapterException` -> *500*.
+
+Both are returned as RFC 9457 `ProblemDetail` by the `web` error handler.
+
+== Register a device
+
+* Invalid body (blank or missing fields) -> *400*, before the service runs.
+* `externalId` already registered -> `DeviceAlreadyExistsException` -> *409*.
+* Success -> *201 Created* with a `Location: /api/devices/\{id}` header.

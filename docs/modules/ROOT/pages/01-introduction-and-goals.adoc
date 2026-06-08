@@ -1,0 +1,33 @@
+= 1. Introduction and Goals
+
+SmartHome is a hub for running your whole home from one place. Built to grow from switching a
+single plug today into a full, automated home.
+
+== Requirements
+
+The hub is built to provide:
+
+* a configurable dashboard for your devices and rooms
+* new device types are added through pluggable integrations, whatever the brand or protocol
+* automated routines that act on your devices for you
+* control through an AI assistant
+
+== Quality goals
+
+[cols="1,3",options="header"]
+|===
+| Goal | What it means
+| Extensibility | A new integration — HTTP, MQTT, … — plugs in as one self-contained piece.
+| Maintainability | The code stays consistent and easy to change.
+| Reliability | A device that is offline or slow can't stall the rest of the hub.
+| Correctness | Behavior is verified by tests, and the API responds predictably.
+|===
+
+== Stakeholders
+
+[cols="1,2",options="header"]
+|===
+| Role | Interest
+| Developer | Extends and refactors the hub safely behind the quality gate.
+| Operator | Relies on the hub to control devices reliably and predictably.
+|===
