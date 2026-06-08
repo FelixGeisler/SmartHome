@@ -4,7 +4,7 @@
 |===
 | Goal | Approach
 | Extensibility | *Ports & adapters.* A `DeviceAdapter` port abstracts a device technology and a registry routes to the right adapter by type; a generic command map (e.g. `on`) keeps the call site identical across adapters. A new technology is one new `@Component`.
-| Maintainability | *Layering* (Controller -> Service -> Repository) plus the quality gate (CheckStyle / PMD / SpotBugs / JaCoCo).
+| Maintainability | *Layering* (Controller -> Service -> Repository) plus the quality gate (Checkstyle / PMD / SpotBugs / JaCoCo).
 | Reliability | Bounded connect/read timeouts on the outbound HTTP client.
 | Correctness | Behavior is covered by tests; a `@RestControllerAdvice` maps exceptions to RFC 9457 `ProblemDetail` responses, so the API answers predictably.
 |===
