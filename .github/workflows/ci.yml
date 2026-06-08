@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Cancel superseded runs for the same ref (e.g., rapid pushes to a branch).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 26 (Temurin)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      - name: Build and run the quality gate
+        run: |
+          chmod +x mvnw
+          ./mvnw -B clean verify
+
+      - name: Upload test & coverage reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/site/jacoco/**
+          if-no-files-found: ignore
+          retention-days: 7
