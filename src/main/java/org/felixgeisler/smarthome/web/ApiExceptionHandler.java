@@ -29,8 +29,10 @@ public class ApiExceptionHandler {
   @ExceptionHandler(UnknownAdapterException.class)
   ProblemDetail handleUnknownAdapter(UnknownAdapterException ex) {
     // Server-side data integrity: a device was persisted with an adapter type no adapter handles.
-    // Log the real cause but keep it out of the client response (don't leak internals in 5xx).
-    log.error("No adapter for a registered device", ex);
+    // The condition is well-defined, so log the message (not a full stack trace) and keep it out
+    // of the client response (don't leak internals in 5xx).
+    String reason = ex.getMessage();
+    log.error("No adapter registered for a device toggle: {}", reason);
     return ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
