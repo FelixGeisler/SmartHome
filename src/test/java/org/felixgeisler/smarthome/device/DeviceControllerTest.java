@@ -112,6 +112,21 @@ class DeviceControllerTest {
   }
 
   @Test
+  void register_returns422WithDetailWhenAdapterTypeUnsupported() throws Exception {
+    when(service.register(any(), any(), any(), any()))
+        .thenThrow(new UnsupportedAdapterTypeException("nest"));
+
+    mvc.perform(
+            post("/api/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"externalId\":\"ext-1\",\"name\":\"Plug\","
+                        + "\"type\":\"SHELLY_PLUG\",\"adapterType\":\"nest\"}"))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.detail").value("Unsupported adapter type: nest"));
+  }
+
+  @Test
   void register_returns400WhenRequiredFieldBlank() throws Exception {
     mvc.perform(
             post("/api/devices")

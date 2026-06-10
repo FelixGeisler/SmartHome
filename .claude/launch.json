@@ -6,6 +6,12 @@
       "runtimeExecutable": "java",
       "runtimeArgs": ["-jar", "target/smarthome-0.0.1-SNAPSHOT.jar", "--server.port=18080"],
       "port": 18080
+    },
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--port", "5199"],
+      "port": 5199
     }
   ]
 }

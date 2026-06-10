@@ -2,6 +2,7 @@ package org.felixgeisler.smarthome.web;
 
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
+import org.felixgeisler.smarthome.device.UnsupportedAdapterTypeException;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,12 @@ public class ApiExceptionHandler {
   @ExceptionHandler(DeviceAlreadyExistsException.class)
   ProblemDetail handleDeviceAlreadyExists(DeviceAlreadyExistsException ex) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(UnsupportedAdapterTypeException.class)
+  ProblemDetail handleUnsupportedAdapterType(UnsupportedAdapterTypeException ex) {
+    // Client-actionable at registration time: this hub has no such integration configured.
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(UnknownAdapterException.class)
