@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { listDevices, toggleDevice } from './devices'
+import { listDevices, registerDevice, toggleDevice } from './devices'
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -21,6 +21,25 @@ describe('devices api client', () => {
     await expect(listDevices()).resolves.toEqual(devices)
 
     expect(fetchMock).toHaveBeenCalledWith('/api/devices', undefined)
+  })
+
+  it('registers a device via POST /api/devices', async () => {
+    const registration = {
+      externalId: '192.168.1.51',
+      name: 'Heater',
+      type: 'SHELLY_PLUG',
+      adapterType: 'shelly',
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 2, ...registration, on: false }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(registerDevice(registration)).resolves.toMatchObject({ id: 2, name: 'Heater' })
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registration),
+    })
   })
 
   it('toggles a device via POST /api/devices/{id}/toggle', async () => {

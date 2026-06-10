@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from './api/devices'
-import { listDevices, toggleDevice } from './api/devices'
+import { listDevices, registerDevice, toggleDevice } from './api/devices'
 import App from './App'
 
 vi.mock('./api/devices')
@@ -110,6 +110,45 @@ describe('App', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Request failed with status 500')
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
+  it('registers a new device and adds it to the list', async () => {
+    vi.mocked(listDevices).mockResolvedValue([])
+    vi.mocked(registerDevice).mockResolvedValue(heater)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(await screen.findByLabelText('Name'), 'Heater')
+    await user.type(screen.getByLabelText('Host'), '192.168.1.51')
+    await user.click(screen.getByRole('button', { name: 'Add device' }))
+
+    expect(registerDevice).toHaveBeenCalledWith({
+      externalId: '192.168.1.51',
+      name: 'Heater',
+      type: 'SHELLY_PLUG',
+      adapterType: 'shelly',
+    })
+    expect(await screen.findByText('Heater')).toBeInTheDocument()
+    expect(screen.getByLabelText('Name')).toHaveValue('')
+    expect(screen.getByLabelText('Host')).toHaveValue('')
+  })
+
+  it('shows the API error when registration fails', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    vi.mocked(registerDevice).mockRejectedValue(
+      new Error("Device with external id '192.168.1.50' already exists"),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(await screen.findByLabelText('Name'), 'Lamp Again')
+    await user.type(screen.getByLabelText('Host'), '192.168.1.50')
+    await user.click(screen.getByRole('button', { name: 'Add device' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Device with external id '192.168.1.50' already exists",
+    )
+    expect(screen.getByLabelText('Name')).toHaveValue('Lamp Again')
   })
 
   it('keeps the device list usable when a toggle fails', async () => {

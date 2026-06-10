@@ -189,3 +189,80 @@ body {
   background: var(--bg);
   border-color: var(--accent);
 }
+
+.add-device {
+  margin-top: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.add-device h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
+.add-device__error {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+}
+
+.add-device__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.add-device__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.add-device__field input,
+.add-device__field select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 160px;
+}
+
+.add-device__field input:focus,
+.add-device__field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.add-device__submit {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.add-device__submit:hover:enabled {
+  background: var(--accent-hover);
+}
+
+.add-device__submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

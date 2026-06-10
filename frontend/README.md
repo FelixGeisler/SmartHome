@@ -1,7 +1,7 @@
 # SmartHome frontend
 
-The device dashboard: a Vite + React + TypeScript single-page app that lists the hub's
-registered devices and toggles them on or off through the REST API.
+The device dashboard: a Vite + React + TypeScript single-page app that registers
+devices, lists them, and toggles them on or off through the REST API.
 
 ## Development
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Device } from './api/devices'
 import { listDevices, toggleDevice } from './api/devices'
+import { AddDeviceForm } from './components/AddDeviceForm'
 import { DeviceCard } from './components/DeviceCard'
 
 type LoadState = 'loading' | 'ready' | 'error'
@@ -96,6 +97,12 @@ function App() {
             />
           ))}
         </ul>
+      )}
+
+      {loadState === 'ready' && (
+        <AddDeviceForm
+          onRegistered={(registered) => setDevices((current) => [...current, registered])}
+        />
       )}
     </main>
   )

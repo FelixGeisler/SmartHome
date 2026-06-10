@@ -8,6 +8,14 @@ export interface Device {
   on: boolean
 }
 
+/** Request body for registering a device. */
+export interface DeviceRegistration {
+  externalId: string
+  name: string
+  type: string
+  adapterType: string
+}
+
 /** The fields we read from an RFC 9457 problem response. */
 interface ProblemDetail {
   detail?: string
@@ -16,6 +24,20 @@ interface ProblemDetail {
 /** Lists all registered devices. */
 export function listDevices(): Promise<Device[]> {
   return request<Device[]>('/api/devices')
+}
+
+/**
+ * Registers a new device.
+ *
+ * @param registration the device to register
+ * @returns the persisted device
+ */
+export function registerDevice(registration: DeviceRegistration): Promise<Device> {
+  return request<Device>('/api/devices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registration),
+  })
 }
 
 /**
