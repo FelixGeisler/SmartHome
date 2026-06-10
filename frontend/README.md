@@ -5,7 +5,7 @@ devices, lists them, and toggles them on or off through the REST API.
 
 ## Development
 
-The easiest way is `npm run dev` from the repository root, which starts the
+The easiest way is to install the frontend deps once (`npm --prefix frontend install` from the repository root) and then run `npm run dev` from the repository root, which starts the
 backend and this dev server together (see the root README).
 
 To run the two halves by hand instead — backend first, from the repository root.
