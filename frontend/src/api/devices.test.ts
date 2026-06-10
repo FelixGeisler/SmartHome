@@ -1,0 +1,47 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { listDevices, toggleDevice } from './devices'
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+describe('devices api client', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('lists devices from GET /api/devices', async () => {
+    const devices = [{ id: 1, name: 'Desk Lamp', on: false }]
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(devices))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(listDevices()).resolves.toEqual(devices)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices', undefined)
+  })
+
+  it('toggles a device via POST /api/devices/{id}/toggle', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, on: true }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(toggleDevice(7)).resolves.toEqual({ id: 7, on: true })
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices/7/toggle', { method: 'POST' })
+  })
+
+  it('reports the detail of an RFC 9457 problem response', async () => {
+    const problem = { title: 'Not Found', detail: 'Device with id 7 not found' }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(problem, 404)))
+
+    await expect(toggleDevice(7)).rejects.toThrow('Device with id 7 not found')
+  })
+
+  it('falls back to the status code when the error body is not JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('oops', { status: 502 })))
+
+    await expect(listDevices()).rejects.toThrow('Request failed with status 502')
+  })
+})
