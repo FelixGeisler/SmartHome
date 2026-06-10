@@ -22,6 +22,11 @@
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.1</wiremock.version>
+        <frontend.plugin.version>1.15.1</frontend.plugin.version>
+        <!-- Node toolchain the frontend build installs for itself (active LTS). -->
+        <node.version>v24.13.0</node.version>
+        <!-- Backend-only iteration: -Dskip.frontend=true skips the npm lifecycle. -->
+        <skip.frontend>false</skip.frontend>
         <!-- Seam for test-JVM agents (Mockito now, JaCoCo later); surefire reads it via @{argLine}. -->
         <argLine/>
     </properties>
@@ -243,6 +248,110 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Build the React frontend with its own Node toolchain, so `mvnw verify` stays the
+                 single quality gate for the whole repo (ESLint + Vitest + type-checked build) and
+                 CI needs no separate Node setup. The downloaded Node archive lands in the local
+                 Maven repo, so CI's Maven cache covers it. -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend.plugin.version}</version>
+                <configuration>
+                    <workingDirectory>frontend</workingDirectory>
+                    <!-- Node lives under target/ so `clean` wipes it and git never sees it. -->
+                    <installDirectory>target</installDirectory>
+                    <skip>${skip.frontend}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-ci</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-lint</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run lint</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>test</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Ship the built SPA inside the jar: Boot serves classpath:/static at the root, so
+                 the dashboard and the API share one origin in production (no CORS, one deploy). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-dist</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>frontend/dist</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Vite writes dist/ outside target/, so teach `clean` to remove it too —
+                 otherwise a stale bundle could be packaged after a skipped frontend build. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>frontend/dist</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
             </plugin>
 
             <!-- SpotBugs: bytecode-level analysis that catches real bugs. -->
