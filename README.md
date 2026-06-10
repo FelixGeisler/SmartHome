@@ -13,7 +13,8 @@ served from the same jar.
 ## Run (development)
 
 ```sh
-npm install   # once
+npm install                    # repo root (docs + dev tooling)
+npm --prefix frontend install  # once (frontend deps)
 npm run dev
 ```
 
