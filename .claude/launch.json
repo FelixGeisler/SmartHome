@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "smarthome-jar",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-jar", "target/smarthome-0.0.1-SNAPSHOT.jar", "--server.port=18080"],
+      "port": 18080
+    }
+  ]
+}

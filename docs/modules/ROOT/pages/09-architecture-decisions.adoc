@@ -1,1 +1,22 @@
 = 9. Architecture Decisions
+
+== ADR 1: Serve the SPA from the Spring Boot jar (same origin)
+
+*Status:* accepted (June 2026)
+
+*Context:* The device dashboard is a Vite + React single-page app that calls the REST
+API from the browser. Hosting it on its own origin would mean CORS configuration on the
+API and a second deployable to version and ship.
+
+*Decision:* The Maven build compiles the SPA with its own pinned Node toolchain
+(`frontend-maven-plugin`) and copies `frontend/dist` into the jar under
+`classpath:/static`, where Spring Boot serves it at `/`. During development the Vite dev
+server proxies `/api` to the Spring app instead.
+
+*Consequences:*
+
+* One artifact ships UI and API; no CORS configuration anywhere.
+* `./mvnw clean verify` stays the single quality gate — ESLint, Vitest, and the
+  type-checked production build join it.
+* The build downloads Node once (cached in the local Maven repository afterwards);
+  backend-only loops can opt out with `-Dskip.frontend=true`.
