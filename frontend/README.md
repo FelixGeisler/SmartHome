@@ -5,10 +5,13 @@ devices, lists them, and toggles them on or off through the REST API.
 
 ## Development
 
-Start the backend first, from the repository root. The skip flag matters:
-`spring-boot:run` forks the build lifecycle through the phase that runs `npm ci`,
-which wipes `node_modules` on every backend start — and fails outright if the Vite
-dev server is holding files open:
+The easiest way is `npm run dev` from the repository root, which starts the
+backend and this dev server together (see the root README).
+
+To run the two halves by hand instead — backend first, from the repository root.
+The skip flag matters: `spring-boot:run` forks the build lifecycle through the
+phase that runs `npm ci`, which wipes `node_modules` on every backend start — and
+fails outright if the Vite dev server is holding files open:
 
 ```sh
 .\mvnw.cmd spring-boot:run "-Dskip.frontend=true"

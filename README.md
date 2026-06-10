@@ -10,6 +10,25 @@ served from the same jar.
 - **Maven**
 - **Vite + React + TypeScript** (`frontend/` — see its [README](frontend/README.md))
 
+## Run (development)
+
+```sh
+npm install   # once
+npm run dev
+```
+
+Starts the backend (port 8080) and the Vite dev server together; open
+<http://localhost:5173> — frontend edits hot-reload, backend edits need a rerun.
+
+## Run (packaged)
+
+```sh
+./mvnw clean verify
+java -jar target/smarthome-0.0.1-SNAPSHOT.jar
+```
+
+UI and API together on <http://localhost:8080>, exactly as deployed.
+
 ## Build
 
 ```sh

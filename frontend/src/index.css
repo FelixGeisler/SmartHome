@@ -1,5 +1,7 @@
 :root {
-  color-scheme: light dark;
+  /* Explicit (not "light dark"): native form-control popups follow the resolved
+     scheme, and Edge can otherwise resolve it from the OS instead of the page. */
+  color-scheme: light;
 
   --bg: #f4f5f7;
   --surface: #ffffff;
@@ -26,6 +28,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --bg: #14161c;
     --surface: #1d2027;
     --text: #eef0f4;
@@ -244,6 +247,42 @@ body {
 .add-device__field select:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
+}
+
+/* Styling the select's background makes Chromium drop its native popup theming,
+   so the option rows need explicit colors to match the scheme. */
+.add-device__field option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Chromium's customizable select: the popup renders in-page and follows our
+   theme. Browsers without support keep the native popup and the rules above. */
+@supports (appearance: base-select) {
+  .add-device__field select,
+  .add-device__field select::picker(select) {
+    appearance: base-select;
+  }
+
+  .add-device__field select::picker(select) {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-top: 4px;
+    padding: 4px;
+  }
+
+  .add-device__field option {
+    padding: 7px 10px;
+    border-radius: 5px;
+  }
+
+  .add-device__field option:hover,
+  .add-device__field option:focus-visible {
+    background: var(--bg);
+  }
 }
 
 .add-device__submit {
