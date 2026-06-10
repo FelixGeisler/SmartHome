@@ -5,16 +5,21 @@ registered devices and toggles them on or off through the REST API.
 
 ## Development
 
+Start the backend first, from the repository root. The skip flag matters:
+`spring-boot:run` forks the build lifecycle through the phase that runs `npm ci`,
+which wipes `node_modules` on every backend start — and fails outright if the Vite
+dev server is holding files open:
+
+```sh
+.\mvnw.cmd spring-boot:run "-Dskip.frontend=true"
+```
+
+Then run the dev server, which proxies `/api` to the Spring Boot app on
+`http://localhost:8080` (see `vite.config.ts`):
+
 ```sh
 npm install
 npm run dev
-```
-
-The dev server proxies `/api` to the Spring Boot app on `http://localhost:8080`
-(see `vite.config.ts`), so start the backend first:
-
-```sh
-.\mvnw.cmd spring-boot:run   # from the repository root
 ```
 
 ## Quality gate
