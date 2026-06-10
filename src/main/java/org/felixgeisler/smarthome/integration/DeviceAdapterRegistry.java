@@ -24,6 +24,16 @@ public class DeviceAdapterRegistry {
   }
 
   /**
+   * Tells whether an adapter is registered for the given type.
+   *
+   * @param adapterType the adapter identifier
+   * @return true if an adapter handles the type
+   */
+  public boolean supports(String adapterType) {
+    return adaptersByType.containsKey(adapterType);
+  }
+
+  /**
    * Returns the adapter registered for the given type.
    *
    * @param adapterType the adapter identifier

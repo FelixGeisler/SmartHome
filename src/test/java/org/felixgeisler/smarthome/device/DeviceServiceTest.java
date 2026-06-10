@@ -65,6 +65,7 @@ class DeviceServiceTest {
 
   @Test
   void register_savesNewDeviceWhenAbsent() {
+    when(adapters.supports("shelly")).thenReturn(true);
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
     when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -77,8 +78,20 @@ class DeviceServiceTest {
   }
 
   @Test
+  void register_throwsWhenAdapterTypeUnsupported() {
+    when(adapters.supports("nest")).thenReturn(false);
+
+    assertThrows(
+        UnsupportedAdapterTypeException.class,
+        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "nest"));
+
+    verify(devices, never()).save(any());
+  }
+
+  @Test
   void register_throwsWhenDeviceAlreadyExists() {
     Device existing = new Device("ext-1", "Existing", DeviceType.SHELLY_PLUG, "shelly");
+    when(adapters.supports("shelly")).thenReturn(true);
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.of(existing));
 
     assertThrows(
@@ -90,6 +103,7 @@ class DeviceServiceTest {
 
   @Test
   void register_throwsAlreadyExistsWhenSaveHitsUniqueConstraint() {
+    when(adapters.supports("shelly")).thenReturn(true);
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
     when(devices.save(any(Device.class)))
         .thenThrow(new DataIntegrityViolationException("duplicate externalId"));

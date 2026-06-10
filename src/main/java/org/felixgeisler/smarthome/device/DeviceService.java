@@ -52,9 +52,13 @@ public class DeviceService {
    * @param type the device category
    * @param adapterType identifier of the adapter that handles this device
    * @return the persisted device
+   * @throws UnsupportedAdapterTypeException if no adapter on this hub handles the adapter type
    * @throws DeviceAlreadyExistsException if a device with the external id already exists
    */
   public Device register(String externalId, String name, DeviceType type, String adapterType) {
+    if (!adapters.supports(adapterType)) {
+      throw new UnsupportedAdapterTypeException(adapterType);
+    }
     if (devices.findByExternalId(externalId).isPresent()) {
       throw new DeviceAlreadyExistsException(externalId);
     }

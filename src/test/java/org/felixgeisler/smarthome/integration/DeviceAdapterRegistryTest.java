@@ -1,7 +1,9 @@
 package org.felixgeisler.smarthome.integration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,20 @@ class DeviceAdapterRegistryTest {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
 
     assertThrows(UnknownAdapterException.class, () -> registry.get("mqtt"));
+  }
+
+  @Test
+  void supports_isTrueForRegisteredType() {
+    DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
+
+    assertTrue(registry.supports("shelly"));
+  }
+
+  @Test
+  void supports_isFalseForUnknownType() {
+    DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
+
+    assertFalse(registry.supports("mqtt"));
   }
 
   private static final class StubAdapter implements DeviceAdapter {
