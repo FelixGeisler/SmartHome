@@ -44,4 +44,12 @@ describe('devices api client', () => {
 
     await expect(listDevices()).rejects.toThrow('Request failed with status 502')
   })
+
+  it('falls back to the status code when the problem response has no detail', async () => {
+    // The API deliberately omits detail on some 5xx responses (see ApiExceptionHandler).
+    const problem = { type: 'about:blank', title: 'Internal Server Error', status: 500 }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(problem, 500)))
+
+    await expect(toggleDevice(7)).rejects.toThrow('Request failed with status 500')
+  })
 })

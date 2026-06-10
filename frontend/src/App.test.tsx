@@ -58,6 +58,51 @@ describe('App', () => {
     expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeInTheDocument()
   })
 
+  it('updates only the toggled device in a multi-device list', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp, heater])
+    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, on: true })
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
+
+    expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Turn Heater off' })).toBeInTheDocument()
+  })
+
+  it('disables the toggle button while its request is in flight', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    let resolveToggle: (device: Device) => void = () => {}
+    vi.mocked(toggleDevice).mockImplementation(
+      () =>
+        new Promise<Device>((resolve) => {
+          resolveToggle = resolve
+        }),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
+
+    expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeDisabled()
+    resolveToggle({ ...lamp, on: true })
+    expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeEnabled()
+  })
+
+  it('reloads the devices when Retry is clicked after a failed load', async () => {
+    vi.mocked(listDevices)
+      .mockRejectedValueOnce(new Error('Request failed with status 503'))
+      .mockResolvedValueOnce([lamp])
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Retry' }))
+
+    expect(await screen.findByText('Desk Lamp')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+  })
+
   it('surfaces an error when loading devices fails', async () => {
     vi.mocked(listDevices).mockRejectedValue(new Error('Request failed with status 500'))
 
