@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeviceService {
 
+  /** State key under which switchable devices keep their power state. */
+  private static final String ON_STATE = "on";
+
   private final DeviceRepository devices;
   private final DeviceAdapterRegistry adapters;
 
@@ -76,13 +79,17 @@ public class DeviceService {
    * @param id the device id
    * @return the updated device
    * @throws DeviceNotFoundException if no device has the given id
+   * @throws UnsupportedCapabilityException if the device's type is not switchable
    */
   public Device toggle(Long id) {
     Device device = getOrThrow(id);
-    boolean desired = !device.isOn();
-    Map<String, Object> command = Map.of("on", desired);
+    if (!device.getType().hasCapability(Capability.SWITCHABLE)) {
+      throw new UnsupportedCapabilityException(id, Capability.SWITCHABLE);
+    }
+    boolean desired = !Boolean.parseBoolean(device.getState().get(ON_STATE));
+    Map<String, Object> command = Map.of(ON_STATE, desired);
     adapters.get(device.getAdapterType()).sendCommand(device.getExternalId(), command);
-    device.setOn(desired);
+    device.putState(ON_STATE, String.valueOf(desired));
     return devices.save(device);
   }
 

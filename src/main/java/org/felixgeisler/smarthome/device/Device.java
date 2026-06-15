@@ -1,13 +1,21 @@
 package org.felixgeisler.smarthome.device;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A smart-home device known to the hub.
@@ -36,9 +44,14 @@ public class Device {
   @Column(nullable = false)
   private String adapterType;
 
-  // "on" is a reserved SQL word, so the column is named explicitly.
-  @Column(name = "powered_on", nullable = false)
-  private boolean on;
+  // The last known runtime state as key/value entries (e.g. on=true), interpreted per
+  // capability. Eagerly fetched: the map is small and open-in-view is off, so a lazy
+  // collection would not survive past the service layer.
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "device_state", joinColumns = @JoinColumn(name = "device_id"))
+  @MapKeyColumn(name = "state_key")
+  @Column(name = "state_value", nullable = false)
+  private Map<String, String> state = new HashMap<>();
 
   /** Required by JPA. */
   protected Device() {
@@ -80,11 +93,22 @@ public class Device {
     return adapterType;
   }
 
-  public boolean isOn() {
-    return on;
+  /**
+   * Returns the device's last known runtime state.
+   *
+   * @return the state entries (read-only view)
+   */
+  public Map<String, String> getState() {
+    return Collections.unmodifiableMap(state);
   }
 
-  public void setOn(boolean on) {
-    this.on = on;
+  /**
+   * Records one state entry, e.g. {@code on=true} after a successful toggle.
+   *
+   * @param key the state key
+   * @param value the new value
+   */
+  public void putState(String key, String value) {
+    state.put(key, value);
   }
 }

@@ -4,8 +4,20 @@ export interface Device {
   externalId: string
   name: string
   type: string
+  capabilities: string[]
   adapterType: string
-  on: boolean
+  /** Last known runtime state as key/value entries, interpreted per capability. */
+  state: Record<string, string>
+}
+
+/** True when the device can be switched on and off. */
+export function isSwitchable(device: Device): boolean {
+  return device.capabilities.includes('SWITCHABLE')
+}
+
+/** True when a switchable device reports itself switched on. */
+export function isOn(device: Device): boolean {
+  return device.state.on === 'true'
 }
 
 /** Request body for registering a device. */

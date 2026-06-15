@@ -5,15 +5,22 @@ import type { Device } from './api/devices'
 import { listDevices, registerDevice, toggleDevice } from './api/devices'
 import App from './App'
 
-vi.mock('./api/devices')
+// Mock only the HTTP functions; the pure helpers (isSwitchable, isOn) stay real.
+vi.mock('./api/devices', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./api/devices')>()),
+  listDevices: vi.fn(),
+  registerDevice: vi.fn(),
+  toggleDevice: vi.fn(),
+}))
 
 const lamp: Device = {
   id: 1,
   externalId: 'shelly-plug-1',
   name: 'Desk Lamp',
   type: 'SHELLY_PLUG',
+  capabilities: ['SWITCHABLE'],
   adapterType: 'shelly',
-  on: false,
+  state: {},
 }
 
 const heater: Device = {
@@ -21,7 +28,7 @@ const heater: Device = {
   id: 2,
   externalId: 'shelly-plug-2',
   name: 'Heater',
-  on: true,
+  state: { on: 'true' },
 }
 
 describe('App', () => {
@@ -46,9 +53,28 @@ describe('App', () => {
     expect(await screen.findByText('No devices registered yet.')).toBeInTheDocument()
   })
 
+  it('renders a read-only card for a device without the switchable capability', async () => {
+    const sensor: Device = {
+      ...lamp,
+      id: 3,
+      externalId: 'sensor-1',
+      name: 'Outdoor Sensor',
+      capabilities: [],
+      state: { temperature: '21.5' },
+    }
+    vi.mocked(listDevices).mockResolvedValue([sensor])
+
+    render(<App />)
+
+    expect(await screen.findByText('Outdoor Sensor')).toBeInTheDocument()
+    expect(screen.getByText('temperature')).toBeInTheDocument()
+    expect(screen.getByText('21.5')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^turn /i })).not.toBeInTheDocument()
+  })
+
   it('toggles a device and renders its new state', async () => {
     vi.mocked(listDevices).mockResolvedValue([lamp])
-    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, on: true })
+    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, state: { on: 'true' } })
     const user = userEvent.setup()
     render(<App />)
 
@@ -60,7 +86,7 @@ describe('App', () => {
 
   it('updates only the toggled device in a multi-device list', async () => {
     vi.mocked(listDevices).mockResolvedValue([lamp, heater])
-    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, on: true })
+    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, state: { on: 'true' } })
     const user = userEvent.setup()
     render(<App />)
 
@@ -85,7 +111,7 @@ describe('App', () => {
     await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
 
     expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeDisabled()
-    resolveToggle({ ...lamp, on: true })
+    resolveToggle({ ...lamp, state: { on: 'true' } })
     expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeEnabled()
   })
 

@@ -14,7 +14,7 @@ describe('devices api client', () => {
   })
 
   it('lists devices from GET /api/devices', async () => {
-    const devices = [{ id: 1, name: 'Desk Lamp', on: false }]
+    const devices = [{ id: 1, name: 'Desk Lamp', state: { on: 'false' } }]
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(devices))
     vi.stubGlobal('fetch', fetchMock)
 
@@ -30,7 +30,7 @@ describe('devices api client', () => {
       type: 'SHELLY_PLUG',
       adapterType: 'shelly',
     }
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 2, ...registration, on: false }))
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 2, ...registration, state: {} }))
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(registerDevice(registration)).resolves.toMatchObject({ id: 2, name: 'Heater' })
@@ -43,10 +43,10 @@ describe('devices api client', () => {
   })
 
   it('toggles a device via POST /api/devices/{id}/toggle', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, on: true }))
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, state: { on: 'true' } }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(toggleDevice(7)).resolves.toEqual({ id: 7, on: true })
+    await expect(toggleDevice(7)).resolves.toEqual({ id: 7, state: { on: 'true' } })
 
     expect(fetchMock).toHaveBeenCalledWith('/api/devices/7/toggle', { method: 'POST' })
   })
