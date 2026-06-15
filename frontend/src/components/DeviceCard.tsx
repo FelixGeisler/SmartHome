@@ -1,4 +1,5 @@
 import type { Device } from '../api/devices'
+import { isOn, isSwitchable } from '../api/devices'
 
 interface DeviceCardProps {
   device: Device
@@ -7,31 +8,43 @@ interface DeviceCardProps {
   onToggle: (device: Device) => void
 }
 
-/** One dashboard tile: device name, metadata, power state, and a toggle button. */
+/** One dashboard tile: device name, metadata, and controls picked per capability. */
 export function DeviceCard({ device, busy, onToggle }: DeviceCardProps) {
+  const on = isSwitchable(device) && isOn(device)
   return (
-    <li className={device.on ? 'device-card device-card--on' : 'device-card'}>
+    <li className={on ? 'device-card device-card--on' : 'device-card'}>
       <div className="device-card__info">
         <span className="device-card__name">{device.name}</span>
         <span className="device-card__meta">
           {formatType(device.type)} &middot; {device.externalId}
         </span>
       </div>
-      <div className="device-card__state">
-        <span className="device-card__status">
-          <span className="device-card__dot" aria-hidden="true" />
-          {device.on ? 'On' : 'Off'}
-        </span>
-        <button
-          type="button"
-          className="device-card__toggle"
-          disabled={busy}
-          aria-label={`Turn ${device.name} ${device.on ? 'off' : 'on'}`}
-          onClick={() => onToggle(device)}
-        >
-          {device.on ? 'Turn off' : 'Turn on'}
-        </button>
-      </div>
+      {isSwitchable(device) ? (
+        <div className="device-card__state">
+          <span className="device-card__status">
+            <span className="device-card__dot" aria-hidden="true" />
+            {on ? 'On' : 'Off'}
+          </span>
+          <button
+            type="button"
+            className="device-card__toggle"
+            disabled={busy}
+            aria-label={`Turn ${device.name} ${on ? 'off' : 'on'}`}
+            onClick={() => onToggle(device)}
+          >
+            {on ? 'Turn off' : 'Turn on'}
+          </button>
+        </div>
+      ) : (
+        <dl className="device-card__readings">
+          {Object.entries(device.state).map(([key, value]) => (
+            <div className="device-card__reading" key={key}>
+              <dt>{key}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </li>
   )
 }

@@ -3,7 +3,6 @@ package org.felixgeisler.smarthome.device;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -40,7 +39,7 @@ class DeviceServiceTest {
   }
 
   @Test
-  void toggle_flipsStateAndCommandsAdapter() {
+  void toggle_switchesAnOffDeviceOn() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
     when(devices.findById(1L)).thenReturn(Optional.of(device));
     when(adapters.get("shelly")).thenReturn(adapter);
@@ -50,8 +49,23 @@ class DeviceServiceTest {
 
     verify(adapter).sendCommand(eq("ext-1"), commandCaptor.capture());
     assertEquals(true, commandCaptor.getValue().get("on"));
-    assertTrue(result.isOn());
+    assertEquals("true", result.getState().get("on"));
     verify(devices).save(device);
+  }
+
+  @Test
+  void toggle_switchesAnOnDeviceOff() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.putState("on", "true");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("shelly")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.toggle(1L);
+
+    verify(adapter).sendCommand(eq("ext-1"), commandCaptor.capture());
+    assertEquals(false, commandCaptor.getValue().get("on"));
+    assertEquals("false", result.getState().get("on"));
   }
 
   @Test

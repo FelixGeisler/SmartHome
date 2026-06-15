@@ -7,6 +7,8 @@
 * xref:07-deployment-view.adoc[7. Deployment View]
 * xref:08-crosscutting-concepts.adoc[8. Cross-cutting Concepts]
 * xref:09-architecture-decisions.adoc[9. Architecture Decisions]
+** xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1: SPA from the jar]
+** xref:adr/0002-capability-based-device-state.adoc[ADR 2: Capability-based state]
 * xref:10-quality-requirements.adoc[10. Quality Requirements]
 * xref:11-risks-and-technical-debt.adoc[11. Risks and Technical Debt]
 * xref:12-glossary.adoc[12. Glossary]

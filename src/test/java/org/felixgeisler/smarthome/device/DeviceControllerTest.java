@@ -57,12 +57,23 @@ class DeviceControllerTest {
   @Test
   void toggle_returnsUpdatedDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
-    device.setOn(true);
+    device.putState("on", "true");
     when(service.toggle(1L)).thenReturn(device);
 
     mvc.perform(post("/api/devices/1/toggle"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.on").value(true));
+        .andExpect(jsonPath("$.state.on").value("true"))
+        .andExpect(jsonPath("$.capabilities[0]").value("SWITCHABLE"));
+  }
+
+  @Test
+  void toggle_returns422WhenDeviceNotSwitchable() throws Exception {
+    when(service.toggle(1L))
+        .thenThrow(new UnsupportedCapabilityException(1L, Capability.SWITCHABLE));
+
+    mvc.perform(post("/api/devices/1/toggle"))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.detail").value("Device 1 does not support capability: SWITCHABLE"));
   }
 
   @Test
