@@ -103,7 +103,7 @@ public class Device {
   }
 
   /**
-   * Records one state entry, e.g. {@code on=true} after a successful toggle.
+   * Records one state entry, e.g. {@code on="true"} after a successful toggle.
    *
    * @param key the state key
    * @param value the new value
