@@ -12,7 +12,7 @@ import java.util.Set;
  * @param type the device category
  * @param capabilities what the device can do; clients pick controls per capability
  * @param adapterType identifier of the adapter that handles this device
- * @param state the last known runtime state as key/value entries (e.g. {@code on=true})
+ * @param state the last known runtime state as key/value entries (e.g. {@code on="true"})
  */
 public record DeviceResponse(
     Long id,
