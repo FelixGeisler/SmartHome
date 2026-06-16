@@ -1,0 +1,25 @@
+= ADR 3: Device integration model
+
+== Status
+
+Accepted
+
+== Context
+
+The hub integrates with external device ecosystems that differ in direction — some accept
+commands, some only report readings — and in topology — some are reached per device, some sit
+behind a bridge that fronts many. The core must absorb a new ecosystem without reshaping for it.
+
+== Decision
+
+Each ecosystem is isolated in the `integration` package. Outbound commands go through a
+`DeviceAdapter` port; inbound, read-only telemetry bypasses the port and updates the device
+directly. A device's capabilities decide which applies. An integration is a configured
+connection, not a persisted domain entity, and the two directions stay separate rather than
+unified under one abstraction.
+
+== Consequences
+
+A new ecosystem plugs in behind the port or the telemetry path without touching the core.
+Unifying the two would be guesswork until there is more than one example of each, so it is left
+undone. Connection and wiring details are configuration, documented with the component, not here.

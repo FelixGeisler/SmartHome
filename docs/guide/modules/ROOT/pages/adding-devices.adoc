@@ -1,0 +1,31 @@
+= Adding devices
+
+A device is registered once, then controlled according to its capabilities: a switchable device
+gets an on/off toggle, a sensing device shows its latest readings.
+
+== From the dashboard
+
+Use *Add device* and pick a kind:
+
+* *Shelly Plug* — a switchable device reached over HTTP. Enter its host.
+* *Sensor Node* — a device that reports readings. Enter its node id and declare its sensors
+  (key, type, unit).
+
+== From the API
+
+[source,bash]
+----
+# A switchable plug
+curl -X POST http://<hub-host>:8080/api/devices \
+  -H 'Content-Type: application/json' \
+  -d '{"externalId":"192.168.1.50","name":"Desk Lamp",
+       "type":"SHELLY_PLUG","adapterType":"shelly"}'
+
+# A sensor node, declaring the sensors it reports
+curl -X POST http://<hub-host>:8080/api/devices \
+  -H 'Content-Type: application/json' \
+  -d '{"externalId":"living-room","name":"Living Room Climate","type":"SENSOR_NODE",
+       "sensors":[{"key":"temperature","type":"TEMPERATURE","unit":"°C"}]}'
+----
+
+A sensor node reports its readings over MQTT — see xref:mqtt-sensors.adoc[MQTT sensors].

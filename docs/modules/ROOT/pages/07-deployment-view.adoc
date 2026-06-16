@@ -1,5 +1,10 @@
 = 7. Deployment View
 
+The hub is a single Spring Boot JAR that serves the dashboard SPA and the REST API from one
+origin (xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It controls command
+devices directly over the LAN, and ingests sensor telemetry by subscribing to an MQTT broker that
+sensor nodes publish to (xref:adr/0003-device-integration-model.adoc[ADR 3]).
+
 [plantuml,deployment,svg]
 ----
 @startuml
@@ -8,20 +13,25 @@ node "Browser" {
 }
 node "Host" {
   artifact "smarthome.jar" as app
-  database "H2\n(embedded, in-memory)" as h2
-  app --> h2
+  database "Database" as db
+  app --> db
 }
-node "Smart device" as dev
+node "Command device\n(e.g. Shelly)" as plug
+node "MQTT broker" as broker
+node "Sensor node" as sensor
 spa --> app : HTTP, same origin\n(static assets + /api)
-app --> dev : HTTP (LAN)
+app --> plug : HTTP (LAN)
+sensor --> broker : publish\nhome/<device>/<sensor>
+app --> broker : subscribe home/+/+\n(MQTT, LAN)
 @enduml
 ----
 
 [cols="1,3",options="header"]
 |===
-| Aspect | Current state
-| Packaging | Single executable Spring Boot JAR; the Maven build compiles the SPA and bundles it under `classpath:/static`, so one artifact ships both
-| Frontend delivery | Served by the JAR at `/`, same origin as the API — no CORS; the Vite dev server proxies `/api` during development only
-| Datastore | Embedded in-memory H2 — not retained across restarts
-| Device access | HTTP over the LAN, addressed by host
+| Node / channel | Role
+| `smarthome.jar` (Host) | Serves the SPA at `/` and the API under `/api`, and persists to a database
+| Browser | Loads the SPA from the JAR over the same origin, so no CORS
+| Command device | Reached directly over the LAN, addressed by host (e.g. a Shelly plug over HTTP)
+| MQTT broker | Carries sensor telemetry; the hub subscribes to `home/+/+`
+| Sensor node | Publishes readings to `home/<device>/<sensor>`; setup is in the xref:guide::mqtt-sensors.adoc[MQTT sensors guide]
 |===

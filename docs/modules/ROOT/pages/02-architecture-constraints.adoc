@@ -8,6 +8,6 @@
 | Language | Java
 | Framework | Spring Boot, Spring Data JPA
 | Build | Maven
-| Persistence | Embedded H2
+| Persistence | Embedded relational database
 | HTTP client | Spring `RestClient`
 |===

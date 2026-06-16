@@ -1,0 +1,9 @@
+= Guide
+
+How to run the SmartHome hub, add devices, and set up the hardware that feeds it.
+
+* xref:getting-started.adoc[Getting started] — build, run, and open the dashboard.
+* xref:adding-devices.adoc[Adding devices] — register and control devices from the dashboard or the API.
+* xref:mqtt-sensors.adoc[MQTT sensors] — run a broker and connect sensor nodes.
+
+For the design behind the system, see the xref:smarthome::01-introduction-and-goals.adoc[Architecture] documentation.

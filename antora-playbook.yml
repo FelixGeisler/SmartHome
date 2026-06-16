@@ -8,6 +8,10 @@ content:
       branches: HEAD
       start_path: docs
       edit_url: https://github.com/FelixGeisler/SmartHome/edit/{refname}/{path}
+    - url: .
+      branches: HEAD
+      start_path: docs/guide
+      edit_url: https://github.com/FelixGeisler/SmartHome/edit/{refname}/{path}
 
 ui:
   bundle:

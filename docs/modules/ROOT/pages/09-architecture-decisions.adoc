@@ -12,3 +12,4 @@ points to its successor through its status line.
 
 * xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1: Serve the SPA from the Spring Boot jar (same origin)]
 * xref:adr/0002-capability-based-device-state.adoc[ADR 2: Capability-based device state]
+* xref:adr/0003-device-integration-model.adoc[ADR 3: Device integration model]
