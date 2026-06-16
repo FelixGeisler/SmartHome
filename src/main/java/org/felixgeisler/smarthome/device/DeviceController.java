@@ -61,7 +61,11 @@ public class DeviceController {
       @Valid @RequestBody DeviceRegistrationRequest request, UriComponentsBuilder uriBuilder) {
     Device device =
         service.register(
-            request.externalId(), request.name(), request.type(), request.adapterType());
+            request.externalId(),
+            request.name(),
+            request.type(),
+            request.adapterType(),
+            request.sensors());
     URI location = uriBuilder.path("/api/devices/{id}").buildAndExpand(device.getId()).toUri();
     return ResponseEntity.created(location).body(DeviceResponse.from(device));
   }

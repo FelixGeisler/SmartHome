@@ -4,7 +4,7 @@
   "private": true,
   "description": "SmartHome architecture documentation (arc42) built with Antora.",
   "scripts": {
-    "dev": "concurrently -k -n spring,vite -c green,cyan \"./mvnw spring-boot:run -Dskip.frontend=true\" \"npm --prefix frontend run dev\"",
+    "dev": "concurrently -k -n spring,vite -c green,cyan \"node scripts/mvnw.mjs spring-boot:run -Dskip.frontend=true\" \"npm --prefix frontend run dev\"",
     "docs:build": "antora --fetch --clean antora-playbook.yml"
   },
   "devDependencies": {
