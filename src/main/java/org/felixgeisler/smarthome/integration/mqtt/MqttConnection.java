@@ -78,7 +78,7 @@ public class MqttConnection {
   private MqttConnectOptions connectOptions() {
     MqttConnectOptions options = new MqttConnectOptions();
     options.setAutomaticReconnect(true);
-    options.setCleanSession(true);
+    options.setCleanSession(false);
     if (properties.username() != null && !properties.username().isBlank()) {
       options.setUserName(properties.username());
       options.setPassword(
