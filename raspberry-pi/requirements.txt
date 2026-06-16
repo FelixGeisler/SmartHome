@@ -1,0 +1,7 @@
+paho-mqtt>=2.0
+RPi.bme280>=0.2.4
+smbus2>=0.4.0
+
+# CO2 sensor (SCD40/SCD41) — only needed when ENABLE_CO2=true.
+adafruit-circuitpython-scd4x>=1.4.0
+adafruit-blinka>=8.0.0
