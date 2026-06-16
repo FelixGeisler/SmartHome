@@ -21,6 +21,7 @@ const lamp: Device = {
   capabilities: ['SWITCHABLE'],
   adapterType: 'shelly',
   state: {},
+  sensors: [],
 }
 
 const heater: Device = {
@@ -53,22 +54,33 @@ describe('App', () => {
     expect(await screen.findByText('No devices registered yet.')).toBeInTheDocument()
   })
 
-  it('renders a read-only card for a device without the switchable capability', async () => {
-    const sensor: Device = {
+  it('renders a sensor readings card for a sensing device', async () => {
+    const sensorNode: Device = {
       ...lamp,
       id: 3,
-      externalId: 'sensor-1',
+      externalId: 'node-1',
       name: 'Outdoor Sensor',
-      capabilities: [],
-      state: { temperature: '21.5' },
+      type: 'SENSOR_NODE',
+      capabilities: ['SENSING'],
+      adapterType: null,
+      state: {},
+      sensors: [
+        {
+          key: 'temperature',
+          type: 'TEMPERATURE',
+          unit: '°C',
+          value: '21.5',
+          updatedAt: '2026-06-15T12:00:00Z',
+        },
+      ],
     }
-    vi.mocked(listDevices).mockResolvedValue([sensor])
+    vi.mocked(listDevices).mockResolvedValue([sensorNode])
 
     render(<App />)
 
     expect(await screen.findByText('Outdoor Sensor')).toBeInTheDocument()
     expect(screen.getByText('temperature')).toBeInTheDocument()
-    expect(screen.getByText('21.5')).toBeInTheDocument()
+    expect(screen.getByText('21.5 °C')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^turn /i })).not.toBeInTheDocument()
   })
 
@@ -157,6 +169,40 @@ describe('App', () => {
     expect(await screen.findByText('Heater')).toBeInTheDocument()
     expect(screen.getByLabelText('Name')).toHaveValue('')
     expect(screen.getByLabelText('Host')).toHaveValue('')
+  })
+
+  it('registers a sensor node with its declared sensors', async () => {
+    vi.mocked(listDevices).mockResolvedValue([])
+    const sensorNode: Device = {
+      ...lamp,
+      id: 4,
+      externalId: 'living-room',
+      name: 'Climate',
+      type: 'SENSOR_NODE',
+      capabilities: ['SENSING'],
+      adapterType: null,
+      state: {},
+      sensors: [{ key: 'temperature', type: 'TEMPERATURE', unit: '°C', value: null, updatedAt: null }],
+    }
+    vi.mocked(registerDevice).mockResolvedValue(sensorNode)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.selectOptions(
+      await screen.findByLabelText('Kind'),
+      screen.getByRole('option', { name: 'Sensor Node (MQTT)' }),
+    )
+    await user.type(screen.getByLabelText('Name'), 'Climate')
+    await user.type(screen.getByLabelText('Node ID'), 'living-room')
+    await user.click(screen.getByRole('button', { name: 'Add device' }))
+
+    expect(registerDevice).toHaveBeenCalledWith({
+      externalId: 'living-room',
+      name: 'Climate',
+      type: 'SENSOR_NODE',
+      sensors: [{ key: 'temperature', type: 'TEMPERATURE', unit: '°C' }],
+    })
+    expect(await screen.findByText('Climate')).toBeInTheDocument()
   })
 
   it('shows the API error when registration fails', async () => {

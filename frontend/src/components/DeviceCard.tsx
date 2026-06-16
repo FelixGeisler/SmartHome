@@ -1,5 +1,5 @@
-import type { Device } from '../api/devices'
-import { isOn, isSwitchable } from '../api/devices'
+import type { Device, Sensor } from '../api/devices'
+import { isOn, isSensing, isSwitchable } from '../api/devices'
 
 interface DeviceCardProps {
   device: Device
@@ -19,7 +19,7 @@ export function DeviceCard({ device, busy, onToggle }: DeviceCardProps) {
           {formatType(device.type)} &middot; {device.externalId}
         </span>
       </div>
-      {isSwitchable(device) ? (
+      {isSwitchable(device) && (
         <div className="device-card__state">
           <span className="device-card__status">
             <span className="device-card__dot" aria-hidden="true" />
@@ -35,18 +35,24 @@ export function DeviceCard({ device, busy, onToggle }: DeviceCardProps) {
             {on ? 'Turn off' : 'Turn on'}
           </button>
         </div>
-      ) : (
+      )}
+      {isSensing(device) && (
         <dl className="device-card__readings">
-          {Object.entries(device.state).map(([key, value]) => (
-            <div className="device-card__reading" key={key}>
-              <dt>{key}</dt>
-              <dd>{value}</dd>
+          {device.sensors.map((sensor) => (
+            <div className="device-card__reading" key={sensor.key}>
+              <dt>{sensor.key}</dt>
+              <dd>{formatReading(sensor)}</dd>
             </div>
           ))}
         </dl>
       )}
     </li>
   )
+}
+
+/** Renders a reading as value plus unit, or an em dash before the first reading arrives. */
+function formatReading(sensor: Sensor): string {
+  return sensor.value === null ? '—' : `${sensor.value} ${sensor.unit}`
 }
 
 /** Renders an enum constant like SHELLY_PLUG as "Shelly Plug". */
