@@ -95,7 +95,7 @@ class DeviceControllerTest {
   @Test
   void register_returnsCreatedDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
-    when(service.register(any(), any(), any(), any())).thenReturn(device);
+    when(service.register(any(), any(), any(), any(), any())).thenReturn(device);
 
     mvc.perform(
             post("/api/devices")
@@ -110,7 +110,7 @@ class DeviceControllerTest {
 
   @Test
   void register_returns409WhenDeviceAlreadyExists() throws Exception {
-    when(service.register(any(), any(), any(), any()))
+    when(service.register(any(), any(), any(), any(), any()))
         .thenThrow(new DeviceAlreadyExistsException("ext-1"));
 
     mvc.perform(
@@ -124,7 +124,7 @@ class DeviceControllerTest {
 
   @Test
   void register_returns422WithDetailWhenAdapterTypeUnsupported() throws Exception {
-    when(service.register(any(), any(), any(), any()))
+    when(service.register(any(), any(), any(), any(), any()))
         .thenThrow(new UnsupportedAdapterTypeException("nest"));
 
     mvc.perform(
@@ -146,5 +146,25 @@ class DeviceControllerTest {
                     "{\"externalId\":\"\",\"name\":\"Plug\","
                         + "\"type\":\"SHELLY_PLUG\",\"adapterType\":\"shelly\"}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void register_acceptsSensorDeviceWithoutAdapter() throws Exception {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("humidity", SensorType.HUMIDITY, "%");
+    when(service.register(any(), any(), any(), any(), any())).thenReturn(device);
+
+    mvc.perform(
+            post("/api/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"externalId\":\"node-1\",\"name\":\"Climate\",\"type\":\"SENSOR_NODE\","
+                        + "\"sensors\":[{\"key\":\"humidity\",\"type\":\"HUMIDITY\","
+                        + "\"unit\":\"%\"}]}"))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.capabilities[0]").value("SENSING"))
+        .andExpect(jsonPath("$.sensors[0].key").value("humidity"))
+        .andExpect(jsonPath("$.sensors[0].type").value("HUMIDITY"))
+        .andExpect(jsonPath("$.sensors[0].unit").value("%"));
   }
 }
