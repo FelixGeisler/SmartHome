@@ -13,12 +13,12 @@ package "integration" {
   [registry]
   [adapter]
 }
-database "H2" as h2
+database "Database" as db
 node "Device" as dev
 
 [frontend] --> [device] : REST (/api)
 [web] ..> [device] : maps errors
-[device] --> h2 : JPA
+[device] --> db : JPA
 [device] --> [registry] : route command
 [registry] --> port
 [adapter] ..|> port

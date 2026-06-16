@@ -1,0 +1,18 @@
+[Unit]
+Description=SmartHome BME280 MQTT sensor node
+# Start after the network is up and the local broker is running.
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust User and the paths below to match where you copied the files and your Pi's username.
+User=pi
+WorkingDirectory=/home/pi/smarthome-sensor-node
+EnvironmentFile=/home/pi/smarthome-sensor-node/sensor-node.env
+ExecStart=/home/pi/smarthome-sensor-node/.venv/bin/python sensor_node.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

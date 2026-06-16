@@ -23,5 +23,5 @@ hub --> device : on/off + state
 
 == Scope
 
-Register, list, read, and toggle devices. Supported device types are listed in the Building
-Block View.
+Register, list, read, and toggle devices; what a device can do follows from its capabilities
+(see xref:adr/0002-capability-based-device-state.adoc[ADR 2]).

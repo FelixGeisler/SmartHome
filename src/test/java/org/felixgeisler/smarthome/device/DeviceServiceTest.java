@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,6 +10,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +30,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 @ExtendWith(MockitoExtension.class)
 class DeviceServiceTest {
 
+  private static final Instant NOW = Instant.parse("2026-06-15T12:00:00Z");
+
   @Mock private DeviceRepository devices;
   @Mock private DeviceAdapterRegistry adapters;
   @Mock private DeviceAdapter adapter;
@@ -35,7 +41,7 @@ class DeviceServiceTest {
 
   @BeforeEach
   void setUp() {
-    service = new DeviceService(devices, adapters);
+    service = new DeviceService(devices, adapters, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
@@ -83,7 +89,7 @@ class DeviceServiceTest {
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
     when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    Device result = service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    Device result = service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", List.of());
 
     assertEquals("ext-1", result.getExternalId());
     assertEquals("Plug", result.getName());
@@ -97,7 +103,7 @@ class DeviceServiceTest {
 
     assertThrows(
         UnsupportedAdapterTypeException.class,
-        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "nest"));
+        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "nest", List.of()));
 
     verify(devices, never()).save(any());
   }
@@ -110,7 +116,7 @@ class DeviceServiceTest {
 
     assertThrows(
         DeviceAlreadyExistsException.class,
-        () -> service.register("ext-1", "New", DeviceType.SHELLY_PLUG, "shelly"));
+        () -> service.register("ext-1", "New", DeviceType.SHELLY_PLUG, "shelly", List.of()));
 
     verify(devices, never()).save(any());
   }
@@ -124,7 +130,7 @@ class DeviceServiceTest {
 
     assertThrows(
         DeviceAlreadyExistsException.class,
-        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly"));
+        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", List.of()));
   }
 
   @Test
@@ -153,5 +159,58 @@ class DeviceServiceTest {
 
     assertEquals(1, result.size());
     assertSame(device, result.getFirst());
+  }
+
+  @Test
+  void register_savesSensingDeviceWithDeclaredSensorsAndNoAdapter() {
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.empty());
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result =
+        service.register(
+            "node-1",
+            "Climate",
+            DeviceType.SENSOR_NODE,
+            null,
+            List.of(new SensorSpec("temperature", SensorType.TEMPERATURE, "°C")));
+
+    assertNull(result.getAdapterType());
+    assertEquals(1, result.getSensors().size());
+    assertEquals("temperature", result.getSensors().getFirst().getKey());
+  }
+
+  @Test
+  void recordReading_updatesMatchingSensorWithTimestamp() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("node-1", "temperature", "21.5");
+
+    Sensor sensor = device.getSensors().getFirst();
+    assertEquals("21.5", sensor.getValue());
+    assertEquals(NOW, sensor.getUpdatedAt());
+    verify(devices).save(device);
+  }
+
+  @Test
+  void recordReading_dropsReadingForUnknownDevice() {
+    when(devices.findByExternalId("ghost")).thenReturn(Optional.empty());
+
+    service.recordReading("ghost", "temperature", "21.5");
+
+    verify(devices, never()).save(any());
+  }
+
+  @Test
+  void recordReading_dropsReadingForUndeclaredSensor() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+
+    service.recordReading("node-1", "humidity", "40");
+
+    verify(devices, never()).save(any());
   }
 }

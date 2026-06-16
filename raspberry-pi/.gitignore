@@ -1,0 +1,7 @@
+# Local config that may hold the broker password — never commit it.
+sensor-node.env
+
+# Python virtual environment and bytecode caches.
+.venv/
+__pycache__/
+*.pyc

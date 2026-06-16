@@ -1,0 +1,26 @@
+= Getting started
+
+== Run the hub
+
+Build the single jar (it bundles the dashboard) and run it:
+
+[source,bash]
+----
+./mvnw clean package
+java -jar target/smarthome-*.jar
+----
+
+Then open the dashboard at http://localhost:8080.
+
+== Develop with live reload
+
+To iterate on the frontend, run the hub and the Vite dev server together:
+
+[source,bash]
+----
+npm run dev
+----
+
+Vite serves the dashboard (default http://localhost:5173) and proxies API calls to the hub.
+
+Next: xref:adding-devices.adoc[add a device].

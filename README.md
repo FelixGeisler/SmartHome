@@ -6,7 +6,7 @@ served from the same jar.
 ## Tech Stack
 
 - **Java 26**
-- **Spring Boot 4.0.6**
+- **Spring Boot 4**
 - **Maven**
 - **Vite + React + TypeScript** (`frontend/` — see its [README](frontend/README.md))
 
@@ -25,7 +25,7 @@ Starts the backend (port 8080) and the Vite dev server together; open
 
 ```sh
 ./mvnw clean verify
-java -jar target/smarthome-0.0.1-SNAPSHOT.jar
+java -jar target/smarthome-*.jar
 ```
 
 UI and API together on <http://localhost:8080>, exactly as deployed.

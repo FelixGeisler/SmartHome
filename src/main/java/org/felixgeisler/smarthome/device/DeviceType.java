@@ -2,11 +2,14 @@ package org.felixgeisler.smarthome.device;
 
 import java.util.Set;
 
-/** Categories of device the hub can control, each declaring what its devices can do. */
+/** Categories of a device the hub can control, each declaring what its devices can do. */
 public enum DeviceType {
 
-  /** A switchable power plug (e.g. a Shelly Plug). */
-  SHELLY_PLUG(Set.of(Capability.SWITCHABLE));
+  /** A switchable power plug (e.g., a Shelly Plug). */
+  SHELLY_PLUG(Set.of(Capability.SWITCHABLE)),
+
+  /** A node that reports readings from one or more sensors (e.g., over MQTT). */
+  SENSOR_NODE(Set.of(Capability.SENSING));
 
   private final Set<Capability> capabilities;
 

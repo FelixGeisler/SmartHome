@@ -1,5 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,8 +13,9 @@ import java.util.Set;
  * @param name human-readable device name
  * @param type the device category
  * @param capabilities what the device can do; clients pick controls per capability
- * @param adapterType identifier of the adapter that handles this device
+ * @param adapterType identifier of the command adapter, or null for a sensing device
  * @param state the last known runtime state as key/value entries (e.g. {@code on="true"})
+ * @param sensors the device's sensors and their latest readings; empty for non-sensing devices
  */
 public record DeviceResponse(
     Long id,
@@ -21,12 +24,36 @@ public record DeviceResponse(
     DeviceType type,
     Set<Capability> capabilities,
     String adapterType,
-    Map<String, String> state) {
+    Map<String, String> state,
+    List<SensorResponse> sensors) {
 
   /** Canonical constructor that defensively copies the mutable collections. */
   public DeviceResponse {
     capabilities = Set.copyOf(capabilities);
     state = Map.copyOf(state);
+    sensors = List.copyOf(sensors);
+  }
+
+  /**
+   * A device's sensor in the REST contract.
+   *
+   * @param key the sensor's key within its device
+   * @param type what the sensor measures
+   * @param unit the unit its readings are expressed in
+   * @param value the latest reading, or null before the first arrives
+   * @param updatedAt when the latest reading arrived, or null before the first
+   */
+  public record SensorResponse(
+      String key, SensorType type, String unit, String value, Instant updatedAt) {
+
+    static SensorResponse from(Sensor sensor) {
+      return new SensorResponse(
+          sensor.getKey(),
+          sensor.getType(),
+          sensor.getUnit(),
+          sensor.getValue(),
+          sensor.getUpdatedAt());
+    }
   }
 
   /**
@@ -43,6 +70,7 @@ public record DeviceResponse(
         device.getType(),
         device.getType().getCapabilities(),
         device.getAdapterType(),
-        device.getState());
+        device.getState(),
+        device.getSensors().stream().map(SensorResponse::from).toList());
   }
 }
