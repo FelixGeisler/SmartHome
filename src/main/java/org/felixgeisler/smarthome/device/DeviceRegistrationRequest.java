@@ -26,4 +26,10 @@ public record DeviceRegistrationRequest(
   public DeviceRegistrationRequest {
     sensors = sensors == null ? List.of() : List.copyOf(sensors);
   }
-}
+
+  @jakarta.validation.constraints.AssertTrue(
+      message = "adapterType is required for switchable devices")
+  boolean isAdapterTypeValid() {
+    return !type.hasCapability(Capability.SWITCHABLE)
+        || (adapterType != null && !adapterType.isBlank());
+  }
