@@ -39,8 +39,12 @@ const SENSOR_PRESETS: SensorSpec[] = [
   { type: 'CO2', key: 'co2', unit: 'ppm' },
 ]
 
-function defaultSensor(): SensorSpec {
-  return { ...SENSOR_PRESETS[0] }
+// A stable per-row id so React keys survive add/remove. UI-only; never sent to the API.
+type SensorRow = SensorSpec & { id: string }
+let nextSensorId = 0
+
+function defaultSensor(): SensorRow {
+  return { id: `sensor-${nextSensorId++}`, ...SENSOR_PRESETS[0] }
 }
 
 interface AddDeviceFormProps {
@@ -52,7 +56,7 @@ export function AddDeviceForm({ onRegistered }: AddDeviceFormProps) {
   const [name, setName] = useState('')
   const [externalId, setExternalId] = useState('')
   const [kindIndex, setKindIndex] = useState(0)
-  const [sensors, setSensors] = useState<SensorSpec[]>([defaultSensor()])
+  const [sensors, setSensors] = useState<SensorRow[]>([defaultSensor()])
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,7 +64,9 @@ export function AddDeviceForm({ onRegistered }: AddDeviceFormProps) {
 
   function changeSensorType(index: number, type: string) {
     const preset = SENSOR_PRESETS.find((entry) => entry.type === type) ?? SENSOR_PRESETS[0]
-    setSensors((current) => current.map((sensor, i) => (i === index ? { ...preset } : sensor)))
+    setSensors((current) =>
+      current.map((sensor, i) => (i === index ? { ...preset, id: sensor.id } : sensor)),
+    )
   }
 
   function updateSensor(index: number, field: 'key' | 'unit', value: string) {
@@ -158,7 +164,7 @@ export function AddDeviceForm({ onRegistered }: AddDeviceFormProps) {
         <fieldset className="add-device__sensors" disabled={pending}>
           <legend>Sensors</legend>
           {sensors.map((sensor, index) => (
-            <div className="add-device__sensor" key={index}>
+            <div className="add-device__sensor" key={sensor.id}>
               <label className="add-device__field">
                 Sensor type
                 <select

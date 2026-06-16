@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -20,16 +21,26 @@ public record DeviceRegistrationRequest(
     @NotBlank String name,
     @NotNull DeviceType type,
     String adapterType,
-    @Valid List<SensorSpec> sensors) {
+    List<@Valid @NotNull SensorSpec> sensors) {
 
-  /** Defensively copies the sensor list, treating an omitted list as empty. */
+  /** Defensively copies the sensor list; {@code List.copyOf} also rejects null entries. */
   public DeviceRegistrationRequest {
     sensors = sensors == null ? List.of() : List.copyOf(sensors);
   }
 
-  @jakarta.validation.constraints.AssertTrue(
-      message = "adapterType is required for switchable devices")
+  /**
+   * Requires a non-blank adapter type for a command device (one that is
+   * {@link Capability#SWITCHABLE}); a sensing device has none. Surfaces a missing adapter as a 400
+   * instead of a misleading "unsupported adapter type" 422.
+   *
+   * @return true if the adapter type is consistent with the device's capabilities
+   */
+  // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
+  @SuppressWarnings("unused")
+  @AssertTrue(message = "adapterType is required for a command device")
   boolean isAdapterTypeValid() {
-    return !type.hasCapability(Capability.SWITCHABLE)
+    return type == null
+        || !type.hasCapability(Capability.SWITCHABLE)
         || (adapterType != null && !adapterType.isBlank());
   }
+}

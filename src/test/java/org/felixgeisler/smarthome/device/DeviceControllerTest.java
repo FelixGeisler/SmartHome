@@ -167,4 +167,24 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.sensors[0].type").value("HUMIDITY"))
         .andExpect(jsonPath("$.sensors[0].unit").value("%"));
   }
+
+  @Test
+  void register_returns400WhenCommandDeviceHasNoAdapterType() throws Exception {
+    mvc.perform(
+            post("/api/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"externalId\":\"ext-1\",\"name\":\"Plug\",\"type\":\"SHELLY_PLUG\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void register_returns400WhenSensorElementIsNull() throws Exception {
+    mvc.perform(
+            post("/api/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"externalId\":\"node-1\",\"name\":\"Climate\","
+                        + "\"type\":\"SENSOR_NODE\",\"sensors\":[null]}"))
+        .andExpect(status().isBadRequest());
+  }
 }
