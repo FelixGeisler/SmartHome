@@ -1,5 +1,6 @@
 package org.felixgeisler.smarthome.device;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,16 +13,22 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * A smart-home device known to the hub.
  *
- * <p>Each device is reached through the {@code DeviceAdapter} named by {@link #getAdapterType()},
- * using {@link #getExternalId()} as its address within that integration.
+ * <p>A command device is reached through the {@code DeviceAdapter} named by
+ * {@link #getAdapterType()}, using {@link #getExternalId()} as its address within that integration.
+ * A sensing device has no command adapter; it owns {@link #getSensors() sensors} whose readings
+ * arrive as inbound telemetry.
  */
 @Entity
 @Table(name = "devices")
@@ -41,7 +48,8 @@ public class Device {
   @Column(nullable = false)
   private DeviceType type;
 
-  @Column(nullable = false)
+  // Null for sensing devices: their integration is inbound telemetry, not a command adapter.
+  @Column
   private String adapterType;
 
   // The last known runtime state as key/value entries (e.g. on="true"), interpreted per
@@ -52,6 +60,12 @@ public class Device {
   @MapKeyColumn(name = "state_key")
   @Column(name = "state_value", nullable = false)
   private Map<String, String> state = new HashMap<>();
+
+  // Declared sensors and their latest readings; empty for non-sensing devices. Eagerly fetched
+  // for the same reason as the state map: the response view is built after the session closes.
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+  @JoinColumn(name = "device_id")
+  private List<Sensor> sensors = new ArrayList<>();
 
   /** Required by JPA. */
   protected Device() {
@@ -64,7 +78,8 @@ public class Device {
    * @param externalId the device's address within its integration
    * @param name human-readable device name
    * @param type the device category
-   * @param adapterType identifier of the adapter that handles this device
+   * @param adapterType identifier of the command adapter that handles this device, or null for a
+   *     sensing device with no command adapter
    */
   public Device(String externalId, String name, DeviceType type, String adapterType) {
     this.externalId = externalId;
@@ -110,5 +125,43 @@ public class Device {
    */
   public void putState(String key, String value) {
     state.put(key, value);
+  }
+
+  /**
+   * Returns the device's declared sensors and their latest readings.
+   *
+   * @return the sensors (read-only view)
+   */
+  public List<Sensor> getSensors() {
+    return Collections.unmodifiableList(sensors);
+  }
+
+  /**
+   * Declares a sensor on this device.
+   *
+   * @param key the sensor's key within this device (e.g. {@code "temperature"})
+   * @param type what the sensor measures
+   * @param unit the unit its readings are expressed in (e.g. {@code "°C"})
+   */
+  public void addSensor(String key, SensorType type, String unit) {
+    sensors.add(new Sensor(key, type, unit));
+  }
+
+  /**
+   * Records a reading against the matching declared sensor, if any.
+   *
+   * @param sensorKey the key of the sensor the reading is for
+   * @param value the reading value
+   * @param at when the reading was taken
+   * @return true if a declared sensor matched and was updated; false otherwise
+   */
+  public boolean recordReading(String sensorKey, String value, Instant at) {
+    for (Sensor sensor : sensors) {
+      if (sensor.getKey().equals(sensorKey)) {
+        sensor.record(value, at);
+        return true;
+      }
+    }
+    return false;
   }
 }

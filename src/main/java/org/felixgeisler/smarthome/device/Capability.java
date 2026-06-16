@@ -9,5 +9,8 @@ package org.felixgeisler.smarthome.device;
 public enum Capability {
 
   /** The device can be switched on and off; its state carries an {@code on} entry. */
-  SWITCHABLE
+  SWITCHABLE,
+
+  /** The device reports readings through one or more sensors. */
+  SENSING
 }
