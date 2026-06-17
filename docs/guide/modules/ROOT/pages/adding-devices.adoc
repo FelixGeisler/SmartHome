@@ -1,31 +1,46 @@
 = Adding devices
 
-A device is registered once, then controlled according to its capabilities: a switchable device
-gets an on/off toggle, a sensing device shows its latest readings.
+A device is registered once; from then on the dashboard presents the controls and readings its
+capabilities call for.
 
-== From the dashboard
+A device reaches the hub one of two ways:
 
-Use *Add device* and pick a kind:
+* *Through a bridge*: A broker or hub fronts many devices over one connection;
+  you connect the hub to the bridge once, and it brings in the devices behind it.
+* *Directly*: The device exposes its own network API, so the hub talks to it with directly.
 
-* *Shelly Plug* — a switchable device reached over HTTP. Enter its host.
-* *Sensor Node* — a device that reports readings. Enter its node id and declare its sensors
+== Devices behind a bridge
+
+Connect the hub to the bridge once; how its devices appear then depends on what the bridge can do.
+
+[#hue-lights]
+=== A Hue bridge
+
+The bridge reports its own lights, so you pick them rather than entering each by hand.
+
+. Use *Pair a Hue bridge* and enter the bridge's host (its IP address or hostname).
+. Press the round link button on the bridge, then start pairing — the bridge only hands out an
+  access key for a few seconds after the button is pressed.
+. Once paired, the hub lists the bridge's lights. Select the ones to add; each becomes a
+  switchable device with an on/off toggle.
+
+The access key the bridge returns is connection state, never committed to source.
+
+=== An MQTT broker
+
+A broker can't list what publishes through it, so you declare each sensor node yourself.
+
+. Use *Add device* → *Sensor Node*, enter its node id, and declare the sensors it reports
   (key, type, unit).
+. Its readings then flow in over the broker. See xref:mqtt-sensors.adoc[MQTT sensors] for the
+  broker setup and topic conventions.
+
+== Direct devices
+
+A Shelly Plug is reached straight over HTTP, with no bridge. Use *Add device* → *Shelly Plug* and
+enter its host.
 
 == From the API
 
-[source,bash]
-----
-# A switchable plug
-curl -X POST http://<hub-host>:8080/api/devices \
-  -H 'Content-Type: application/json' \
-  -d '{"externalId":"192.168.1.50","name":"Desk Lamp",
-       "type":"SHELLY_PLUG","adapterType":"shelly"}'
-
-# A sensor node, declaring the sensors it reports
-curl -X POST http://<hub-host>:8080/api/devices \
-  -H 'Content-Type: application/json' \
-  -d '{"externalId":"living-room","name":"Living Room Climate","type":"SENSOR_NODE",
-       "sensors":[{"key":"temperature","type":"TEMPERATURE","unit":"°C"}]}'
-----
-
-A sensor node reports its readings over MQTT — see xref:mqtt-sensors.adoc[MQTT sensors].
+Every registration the dashboard performs is also a plain REST call. The exact request shapes are documented live and always in sync at the hub's
+API reference, `/swagger-ui.html` (see xref:getting-started.adoc[Getting started]).

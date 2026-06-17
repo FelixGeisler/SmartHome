@@ -1,5 +1,5 @@
 site:
-  title: SmartHome Architecture
+  title: SmartHome Docs
   start_page: smarthome::01-introduction-and-goals.adoc
 
 content:
