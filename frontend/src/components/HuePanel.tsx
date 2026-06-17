@@ -22,6 +22,11 @@ export function HuePanel({ onRegistered }: HuePanelProps) {
     setBusy(true)
     setError(null)
     setStatus(null)
+    // Start each attempt from a clean slate: a failed re-pair must not leave a stale
+    // paired flag or the previous bridge's lights on screen.
+    setPaired(false)
+    setLights([])
+    setSelected(new Set())
     try {
       const result = await pairBridge(host.trim())
       if (!result.paired) {

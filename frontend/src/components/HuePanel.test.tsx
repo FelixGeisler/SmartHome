@@ -77,4 +77,32 @@ describe('HuePanel', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('The Hue bridge is unreachable')
   })
+
+  it('clears the previous bridge lights when a re-pair attempt fails', async () => {
+    vi.mocked(pairBridge)
+      .mockResolvedValueOnce({ paired: true, message: 'paired' })
+      .mockResolvedValueOnce({
+        paired: false,
+        message: 'Press the bridge link button, then try again.',
+      })
+    vi.mocked(discoverLights).mockResolvedValue([{ id: '1', name: 'Living Room Lamp', on: false }])
+    const user = userEvent.setup()
+    render(<HuePanel onRegistered={vi.fn()} />)
+
+    // First attempt pairs and discovers a light.
+    await user.type(screen.getByLabelText('Bridge host'), '192.168.1.10')
+    await user.click(screen.getByRole('button', { name: /pair/i }))
+    expect(await screen.findByLabelText('Living Room Lamp')).toBeInTheDocument()
+
+    // Re-pair without pressing the link button: no stale light or paired state may remain.
+    await user.click(screen.getByRole('button', { name: 'Re-pair' }))
+
+    expect(
+      await screen.findByText('Press the bridge link button, then try again.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText('Living Room Lamp')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Press the link button, then pair' }),
+    ).toBeInTheDocument()
+  })
 })
