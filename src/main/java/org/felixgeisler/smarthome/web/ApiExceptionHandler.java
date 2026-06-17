@@ -5,6 +5,7 @@ import org.felixgeisler.smarthome.device.DeviceNotFoundException;
 import org.felixgeisler.smarthome.device.UnsupportedAdapterTypeException;
 import org.felixgeisler.smarthome.device.UnsupportedCapabilityException;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
+import org.felixgeisler.smarthome.integration.hue.HueBridgeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -48,5 +49,11 @@ public class ApiExceptionHandler {
     String reason = ex.getMessage();
     log.error("No adapter registered for a device toggle: {}", reason);
     return ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(HueBridgeException.class)
+  ProblemDetail handleHueBridge(HueBridgeException ex) {
+    // Client-actionable: the hub could not reach or use the Hue bridge (unreachable, not paired).
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
   }
 }
