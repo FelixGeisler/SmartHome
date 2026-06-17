@@ -7,7 +7,7 @@ A device reaches the hub one of two ways:
 
 * *Through a bridge*: A broker or hub fronts many devices over one connection;
   you connect the hub to the bridge once, and it brings in the devices behind it.
-* *Directly*: The device exposes its own network API, so the hub talks to it with directly.
+* *Directly*: The device exposes its own network API, so the hub talks to it directly.
 
 == Devices behind a bridge
 
