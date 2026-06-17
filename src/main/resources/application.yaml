@@ -14,3 +14,9 @@ smarthome:
     topic-filter: home/+/+
     # username: ${SMARTHOME_MQTT_USERNAME}
     # password: ${SMARTHOME_MQTT_PASSWORD}
+  hue:
+    # Pair a bridge at runtime via POST /api/integrations/hue/pair (press the bridge link button
+    # first). The app key obtained by pairing is held for the run; to keep it across restarts set
+    # it here or via the environment — never commit a real key.
+    # bridge-host: 192.168.1.10
+    # app-key: ${SMARTHOME_HUE_APP_KEY}

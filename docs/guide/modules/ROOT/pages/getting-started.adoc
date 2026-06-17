@@ -12,6 +12,10 @@ java -jar target/smarthome-*.jar
 
 Then open the dashboard at http://localhost:8080.
 
+The hub also serves a live, interactive API reference (generated from the code) at
+http://localhost:8080/swagger-ui.html, with the raw OpenAPI document at
+http://localhost:8080/v3/api-docs.
+
 == Develop with live reload
 
 To iterate on the frontend, run the hub and the Vite dev server together:

@@ -23,6 +23,7 @@
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.1</wiremock.version>
         <paho.version>1.2.5</paho.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
         <!-- Node toolchain the frontend build installs for itself (active LTS). -->
         <node.version>v24.13.0</node.version>
@@ -46,6 +47,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- springdoc-openapi: reflects the controllers into an OpenAPI 3 spec (/v3/api-docs) and
+             serves Swagger UI (/swagger-ui.html). The 3.x line targets Spring Boot 4. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <!-- Eclipse Paho MQTT client: the hub subscribes to a broker for inbound sensor telemetry. -->
@@ -376,6 +385,8 @@
                     <effort>Default</effort>
                     <threshold>Medium</threshold>
                     <maxHeap>768</maxHeap>
+                    <!-- Injected Spring singletons stored as fields: DI, not exposed state. -->
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
                 </configuration>
                 <executions>
                     <execution>
