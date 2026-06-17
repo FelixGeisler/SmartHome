@@ -91,7 +91,7 @@ export function toggleDevice(id: number): Promise<Device> {
   return request<Device>(`/api/devices/${id}/toggle`, { method: 'POST' })
 }
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init)
   if (!response.ok) {
     throw new Error(await errorMessage(response))

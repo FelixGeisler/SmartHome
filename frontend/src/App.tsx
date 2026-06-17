@@ -3,6 +3,7 @@ import type { Device } from './api/devices'
 import { listDevices, toggleDevice } from './api/devices'
 import { AddDeviceForm } from './components/AddDeviceForm'
 import { DeviceCard } from './components/DeviceCard'
+import { HuePanel } from './components/HuePanel'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -101,6 +102,12 @@ function App() {
 
       {loadState === 'ready' && (
         <AddDeviceForm
+          onRegistered={(registered) => setDevices((current) => [...current, registered])}
+        />
+      )}
+
+      {loadState === 'ready' && (
+        <HuePanel
           onRegistered={(registered) => setDevices((current) => [...current, registered])}
         />
       )}
