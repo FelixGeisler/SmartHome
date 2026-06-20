@@ -1,23 +1,13 @@
-= ADR 1: Serve the SPA from the Spring Boot jar (same origin)
+= ADR 1: Serve the SPA from the Spring Boot jar
 
 == Status
-
 Accepted
 
 == Context
-
-The device dashboard is a Vite + React SPA that calls the REST API from the browser. It's
-the only consumer of that API. A separate origin (with CORS) or a reverse proxy would buy independent deploys and scaling we don't
-need; serving from the jar avoids CORS and keeps the UI and API on one version.
+The dashboard is an SPA and the only client of the REST API. A separate origin or reverse proxy would add CORS and independently deploys we don't need.
 
 == Decision
-
-The Maven build compiles the SPA (`frontend-maven-plugin`) into the jar under
-`classpath:/static`; Spring Boot serves it at `/`, with unmatched non-`/api` routes
-falling back to `index.html`. In development, Vite proxies `/api` to Spring.
+The Maven build compiles the SPA into the jar under classpath:/static. Spring serves it at /, with non-/api routes falling back to index.html. In development, the Vite dev server proxies /api to Spring.
 
 == Consequences
-
-One artifact, no CORS, one `./mvnw clean verify` gate, and the UI and API can't drift out
-of version. The cost: a frontend-only change redeploys the whole jar, assets aren't
-CDN-cached, and the build fetches Node on a cold cache (skip with `-Dskip.frontend=true`).
+One artifact, no CORS, UI and API are always on one version. Cost: a frontend-only change rebuilds the whole jar, and the build fetches Node on a cold cache (skip with -Dskip.frontend=true).

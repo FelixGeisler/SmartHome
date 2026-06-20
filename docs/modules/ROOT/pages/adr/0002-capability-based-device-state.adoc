@@ -1,31 +1,13 @@
 = ADR 2: Capability-based device state
 
 == Status
-
 Accepted
 
 == Context
-
-A device hub serves heterogeneous devices: some are switchable, some only report readings
-such as temperature or humidity, and others differ again. Modeling every device as a
-switchable plug (a boolean `on` flag, a toggle-only command path, toggle-card UI) cannot
-represent a device with no on/off notion. It turns every new device kind into a
-structural change across the schema, the commands, and the UI.
+Devices vary: some switch, some dim or change color, some only report readings. Deriving behavior from a fixed device category can't tell two same-category devices with different abilities apart and makes every new behavior a schema change.
 
 == Decision
-
-A `DeviceType` declares the set of capabilities it supports, such as `SWITCHABLE`. A
-device's runtime state is a key/value snapshot in a `device_state` table rather than a
-typed column per behavior. Capability gates commands: a toggle requires
-`SWITCHABLE`, and a device without it gets a 422 problem response. The REST contract
-exposes `capabilities` and `state`, and the dashboard chooses controls per capability,
-rendering a toggle card for a switchable device and a read-only readings list otherwise.
+A device declares a set of capabilities — on/off, brightness, color, color temperature — each a typed contract that owns the neutral attributes it reports and the commands it accepts. Capabilities compose. They aren't inherited from a category. The set is detected at discovery and stored on the device. A command using a capability the device doesn't have is rejected. Category is used only for grouping and icons, never to gate commands. Sensor readings aren't capabilities. They're separate measurement channels.
 
 == Consequences
-
-Adding a device kind is additive: it declares its capabilities instead of inheriting a
-fixed device shape, so a read-only sensor is one new enum constant and a card variant.
-State values are untyped strings interpreted per capability (`on == "true"`), which the
-database cannot validate, and the link between a device's state keys and its declared
-capabilities is enforced only in code. Typing is per capability, so one capability can
-adopt a richer representation without affecting the others.
+Adding a device kind means listing its capabilities. Adding a behavior means one capability plus its contract. The capability set is the source of truth for the command gate, the adapter, and the dashboard's controls. State is stored as strings. The contract, not the database, enforces shape.
