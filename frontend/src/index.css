@@ -50,25 +50,57 @@ body {
   min-height: 100svh;
 }
 
-.dashboard {
+.app {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 24px 24px 64px;
 }
 
-.dashboard__header {
+.app__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-.dashboard__header h1 {
+.app__brand h1 {
   font-size: 28px;
   letter-spacing: -0.5px;
   margin: 0;
 }
 
-.dashboard__header p {
-  margin: 4px 0 0;
+.app__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.app__nav-link {
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-muted);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.app__nav-link:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.app__nav-link--active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.configuration {
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard__hint {

@@ -157,6 +157,9 @@
                              which is unit-tested. -->
                         <exclude>org/felixgeisler/smarthome/integration/mqtt/MqttConnection.class</exclude>
                         <exclude>org/felixgeisler/smarthome/integration/mqtt/MqttProperties.class</exclude>
+                        <!-- SPA static-resource wiring and its index.html fallback: exercised only
+                             against the built frontend in the running app, verified there. -->
+                        <exclude>org/felixgeisler/smarthome/web/SpaResourceConfig*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
