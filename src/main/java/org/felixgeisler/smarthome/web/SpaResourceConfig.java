@@ -39,9 +39,11 @@ public class SpaResourceConfig implements WebMvcConfigurer {
     @Override
     protected @Nullable Resource getResource(String resourcePath, Resource location)
         throws IOException {
-      Resource requested = location.createRelative(resourcePath);
-      if (requested.exists() && requested.isReadable()) {
-        return requested;
+      // Delegate to the superclass so its path-traversal / under-location checks run; it returns
+      // null when no safe resource matches (missing file, or an attempted escape outside /static).
+      Resource resolved = super.getResource(resourcePath, location);
+      if (resolved != null) {
+        return resolved;
       }
       // Never mask the API or its docs with the SPA shell; let them resolve or 404 on their own.
       if (resourcePath.startsWith("api/")

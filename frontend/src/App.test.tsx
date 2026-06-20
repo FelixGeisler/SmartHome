@@ -102,4 +102,47 @@ describe('App', () => {
 
     expect(await screen.findByText('Desk Lamp')).toBeInTheDocument()
   })
+
+  it('updates only the toggled device in a multi-device list', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp, heater])
+    vi.mocked(toggleDevice).mockResolvedValue({ ...lamp, state: { on: 'true' } })
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
+
+    expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Turn Heater off' })).toBeInTheDocument()
+  })
+
+  it('disables the toggle while its request is in flight', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    let resolveToggle: (device: Device) => void = () => {}
+    vi.mocked(toggleDevice).mockImplementation(
+      () =>
+        new Promise<Device>((resolve) => {
+          resolveToggle = resolve
+        }),
+    )
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
+
+    expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeDisabled()
+    resolveToggle({ ...lamp, state: { on: 'true' } })
+    expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeEnabled()
+  })
+
+  it('keeps the device list usable when a toggle fails', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    vi.mocked(toggleDevice).mockRejectedValue(new Error('Device with id 1 not found'))
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Turn Desk Lamp on' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Device with id 1 not found')
+    expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeEnabled()
+  })
 })
