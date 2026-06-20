@@ -12,4 +12,6 @@ points to its successor through its status line.
 
 * xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1: Serve the SPA from the Spring Boot jar (same origin)]
 * xref:adr/0002-capability-based-device-state.adoc[ADR 2: Capability-based device state]
-* xref:adr/0003-device-integration-model.adoc[ADR 3: Device integration model]
+* xref:adr/0003-neutral-state-and-command-contracts.adoc[ADR 3: Neutral state and command contracts]
+* xref:adr/0004-device-integration-model.adoc[ADR 4: Device integration model]
+* xref:adr/0005-integrations-as-persisted-ui-configured-connections.adoc[ADR 5: Integrations as persisted, UI-configured connections]

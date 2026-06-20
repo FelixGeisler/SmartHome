@@ -1,0 +1,13 @@
+= ADR 3: Neutral state and command contracts
+
+== Status
+Accepted
+
+== Context
+For commands and state to work across ecosystems and be shared by the command gate, adapters, and dashboard, every behavior needs one neutral vocabulary with defined types, units, and ranges. Otherwise, each adapter and UI invents its own encoding.
+
+== Decision
+A fixed set of neutral attribute keys defines both state values and command arguments. Each key owns its type, unit, range, and parse/validate logic. Brightness is a percentage, color is CIE chromaticity, color temperature is absolute Kelvin. A color device is in one color mode at a time, so a command setting both color and color temperature is rejected. The active mode follows whichever was set last. Setting brightness on a device that is off turns it on, and brightness zero is not the off state (turning off is a separate command). Declared ranges are a sanity bound, and a device's real limits are applied inside its adapter.
+
+== Consequences
+Shape and validity are enforced once, in the contract. A scene written in neutral keys replays on any ecosystem. Cost: every adapter translates neutral to native and back, and a device feature with no neutral key stays invisible until the vocabulary grows.

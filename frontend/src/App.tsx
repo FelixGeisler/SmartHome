@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { Device } from './api/devices'
 import { listDevices, toggleDevice } from './api/devices'
-import { AddDeviceForm } from './components/AddDeviceForm'
-import { DeviceCard } from './components/DeviceCard'
-import { HuePanel } from './components/HuePanel'
+import { ConfigurationPage } from './pages/ConfigurationPage'
+import { DashboardPage, type LoadState } from './pages/DashboardPage'
 
-type LoadState = 'loading' | 'ready' | 'error'
-
-/** The device dashboard: lists every registered device and lets the user toggle each one. */
+/**
+ * Application shell: loads the devices once, owns the shared device state, and routes between
+ * the Dashboard (control) and Configuration (setup) views.
+ */
 function App() {
   const [devices, setDevices] = useState<Device[]>([])
   const [loadState, setLoadState] = useState<LoadState>('loading')
@@ -62,57 +63,55 @@ function App() {
     }
   }
 
+  function handleRegistered(device: Device) {
+    setDevices((current) => [...current, device])
+  }
+
   return (
-    <main className="dashboard">
-      <header className="dashboard__header">
-        <h1>SmartHome</h1>
-        <p>Device dashboard</p>
+    <div className="app">
+      <header className="app__header">
+        <div className="app__brand">
+          <h1>SmartHome</h1>
+        </div>
+        <nav className="app__nav">
+          <NavLink to="/dashboard" className={navClass}>
+            Dashboard
+          </NavLink>
+          <NavLink to="/configuration" className={navClass}>
+            Configuration
+          </NavLink>
+        </nav>
       </header>
 
-      {error !== null && (
-        <p className="dashboard__error" role="alert">
-          {error}
-        </p>
-      )}
-
-      {loadState === 'loading' && <p className="dashboard__hint">Loading devices&hellip;</p>}
-
-      {loadState === 'error' && (
-        <button type="button" className="dashboard__retry" onClick={retry}>
-          Retry
-        </button>
-      )}
-
-      {loadState === 'ready' && devices.length === 0 && (
-        <p className="dashboard__hint">No devices registered yet.</p>
-      )}
-
-      {loadState === 'ready' && devices.length > 0 && (
-        <ul className="device-grid">
-          {devices.map((device) => (
-            <DeviceCard
-              key={device.id}
-              device={device}
-              busy={busyIds.has(device.id)}
-              onToggle={(toggled) => void handleToggle(toggled)}
-            />
-          ))}
-        </ul>
-      )}
-
-      {loadState === 'ready' && (
-        <AddDeviceForm
-          onRegistered={(registered) => setDevices((current) => [...current, registered])}
-        />
-      )}
-
-      {loadState === 'ready' && (
-        <HuePanel
-          onRegistered={(registered) => setDevices((current) => [...current, registered])}
-        />
-      )}
-    </main>
+      <main className="app__main">
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <DashboardPage
+                devices={devices}
+                loadState={loadState}
+                error={error}
+                busyIds={busyIds}
+                onToggle={(device) => void handleToggle(device)}
+                onRetry={retry}
+              />
+            }
+          />
+          <Route
+            path="/configuration"
+            element={<ConfigurationPage onRegistered={handleRegistered} />}
+          />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </main>
+    </div>
   )
+}
+
+function navClass({ isActive }: { isActive: boolean }): string {
+  return isActive ? 'app__nav-link app__nav-link--active' : 'app__nav-link'
 }
 
 function messageOf(cause: unknown): string {

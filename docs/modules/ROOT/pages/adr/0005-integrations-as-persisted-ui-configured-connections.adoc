@@ -1,0 +1,13 @@
+= ADR 5: Integrations as persisted, UI-configured connections
+
+== Status
+Accepted
+
+== Context
+The hub is a consumer product, set up entirely from the dashboard. A connection must survive restarts, be listed and removed in the UI, and show its status. Setup isn't uniform: some ecosystems need a simple form, a Hue bridge needs a physical button press while the hub polls, and OAuth ecosystems redirect the user to an external login. A single declared form only covers the first case.
+
+== Decision
+An integration is a stored connection record: which connector it uses, a user label, a stable id that identifies it (so re-adding doesn't duplicate), and a setup status. The connector drives a setup flow instead of a flat form. Each step is one of: show a form, redirect to a URL, show a message and poll, complete, or fail. The dashboard is a generic driver that reacts to the step type and hard-codes nothing ecosystem-specific. Discovery keys devices by their own stable id, not their bridge-local address, so a device survives re-pairing. The bridge-local address is kept only for commanding. Secrets are stored outside the record and never logged.
+
+== Consequences
+Connections survive restarts and are added through one generic wizard that handles forms, button-press pairing, and OAuth with the same UI. Adding an ecosystem is normally backend-only. Status reflects setup, not live reachability, so a connected integration may still be offline. Deferred: reconfiguration, data migration, runtime reachability, reload without restart.

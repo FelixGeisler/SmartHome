@@ -1,0 +1,13 @@
+= ADR 4: Device integration model
+
+== Status
+Accepted
+
+== Context
+Ecosystems differ in direction (some take commands, some only report) and topology (some per device, some behind a bridge). The core must absorb a new one without reshaping.
+
+== Decision
+Each ecosystem lives in its own integration package. Outbound commands go through a device-adapter port found via a registry. Inbound updates skip that port and write to the device directly but still pass through the contract, so they're validated. Inbound covers sensor readings, and a controllable device reporting its own state changes (a light switched from the vendor app), which keeps the dashboard correct. Everything crossing the port uses the neutral vocabulary, and vendor encodings stay inside the adapter. A connector and an adapter are two facets of one integration, bound by a shared id, so the registry can confirm at startup that every command path has a working adapter.
+
+== Consequences
+A new ecosystem plugs into the port or the inbound path without touching the core. Rules and scenes written in the neutral vocabulary work regardless of which ecosystem backs a device. Unifying the inbound and outbound directions is deferred until each has more than one example.
