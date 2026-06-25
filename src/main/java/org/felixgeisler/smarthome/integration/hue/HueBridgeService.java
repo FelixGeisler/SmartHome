@@ -110,8 +110,7 @@ public class HueBridgeService {
               .get()
               .uri(uri)
               .retrieve()
-              .body(new ParameterizedTypeReference<>() {
-              });
+              .body(new ParameterizedTypeReference<>() {});
     } catch (RestClientException ex) {
       throw new HueBridgeException("Could not list lights from the Hue bridge", ex);
     }
