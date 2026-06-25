@@ -57,10 +57,10 @@ public enum AttributeKey {
     @Override
     public Optional<String> validate(Object value) {
       if (!(value instanceof XyColor(double x, double y))) {
-        return Optional.of("colorXy must be a CIE xy color");
+        return Optional.of("must be a CIE xy color");
       }
       if (outsideUnitInterval(x) || outsideUnitInterval(y)) {
-        return Optional.of("colorXy x and y must be in 0..1");
+        return Optional.of("x and y must be in 0..1");
       }
       return Optional.empty();
     }
