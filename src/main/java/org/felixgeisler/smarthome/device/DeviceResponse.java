@@ -68,7 +68,7 @@ public record DeviceResponse(
         device.getExternalId(),
         device.getName(),
         device.getType(),
-        device.getType().getCapabilities(),
+        device.getCapabilities(),
         device.getAdapterType(),
         device.getState(),
         device.getSensors().stream().map(SensorResponse::from).toList());

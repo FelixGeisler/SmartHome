@@ -5,6 +5,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Request body for registering a device.
@@ -14,6 +15,8 @@ import java.util.List;
  * @param type the device category
  * @param adapterType identifier of the command adapter; required for a command device, omitted for
  *     a sensing one
+ * @param capabilities what the device can do, as detected at discovery (ADR 2); omitted to fall
+ *     back to the type's defaults
  * @param sensors the sensors a sensing device declares; omitted for non-sensing types
  */
 public record DeviceRegistrationRequest(
@@ -21,10 +24,12 @@ public record DeviceRegistrationRequest(
     @NotBlank String name,
     @NotNull DeviceType type,
     String adapterType,
+    Set<Capability> capabilities,
     List<@Valid @NotNull SensorSpec> sensors) {
 
-  /** Defensively copies the sensor list; {@code List.copyOf} also rejects null entries. */
+  /** Defensively copies the collections; {@code copyOf} also rejects null entries. */
   public DeviceRegistrationRequest {
+    capabilities = capabilities == null ? Set.of() : Set.copyOf(capabilities);
     sensors = sensors == null ? List.of() : List.copyOf(sensors);
   }
 

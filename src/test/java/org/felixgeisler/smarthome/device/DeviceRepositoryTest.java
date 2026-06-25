@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -38,7 +39,7 @@ class DeviceRepositoryTest {
     device.putState("on", "true");
     repository.save(device);
     // Force the reload to hit the device_state table instead of the first-level
-    // cache handing back the same managed instance — otherwise this proves nothing.
+    // cache handing back the same managed instance, otherwise this proves nothing.
     entityManager.flush();
     entityManager.clear();
 
@@ -46,6 +47,26 @@ class DeviceRepositoryTest {
 
     assertTrue(found.isPresent());
     assertEquals("true", found.get().getState().get("on"));
+  }
+
+  @Test
+  void save_roundTripsCapabilities() {
+    Device device =
+        new Device(
+            "light-1",
+            "Lamp",
+            DeviceType.HUE_LIGHT,
+            "hue",
+            Set.of(Capability.SWITCHABLE, Capability.DIMMABLE));
+    repository.save(device);
+    entityManager.flush();
+    entityManager.clear();
+
+    Optional<Device> found = repository.findByExternalId("light-1");
+
+    assertTrue(found.isPresent());
+    assertEquals(
+        Set.of(Capability.SWITCHABLE, Capability.DIMMABLE), found.get().getCapabilities());
   }
 
   @Test

@@ -2,6 +2,7 @@ package org.felixgeisler.smarthome.web;
 
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
+import org.felixgeisler.smarthome.device.InvalidCommandException;
 import org.felixgeisler.smarthome.device.UnsupportedAdapterTypeException;
 import org.felixgeisler.smarthome.device.UnsupportedCapabilityException;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
@@ -39,6 +40,13 @@ public class ApiExceptionHandler {
   ProblemDetail handleUnsupportedCapability(UnsupportedCapabilityException ex) {
     // Client-actionable: the command addressed a device that cannot perform it.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidCommandException.class)
+  ProblemDetail handleInvalidCommand(InvalidCommandException ex) {
+    // Client-actionable: the command is malformed for the neutral contract (empty, out of range,
+    // or setting color and color temperature together).
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
   @ExceptionHandler(UnknownAdapterException.class)

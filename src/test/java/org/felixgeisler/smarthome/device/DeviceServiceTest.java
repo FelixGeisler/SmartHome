@@ -16,6 +16,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,12 +91,34 @@ class DeviceServiceTest {
     when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
     when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    Device result = service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", List.of());
+    Device result =
+        service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", Set.of(), List.of());
 
     assertEquals("ext-1", result.getExternalId());
     assertEquals("Plug", result.getName());
     assertEquals(DeviceType.SHELLY_PLUG, result.getType());
     assertEquals("shelly", result.getAdapterType());
+    assertEquals(Set.of(Capability.SWITCHABLE), result.getCapabilities());
+  }
+
+  @Test
+  void register_storesDetectedCapabilitiesForRichDevices() {
+    when(adapters.supports("hue")).thenReturn(true);
+    when(devices.findByExternalId("light-1")).thenReturn(Optional.empty());
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result =
+        service.register(
+            "light-1",
+            "Lamp",
+            DeviceType.HUE_LIGHT,
+            "hue",
+            Set.of(Capability.SWITCHABLE, Capability.DIMMABLE, Capability.COLOR),
+            List.of());
+
+    assertEquals(
+        Set.of(Capability.SWITCHABLE, Capability.DIMMABLE, Capability.COLOR),
+        result.getCapabilities());
   }
 
   @Test
@@ -103,7 +127,9 @@ class DeviceServiceTest {
 
     assertThrows(
         UnsupportedAdapterTypeException.class,
-        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "nest", List.of()));
+        () ->
+            service.register(
+                "ext-1", "Plug", DeviceType.SHELLY_PLUG, "nest", Set.of(), List.of()));
 
     verify(devices, never()).save(any());
   }
@@ -116,7 +142,9 @@ class DeviceServiceTest {
 
     assertThrows(
         DeviceAlreadyExistsException.class,
-        () -> service.register("ext-1", "New", DeviceType.SHELLY_PLUG, "shelly", List.of()));
+        () ->
+            service.register(
+                "ext-1", "New", DeviceType.SHELLY_PLUG, "shelly", Set.of(), List.of()));
 
     verify(devices, never()).save(any());
   }
@@ -130,7 +158,9 @@ class DeviceServiceTest {
 
     assertThrows(
         DeviceAlreadyExistsException.class,
-        () -> service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", List.of()));
+        () ->
+            service.register(
+                "ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", Set.of(), List.of()));
   }
 
   @Test
@@ -172,6 +202,7 @@ class DeviceServiceTest {
             "Climate",
             DeviceType.SENSOR_NODE,
             null,
+            Set.of(),
             List.of(new SensorSpec("temperature", SensorType.TEMPERATURE, "°C")));
 
     assertNull(result.getAdapterType());
@@ -212,5 +243,112 @@ class DeviceServiceTest {
     service.recordReading("node-1", "humidity", "40");
 
     verify(devices, never()).save(any());
+  }
+
+  @Test
+  void applyCommand_setsBrightnessAndTurnsAnOffDeviceOn() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.applyCommand(1L, new CommandRequest(null, 60, null, null));
+
+    assertEquals("60", result.getState().get("brightness"));
+    assertEquals("true", result.getState().get("on"));
+    verify(adapter).sendCommand(eq("light-1"), commandCaptor.capture());
+    Map<String, Object> payload = commandCaptor.getValue();
+    assertEquals(60, payload.get("brightness"));
+    assertEquals(true, payload.get("on"));
+  }
+
+  @Test
+  void applyCommand_setsColorAndRecordsXyColorMode() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result =
+        service.applyCommand(1L, new CommandRequest(null, null, new XyColor(0.3, 0.3), null));
+
+    assertEquals("0.3,0.3", result.getState().get("colorXy"));
+    assertEquals("XY", result.getState().get("colorMode"));
+  }
+
+  @Test
+  void applyCommand_respectsAnExplicitOff() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.applyCommand(1L, new CommandRequest(false, null, null, null));
+
+    verify(adapter).sendCommand(eq("light-1"), commandCaptor.capture());
+    assertEquals(false, commandCaptor.getValue().get("on"));
+    assertEquals("false", result.getState().get("on"));
+  }
+
+  @Test
+  void applyCommand_rejectsColorAndColorTemperatureTogether() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    assertThrows(
+        InvalidCommandException.class,
+        () ->
+            service.applyCommand(1L, new CommandRequest(null, null, new XyColor(0.3, 0.3), 3000)));
+
+    verify(devices, never()).save(any());
+  }
+
+  @Test
+  void applyCommand_rejectsAttributeForCapabilityTheDeviceLacks() {
+    Device plug = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(plug));
+
+    assertThrows(
+        UnsupportedCapabilityException.class,
+        () -> service.applyCommand(1L, new CommandRequest(null, 50, null, null)));
+
+    verify(devices, never()).save(any());
+  }
+
+  @Test
+  void applyCommand_rejectsValueOutsideTheContractRange() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    assertThrows(
+        InvalidCommandException.class,
+        () -> service.applyCommand(1L, new CommandRequest(null, 0, null, null)));
+
+    verify(devices, never()).save(any());
+  }
+
+  @Test
+  void applyCommand_rejectsAnEmptyCommand() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    assertThrows(
+        InvalidCommandException.class,
+        () -> service.applyCommand(1L, new CommandRequest(null, null, null, null)));
+
+    verify(devices, never()).save(any());
+  }
+
+  private static Device richLight() {
+    return new Device(
+        "light-1",
+        "Lamp",
+        DeviceType.HUE_LIGHT,
+        "hue",
+        Set.of(
+            Capability.SWITCHABLE,
+            Capability.DIMMABLE,
+            Capability.COLOR,
+            Capability.COLOR_TEMPERATURE));
   }
 }
