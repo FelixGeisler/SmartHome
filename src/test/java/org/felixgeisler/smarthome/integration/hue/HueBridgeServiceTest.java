@@ -16,6 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.felixgeisler.smarthome.device.Capability;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,17 +87,17 @@ class HueBridgeServiceTest {
     HueBridgeService service = unpaired();
     service.pair(host);
 
-    assertTrue(service.getLightOn("1"));
+    assertTrue(service.getLight("1").isOn());
   }
 
   @Test
-  void discoverLights_mapsBridgeLights() {
+  void discoverLights_mapsLightsAndDetectsCapabilities() {
     server.stubFor(
         get(urlPathEqualTo("/api/testkey/lights"))
             .willReturn(
                 okJson(
                     "{\"1\":{\"name\":\"Lamp\",\"type\":\"Extended color light\","
-                        + "\"state\":{\"on\":true,\"bri\":254}},"
+                        + "\"state\":{\"on\":true,\"bri\":254,\"xy\":[0.4,0.4],\"ct\":250}},"
                         + "\"2\":{\"name\":\"Desk\",\"state\":{\"on\":false}}}")));
 
     List<HueLight> lights = paired().discoverLights();
@@ -103,28 +106,37 @@ class HueBridgeServiceTest {
     HueLight lamp = lights.stream().filter(l -> l.id().equals("1")).findFirst().orElseThrow();
     assertEquals("Lamp", lamp.name());
     assertTrue(lamp.on());
+    assertEquals(
+        Set.of(
+            Capability.SWITCHABLE,
+            Capability.DIMMABLE,
+            Capability.COLOR,
+            Capability.COLOR_TEMPERATURE),
+        lamp.capabilities());
+    HueLight desk = lights.stream().filter(l -> l.id().equals("2")).findFirst().orElseThrow();
+    assertEquals(Set.of(Capability.SWITCHABLE), desk.capabilities());
   }
 
   @Test
-  void setLightOn_putsStateToBridge() {
+  void setLightState_putsStateToBridge() {
     server.stubFor(
         put(urlPathEqualTo("/api/testkey/lights/1/state"))
             .willReturn(aResponse().withStatus(200)));
 
-    paired().setLightOn("1", true);
+    paired().setLightState("1", Map.of("on", true, "bri", 254));
 
     server.verify(
         putRequestedFor(urlPathEqualTo("/api/testkey/lights/1/state"))
-            .withRequestBody(equalToJson("{\"on\":true}")));
+            .withRequestBody(equalToJson("{\"on\":true,\"bri\":254}")));
   }
 
   @Test
-  void getLightOn_readsStateFromBridge() {
+  void getLight_readsStateFromBridge() {
     server.stubFor(
         get(urlPathEqualTo("/api/testkey/lights/1"))
             .willReturn(okJson("{\"state\":{\"on\":true}}")));
 
-    assertTrue(paired().getLightOn("1"));
+    assertTrue(paired().getLight("1").isOn());
   }
 
   @Test

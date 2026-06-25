@@ -66,6 +66,7 @@ export function HuePanel({ onRegistered }: HuePanelProps) {
           name: light.name,
           type: 'HUE_LIGHT',
           adapterType: 'hue',
+          capabilities: light.capabilities,
         })
         onRegistered(device)
       }

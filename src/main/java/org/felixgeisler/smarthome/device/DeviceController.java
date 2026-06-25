@@ -65,6 +65,7 @@ public class DeviceController {
             request.name(),
             request.type(),
             request.adapterType(),
+            request.capabilities(),
             request.sensors());
     URI location = uriBuilder.path("/api/devices/{id}").buildAndExpand(device.getId()).toUri();
     return ResponseEntity.created(location).body(DeviceResponse.from(device));
@@ -79,5 +80,18 @@ public class DeviceController {
   @PostMapping("/{id}/toggle")
   public DeviceResponse toggle(@PathVariable Long id) {
     return DeviceResponse.from(service.toggle(id));
+  }
+
+  /**
+   * Applies a neutral command to a device, e.g., setting brightness or color.
+   *
+   * @param id the device id
+   * @param request the neutral attributes to set
+   * @return the updated device as a response view
+   */
+  @PostMapping("/{id}/command")
+  public DeviceResponse command(
+      @PathVariable Long id, @Valid @RequestBody CommandRequest request) {
+    return DeviceResponse.from(service.applyCommand(id, request));
   }
 }

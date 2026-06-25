@@ -98,7 +98,7 @@ public class HueBridgeService {
    * Lists the lights on the paired bridge.
    *
    * @return the bridge's lights
-   * @throws HueBridgeException if no bridge is paired or it could not be reached
+   * @throws HueBridgeException if no bridge is paired, or it could not be reached
    */
   public List<HueLight> discoverLights() {
     String key = requireAppKey();
@@ -110,25 +110,27 @@ public class HueBridgeService {
               .get()
               .uri(uri)
               .retrieve()
-              .body(new ParameterizedTypeReference<Map<String, HueLightResource>>() {});
+              .body(new ParameterizedTypeReference<>() {});
     } catch (RestClientException ex) {
       throw new HueBridgeException("Could not list lights from the Hue bridge", ex);
     }
     List<HueLight> result = new ArrayList<>();
     if (lights != null) {
-      lights.forEach((id, light) -> result.add(new HueLight(id, light.name(), light.isOn())));
+      lights.forEach(
+          (id, light) ->
+              result.add(new HueLight(id, light.name(), light.isOn(), light.capabilities())));
     }
     return result;
   }
 
   /**
-   * Turns a light on or off.
+   * Sets a light's state from a native Hue state body (e.g. {@code {"on":true,"bri":254}}).
    *
    * @param lightId the light's id on the bridge
-   * @param on the desired state
-   * @throws HueBridgeException if no bridge is paired or it could not be reached
+   * @param nativeState the Hue-native state to apply
+   * @throws HueBridgeException if no bridge is paired, or it could not be reached
    */
-  public void setLightOn(String lightId, boolean on) {
+  public void setLightState(String lightId, Map<String, Object> nativeState) {
     String key = requireAppKey();
     URI uri = authed("/api/{appKey}/lights/{id}/state").buildAndExpand(key, lightId).toUri();
     try {
@@ -136,7 +138,7 @@ public class HueBridgeService {
           .put()
           .uri(uri)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(Map.of("on", on))
+          .body(nativeState)
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -145,13 +147,14 @@ public class HueBridgeService {
   }
 
   /**
-   * Reads a light's on/off state.
+   * Reads a light's full state from the bridge.
    *
    * @param lightId the light's id on the bridge
-   * @return true if the light is on
-   * @throws HueBridgeException if no bridge is paired or it could not be reached
+   * @return the light as the bridge reports it
+   * @throws HueBridgeException if no bridge is paired, it could not be reached, or it returned no
+   *     data for the light
    */
-  public boolean getLightOn(String lightId) {
+  HueLightResource getLight(String lightId) {
     String key = requireAppKey();
     URI uri = authed("/api/{appKey}/lights/{id}").buildAndExpand(key, lightId).toUri();
     HueLightResource light;
@@ -160,7 +163,10 @@ public class HueBridgeService {
     } catch (RestClientException ex) {
       throw new HueBridgeException("Could not read light " + lightId + " from the Hue bridge", ex);
     }
-    return light != null && light.isOn();
+    if (light == null) {
+      throw new HueBridgeException("The Hue bridge returned no data for light " + lightId);
+    }
+    return light;
   }
 
   private String requireAppKey() {
@@ -171,7 +177,7 @@ public class HueBridgeService {
     return key;
   }
 
-  // Treat the host strictly as the authority so a crafted value cannot inject path or query.
+  // Treat the host strictly as the authority, so a crafted value cannot inject path or query.
   private static UriComponentsBuilder base(String host) {
     return UriComponentsBuilder.fromUriString("http://" + host).replaceQuery(null);
   }

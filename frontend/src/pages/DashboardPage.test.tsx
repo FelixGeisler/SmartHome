@@ -26,6 +26,7 @@ describe('DashboardPage', () => {
         error={null}
         busyIds={new Set()}
         onToggle={vi.fn()}
+        onCommand={vi.fn()}
         onRetry={vi.fn()}
       />,
     )
@@ -42,6 +43,7 @@ describe('DashboardPage', () => {
         error={null}
         busyIds={new Set()}
         onToggle={vi.fn()}
+        onCommand={vi.fn()}
         onRetry={vi.fn()}
       />,
     )
@@ -74,6 +76,7 @@ describe('DashboardPage', () => {
         error={null}
         busyIds={new Set()}
         onToggle={vi.fn()}
+        onCommand={vi.fn()}
         onRetry={vi.fn()}
       />,
     )
@@ -93,6 +96,7 @@ describe('DashboardPage', () => {
         error={null}
         busyIds={new Set()}
         onToggle={onToggle}
+        onCommand={vi.fn()}
         onRetry={vi.fn()}
       />,
     )
@@ -110,6 +114,7 @@ describe('DashboardPage', () => {
         error={null}
         busyIds={new Set([lamp.id])}
         onToggle={vi.fn()}
+        onCommand={vi.fn()}
         onRetry={vi.fn()}
       />,
     )
@@ -127,6 +132,7 @@ describe('DashboardPage', () => {
         error="Request failed with status 500"
         busyIds={new Set()}
         onToggle={vi.fn()}
+        onCommand={vi.fn()}
         onRetry={onRetry}
       />,
     )

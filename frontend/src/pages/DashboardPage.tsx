@@ -1,4 +1,4 @@
-import type { Device } from '../api/devices'
+import type { Device, DeviceCommand } from '../api/devices'
 import { DeviceCard } from '../components/DeviceCard'
 
 export type LoadState = 'loading' | 'ready' | 'error'
@@ -9,16 +9,18 @@ interface DashboardPageProps {
   error: string | null
   busyIds: ReadonlySet<number>
   onToggle: (device: Device) => void
+  onCommand: (device: Device, command: DeviceCommand) => void
   onRetry: () => void
 }
 
-/** The dashboard view: lists every registered device and lets the user control each one. */
+/** The dashboard view lists every registered device and lets the user control each one. */
 export function DashboardPage({
   devices,
   loadState,
   error,
   busyIds,
   onToggle,
+  onCommand,
   onRetry,
 }: DashboardPageProps) {
   return (
@@ -49,6 +51,7 @@ export function DashboardPage({
               device={device}
               busy={busyIds.has(device.id)}
               onToggle={onToggle}
+              onCommand={onCommand}
             />
           ))}
         </ul>

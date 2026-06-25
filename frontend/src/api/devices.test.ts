@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { listDevices, registerDevice, toggleDevice } from './devices'
+import { listDevices, registerDevice, sendCommand, toggleDevice } from './devices'
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -49,6 +49,22 @@ describe('devices api client', () => {
     await expect(toggleDevice(7)).resolves.toEqual({ id: 7, state: { on: 'true' } })
 
     expect(fetchMock).toHaveBeenCalledWith('/api/devices/7/toggle', { method: 'POST' })
+  })
+
+  it('sends a neutral command via POST /api/devices/{id}/command', async () => {
+    const command = { brightness: 60, colorXy: { x: 0.4, y: 0.4 } }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ id: 3, state: { brightness: '60' } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(sendCommand(3, command)).resolves.toMatchObject({ id: 3 })
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices/3/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(command),
+    })
   })
 
   it('reports the detail of an RFC 9457 problem response', async () => {

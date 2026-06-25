@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Set;
+import org.felixgeisler.smarthome.device.Capability;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -55,14 +57,19 @@ class HueControllerTest {
   }
 
   @Test
-  void lights_returnsDiscoveredLights() throws Exception {
-    when(bridge.discoverLights()).thenReturn(List.of(new HueLight("1", "Lamp", true)));
+  void lights_returnsDiscoveredLightsWithCapabilities() throws Exception {
+    when(bridge.discoverLights())
+        .thenReturn(
+            List.of(
+                new HueLight(
+                    "1", "Lamp", true, Set.of(Capability.SWITCHABLE, Capability.DIMMABLE))));
 
     mvc.perform(get("/api/integrations/hue/lights"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value("1"))
         .andExpect(jsonPath("$[0].name").value("Lamp"))
-        .andExpect(jsonPath("$[0].on").value(true));
+        .andExpect(jsonPath("$[0].on").value(true))
+        .andExpect(jsonPath("$[0].capabilities").isArray());
   }
 
   @Test

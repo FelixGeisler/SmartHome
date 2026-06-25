@@ -18,9 +18,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A smart-home device known to the hub.
@@ -48,11 +50,17 @@ public class Device {
   @Column(nullable = false)
   private DeviceType type;
 
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "device_capabilities", joinColumns = @JoinColumn(name = "device_id"))
+  @Column(name = "capability", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private Set<Capability> capabilities = EnumSet.noneOf(Capability.class);
+
   // Null for sensing devices: their integration is inbound telemetry, not a command adapter.
   @Column
   private String adapterType;
 
-  // The last known runtime state as key/value entries (e.g. on="true"), interpreted per
+  // The last known runtime state as key/value entries (e.g., on="true"), interpreted per
   // capability. Eagerly fetched: the map is small and open-in-view is off, so a lazy
   // collection would not survive past the service layer.
   @ElementCollection(fetch = FetchType.EAGER)
@@ -73,7 +81,7 @@ public class Device {
   }
 
   /**
-   * Creates a device.
+   * Creates a device whose capabilities are the defaults declared by its {@link DeviceType}.
    *
    * @param externalId the device's address within its integration
    * @param name human-readable device name
@@ -82,10 +90,31 @@ public class Device {
    *     sensing device with no command adapter
    */
   public Device(String externalId, String name, DeviceType type, String adapterType) {
+    this(externalId, name, type, adapterType, type.getCapabilities());
+  }
+
+  /**
+   * Creates a device with an explicit capability set, as detected at discovery.
+   *
+   * @param externalId the device's address within its integration
+   * @param name human-readable device name
+   * @param type the device category
+   * @param adapterType identifier of the command adapter that handles this device, or null for a
+   *     sensing device with no command adapter
+   * @param capabilities what this device can do
+   */
+  public Device(
+      String externalId,
+      String name,
+      DeviceType type,
+      String adapterType,
+      Set<Capability> capabilities) {
     this.externalId = externalId;
     this.name = name;
     this.type = type;
     this.adapterType = adapterType;
+    this.capabilities =
+        capabilities.isEmpty() ? EnumSet.noneOf(Capability.class) : EnumSet.copyOf(capabilities);
   }
 
   public Long getId() {
@@ -102,6 +131,15 @@ public class Device {
 
   public DeviceType getType() {
     return type;
+  }
+
+  /**
+   * Returns what this device can do, as detected at discovery.
+   *
+   * @return the device's capabilities (read-only view)
+   */
+  public Set<Capability> getCapabilities() {
+    return Collections.unmodifiableSet(capabilities);
   }
 
   public String getAdapterType() {

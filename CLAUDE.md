@@ -25,6 +25,8 @@ Spring Boot smart-home hub.
 
 - Follow **Google Java Style** (`google_checks.xml`) — CheckStyle enforces it.
 - Javadoc on public types and non-trivial public methods, with `@param`/`@return`.
+- **American English** for all prose and identifiers — comments, Javadoc, symbol names,
+  user-facing strings, and docs.
 
 ## Forbidden patterns
 

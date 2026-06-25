@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Set;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,9 +95,53 @@ class DeviceControllerTest {
   }
 
   @Test
+  void command_returnsUpdatedDevice() throws Exception {
+    Device device =
+        new Device(
+            "light-1", "Lamp", DeviceType.HUE_LIGHT, "hue", Set.of(Capability.DIMMABLE));
+    device.putState("on", "true");
+    device.putState("brightness", "60");
+    when(service.applyCommand(eq(1L), any())).thenReturn(device);
+
+    mvc.perform(
+            post("/api/devices/1/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"brightness\":60}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.state.brightness").value("60"))
+        .andExpect(jsonPath("$.state.on").value("true"));
+  }
+
+  @Test
+  void command_returns422WhenCapabilityUnsupported() throws Exception {
+    when(service.applyCommand(eq(1L), any()))
+        .thenThrow(new UnsupportedCapabilityException(1L, Capability.DIMMABLE));
+
+    mvc.perform(
+            post("/api/devices/1/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"brightness\":60}"))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.detail").value("Device 1 does not support capability: DIMMABLE"));
+  }
+
+  @Test
+  void command_returns400WhenCommandInvalid() throws Exception {
+    when(service.applyCommand(eq(1L), any()))
+        .thenThrow(new InvalidCommandException("Command sets no attributes"));
+
+    mvc.perform(
+            post("/api/devices/1/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.detail").value("Command sets no attributes"));
+  }
+
+  @Test
   void register_returnsCreatedDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
-    when(service.register(any(), any(), any(), any(), any())).thenReturn(device);
+    when(service.register(any(), any(), any(), any(), any(), any())).thenReturn(device);
 
     mvc.perform(
             post("/api/devices")
@@ -110,7 +156,7 @@ class DeviceControllerTest {
 
   @Test
   void register_returns409WhenDeviceAlreadyExists() throws Exception {
-    when(service.register(any(), any(), any(), any(), any()))
+    when(service.register(any(), any(), any(), any(), any(), any()))
         .thenThrow(new DeviceAlreadyExistsException("ext-1"));
 
     mvc.perform(
@@ -124,7 +170,7 @@ class DeviceControllerTest {
 
   @Test
   void register_returns422WithDetailWhenAdapterTypeUnsupported() throws Exception {
-    when(service.register(any(), any(), any(), any(), any()))
+    when(service.register(any(), any(), any(), any(), any(), any()))
         .thenThrow(new UnsupportedAdapterTypeException("nest"));
 
     mvc.perform(
@@ -152,7 +198,7 @@ class DeviceControllerTest {
   void register_acceptsSensorDeviceWithoutAdapter() throws Exception {
     Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
     device.addSensor("humidity", SensorType.HUMIDITY, "%");
-    when(service.register(any(), any(), any(), any(), any())).thenReturn(device);
+    when(service.register(any(), any(), any(), any(), any(), any())).thenReturn(device);
 
     mvc.perform(
             post("/api/devices")
