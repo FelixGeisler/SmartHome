@@ -61,7 +61,7 @@ public class Device {
   private String adapterType;
 
   // The last known runtime state as key/value entries (e.g., on="true"), interpreted per
-  // capability. Eagerly fetched: the map is small and open-in-view it is off, so a lazy
+  // capability. Eagerly fetched: the map is small and open-in-view is off, so a lazy
   // collection would not survive past the service layer.
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "device_state", joinColumns = @JoinColumn(name = "device_id"))
