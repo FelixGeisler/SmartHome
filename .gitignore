@@ -33,3 +33,7 @@ build/
 
 ### Antora / docs toolchain ###
 /node_modules/
+
+### JVM crash dumps ###
+hs_err_pid*.log
+replay_pid*.log
