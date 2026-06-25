@@ -5,6 +5,8 @@ export interface HueLight {
   id: string
   name: string
   on: boolean
+  /** What the light can do, detected from the state the bridge reports. */
+  capabilities: string[]
 }
 
 /** Result of a bridge pairing attempt. */

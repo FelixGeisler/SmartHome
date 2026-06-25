@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from './api/devices'
-import { listDevices, registerDevice, toggleDevice } from './api/devices'
+import { listDevices, registerDevice, sendCommand, toggleDevice } from './api/devices'
 import App from './App'
 
 // Mock only the HTTP functions; the pure helpers (isSwitchable, isOn) stay real.
@@ -12,6 +12,7 @@ vi.mock('./api/devices', async (importOriginal) => ({
   listDevices: vi.fn(),
   registerDevice: vi.fn(),
   toggleDevice: vi.fn(),
+  sendCommand: vi.fn(),
 }))
 
 const lamp: Device = {
@@ -132,6 +133,31 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeDisabled()
     resolveToggle({ ...lamp, state: { on: 'true' } })
     expect(await screen.findByRole('button', { name: 'Turn Desk Lamp off' })).toBeEnabled()
+  })
+
+  it('sends a brightness command and renders the new level', async () => {
+    const bulb: Device = {
+      id: 5,
+      externalId: 'light-1',
+      name: 'Ceiling',
+      type: 'HUE_LIGHT',
+      capabilities: ['SWITCHABLE', 'DIMMABLE'],
+      adapterType: 'hue',
+      state: { on: 'true', brightness: '40' },
+      sensors: [],
+    }
+    vi.mocked(listDevices).mockResolvedValue([bulb])
+    vi.mocked(sendCommand).mockResolvedValue({
+      ...bulb,
+      state: { on: 'true', brightness: '80' },
+    })
+    renderApp()
+
+    const slider = await screen.findByLabelText('Brightness for Ceiling')
+    fireEvent.change(slider, { target: { value: '80' } })
+
+    expect(sendCommand).toHaveBeenCalledWith(5, { brightness: 80 })
+    expect(await screen.findByText('80%')).toBeInTheDocument()
   })
 
   it('keeps the device list usable when a toggle fails', async () => {

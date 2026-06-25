@@ -30,7 +30,9 @@ describe('HuePanel', () => {
 
   it('pairs, discovers lights, and registers the selected one', async () => {
     vi.mocked(pairBridge).mockResolvedValue({ paired: true, message: 'paired' })
-    vi.mocked(discoverLights).mockResolvedValue([{ id: '1', name: 'Living Room Lamp', on: false }])
+    vi.mocked(discoverLights).mockResolvedValue([
+      { id: '1', name: 'Living Room Lamp', on: false, capabilities: ['SWITCHABLE', 'DIMMABLE'] },
+    ])
     vi.mocked(registerDevice).mockResolvedValue(lamp)
     const onRegistered = vi.fn()
     const user = userEvent.setup()
@@ -48,6 +50,7 @@ describe('HuePanel', () => {
       name: 'Living Room Lamp',
       type: 'HUE_LIGHT',
       adapterType: 'hue',
+      capabilities: ['SWITCHABLE', 'DIMMABLE'],
     })
     expect(onRegistered).toHaveBeenCalledWith(lamp)
   })
@@ -85,7 +88,9 @@ describe('HuePanel', () => {
         paired: false,
         message: 'Press the bridge link button, then try again.',
       })
-    vi.mocked(discoverLights).mockResolvedValue([{ id: '1', name: 'Living Room Lamp', on: false }])
+    vi.mocked(discoverLights).mockResolvedValue([
+      { id: '1', name: 'Living Room Lamp', on: false, capabilities: ['SWITCHABLE'] },
+    ])
     const user = userEvent.setup()
     render(<HuePanel onRegistered={vi.fn()} />)
 

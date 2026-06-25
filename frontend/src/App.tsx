@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import type { Device } from './api/devices'
-import { listDevices, toggleDevice } from './api/devices'
+import type { Device, DeviceCommand } from './api/devices'
+import { listDevices, sendCommand, toggleDevice } from './api/devices'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
 
@@ -17,7 +17,7 @@ function App() {
   const [loadAttempt, setLoadAttempt] = useState(0)
 
   useEffect(() => {
-    // StrictMode mounts effects twice and a retry can supersede a slow first
+    // StrictMode mounts effects twice, and a retry can supersede a slow first
     // load; the stale flag keeps an outdated response from overwriting state.
     let stale = false
     listDevices()
@@ -49,6 +49,25 @@ function App() {
     setError(null)
     try {
       const updated = await toggleDevice(device.id)
+      setDevices((current) =>
+        current.map((existing) => (existing.id === updated.id ? updated : existing)),
+      )
+    } catch (cause) {
+      setError(messageOf(cause))
+    } finally {
+      setBusyIds((ids) => {
+        const next = new Set(ids)
+        next.delete(device.id)
+        return next
+      })
+    }
+  }
+
+  async function handleCommand(device: Device, command: DeviceCommand) {
+    setBusyIds((ids) => new Set(ids).add(device.id))
+    setError(null)
+    try {
+      const updated = await sendCommand(device.id, command)
       setDevices((current) =>
         current.map((existing) => (existing.id === updated.id ? updated : existing)),
       )
@@ -95,6 +114,7 @@ function App() {
                 error={error}
                 busyIds={busyIds}
                 onToggle={(device) => void handleToggle(device)}
+                onCommand={(device, command) => void handleCommand(device, command)}
                 onRetry={retry}
               />
             }
