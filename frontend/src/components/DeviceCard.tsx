@@ -167,7 +167,7 @@ function CommitInput({ type, value, ariaLabel, min, max, onCommit }: CommitInput
     const commit = () => onCommit(input.value)
     input.addEventListener('change', commit)
     return () => input.removeEventListener('change', commit)
-  }, [onCommit])
+  }, [onCommit, value])
 
   return (
     <input
