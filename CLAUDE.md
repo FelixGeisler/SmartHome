@@ -27,6 +27,8 @@ Spring Boot smart-home hub.
 - Javadoc on public types and non-trivial public methods, with `@param`/`@return`.
 - **American English** for all prose and identifiers — comments, Javadoc, symbol names,
   user-facing strings, and docs.
+- These Java-source conventions are also captured as an editor rule in
+  [`.claude/rules/java-conventions.md`](.claude/rules/java-conventions.md).
 
 ## Forbidden patterns
 
@@ -53,7 +55,7 @@ Spring Boot smart-home hub.
 - **Every test asserts something meaningful.** Coverage proves a line ran, not that behavior was
   verified — an assertion-free test is coverage theater. No empty test bodies.
 - **AAA** — arrange, act, assert. One behavior per test, exercised through the public API and
-  named for what it verifies.
+  named for what it verifies, with a `@DisplayName` stating that behavior in plain language.
 - **Unit-test services as plain objects**, with Mockito mocks for their repositories and
   collaborators — which is exactly why constructor injection and interface repositories are in the
   rules above. Reach for the framework only when needed: `@WebMvcTest` for controllers,
