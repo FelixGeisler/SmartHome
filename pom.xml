@@ -20,7 +20,7 @@
         <checkstyle.version>10.21.4</checkstyle.version>
         <pmd.plugin.version>3.28.0</pmd.plugin.version>
         <pmd.version>7.25.0</pmd.version>
-        <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
+        <spotbugs.plugin.version>4.10.2.0</spotbugs.plugin.version>
         <findsecbugs.version>1.13.0</findsecbugs.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.1</wiremock.version>
