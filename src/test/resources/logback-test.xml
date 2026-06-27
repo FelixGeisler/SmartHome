@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Test-only logging (on the test classpath, so production logging is unchanged). The suite
+  deliberately exercises bad-input endpoints and drop paths, so the app and framework emit
+  expected WARNs; quieting them here keeps `mvn clean verify` output clean. Behavior is asserted
+  through return values and mock verifications, never through these logs.
+-->
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+  <!-- Spring MVC logs every exception it resolves; the negative-path @WebMvcTests cause those. -->
+  <logger name="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver" level="OFF"/>
+  <!-- springdoc nags that Swagger UI is enabled by default at every context start. -->
+  <logger name="org.springdoc" level="ERROR"/>
+  <!-- Our own expected drop-path warnings (unknown device, undeclared sensor, unparseable topic). -->
+  <logger name="org.felixgeisler.smarthome" level="ERROR"/>
+</configuration>
