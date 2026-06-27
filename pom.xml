@@ -21,7 +21,7 @@
         <pmd.plugin.version>3.28.0</pmd.plugin.version>
         <pmd.version>7.25.0</pmd.version>
         <spotbugs.plugin.version>4.10.2.0</spotbugs.plugin.version>
-        <findsecbugs.version>1.13.0</findsecbugs.version>
+        <findsecbugs.version>1.14.0</findsecbugs.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.1</wiremock.version>
         <paho.version>1.2.5</paho.version>
