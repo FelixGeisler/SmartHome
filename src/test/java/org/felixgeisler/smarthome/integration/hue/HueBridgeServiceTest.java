@@ -21,6 +21,7 @@ import java.util.Set;
 import org.felixgeisler.smarthome.device.Capability;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class HueBridgeServiceTest {
@@ -48,6 +49,7 @@ class HueBridgeServiceTest {
     return new HueBridgeService(new HueProperties(null, null, "smarthome#hub"));
   }
 
+  @DisplayName("pair() succeeds when the link button was pressed")
   @Test
   void pair_succeedsWhenLinkButtonPressed() {
     server.stubFor(
@@ -57,6 +59,7 @@ class HueBridgeServiceTest {
     assertTrue(unpaired().pair(host));
   }
 
+  @DisplayName("pair() returns false when the link button was not pressed")
   @Test
   void pair_returnsFalseWhenLinkButtonNotPressed() {
     server.stubFor(
@@ -66,6 +69,7 @@ class HueBridgeServiceTest {
     assertFalse(unpaired().pair(host));
   }
 
+  @DisplayName("pair() throws when the bridge returns an unexpected error")
   @Test
   void pair_throwsOnUnexpectedError() {
     server.stubFor(
@@ -75,6 +79,7 @@ class HueBridgeServiceTest {
     assertThrows(HueBridgeException.class, () -> unpaired().pair(host));
   }
 
+  @DisplayName("pair() stores the credentials so subsequent calls are authenticated")
   @Test
   void pair_storesCredentialsForSubsequentCalls() {
     server.stubFor(
@@ -90,6 +95,7 @@ class HueBridgeServiceTest {
     assertTrue(service.getLight("1").isOn());
   }
 
+  @DisplayName("discoverLights() maps lights and detects their capabilities")
   @Test
   void discoverLights_mapsLightsAndDetectsCapabilities() {
     server.stubFor(
@@ -117,6 +123,7 @@ class HueBridgeServiceTest {
     assertEquals(Set.of(Capability.SWITCHABLE), desk.capabilities());
   }
 
+  @DisplayName("setLightState() puts the requested state to the bridge")
   @Test
   void setLightState_putsStateToBridge() {
     server.stubFor(
@@ -130,6 +137,7 @@ class HueBridgeServiceTest {
             .withRequestBody(equalToJson("{\"on\":true,\"bri\":254}")));
   }
 
+  @DisplayName("getLight() reads the light state from the bridge")
   @Test
   void getLight_readsStateFromBridge() {
     server.stubFor(
@@ -139,6 +147,7 @@ class HueBridgeServiceTest {
     assertTrue(paired().getLight("1").isOn());
   }
 
+  @DisplayName("discoverLights() throws when the bridge is not paired")
   @Test
   void discoverLights_throwsWhenNotPaired() {
     assertThrows(HueBridgeException.class, () -> unpaired().discoverLights());

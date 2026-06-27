@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ShellyAdapterTest {
@@ -32,6 +33,7 @@ class ShellyAdapterTest {
     server.stop();
   }
 
+  @DisplayName("sendCommand() switches the relay on")
   @Test
   void sendCommand_switchesRelayOn() {
     server.stubFor(
@@ -45,6 +47,7 @@ class ShellyAdapterTest {
         getRequestedFor(urlPathEqualTo("/relay/0")).withQueryParam("turn", equalTo("on")));
   }
 
+  @DisplayName("sendCommand() switches the relay off")
   @Test
   void sendCommand_switchesRelayOff() {
     server.stubFor(
@@ -58,6 +61,7 @@ class ShellyAdapterTest {
         getRequestedFor(urlPathEqualTo("/relay/0")).withQueryParam("turn", equalTo("off")));
   }
 
+  @DisplayName("sendCommand() ignores path and query injected via the external id")
   @Test
   void sendCommand_ignoresPathAndQueryInjectedViaExternalId() {
     server.stubFor(
@@ -71,6 +75,7 @@ class ShellyAdapterTest {
         getRequestedFor(urlPathEqualTo("/relay/0")).withQueryParam("turn", equalTo("on")));
   }
 
+  @DisplayName("getState() reads the relay status")
   @Test
   void getState_readsRelayStatus() {
     server.stubFor(get(urlPathEqualTo("/relay/0")).willReturn(okJson("{\"ison\":true}")));

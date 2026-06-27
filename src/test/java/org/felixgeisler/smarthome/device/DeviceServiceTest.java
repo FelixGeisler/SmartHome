@@ -21,6 +21,7 @@ import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +47,7 @@ class DeviceServiceTest {
     service = new DeviceService(devices, adapters, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
+  @DisplayName("toggle() switches an off device on")
   @Test
   void toggle_switchesAnOffDeviceOn() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -61,6 +63,7 @@ class DeviceServiceTest {
     verify(devices).save(device);
   }
 
+  @DisplayName("toggle() switches an on device off")
   @Test
   void toggle_switchesAnOnDeviceOff() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -76,6 +79,7 @@ class DeviceServiceTest {
     assertEquals("false", result.getState().get("on"));
   }
 
+  @DisplayName("toggle() throws when the device does not exist")
   @Test
   void toggle_throwsWhenDeviceMissing() {
     when(devices.findById(99L)).thenReturn(Optional.empty());
@@ -85,6 +89,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("register() saves a new device when none exists yet")
   @Test
   void register_savesNewDeviceWhenAbsent() {
     when(adapters.supports("shelly")).thenReturn(true);
@@ -101,6 +106,7 @@ class DeviceServiceTest {
     assertEquals(Set.of(Capability.SWITCHABLE), result.getCapabilities());
   }
 
+  @DisplayName("register() stores the detected capabilities for rich devices")
   @Test
   void register_storesDetectedCapabilitiesForRichDevices() {
     when(adapters.supports("hue")).thenReturn(true);
@@ -121,6 +127,7 @@ class DeviceServiceTest {
         result.getCapabilities());
   }
 
+  @DisplayName("register() throws when the adapter type is unsupported")
   @Test
   void register_throwsWhenAdapterTypeUnsupported() {
     when(adapters.supports("nest")).thenReturn(false);
@@ -134,6 +141,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("register() throws when a device with the same external id already exists")
   @Test
   void register_throwsWhenDeviceAlreadyExists() {
     Device existing = new Device("ext-1", "Existing", DeviceType.SHELLY_PLUG, "shelly");
@@ -149,6 +157,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("register() throws already-exists when the save hits a unique constraint")
   @Test
   void register_throwsAlreadyExistsWhenSaveHitsUniqueConstraint() {
     when(adapters.supports("shelly")).thenReturn(true);
@@ -163,6 +172,7 @@ class DeviceServiceTest {
                 "ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", Set.of(), List.of()));
   }
 
+  @DisplayName("getById() returns the matching device")
   @Test
   void getById_returnsDevice() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -173,6 +183,7 @@ class DeviceServiceTest {
     assertSame(device, result);
   }
 
+  @DisplayName("getById() throws when the device does not exist")
   @Test
   void getById_throwsWhenDeviceMissing() {
     when(devices.findById(99L)).thenReturn(Optional.empty());
@@ -180,6 +191,7 @@ class DeviceServiceTest {
     assertThrows(DeviceNotFoundException.class, () -> service.getById(99L));
   }
 
+  @DisplayName("getAllDevices() returns the repository contents")
   @Test
   void getAllDevices_returnsRepositoryContents() {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -191,6 +203,7 @@ class DeviceServiceTest {
     assertSame(device, result.getFirst());
   }
 
+  @DisplayName("register() saves a sensing device with its declared sensors and no adapter")
   @Test
   void register_savesSensingDeviceWithDeclaredSensorsAndNoAdapter() {
     when(devices.findByExternalId("node-1")).thenReturn(Optional.empty());
@@ -210,6 +223,7 @@ class DeviceServiceTest {
     assertEquals("temperature", result.getSensors().getFirst().getKey());
   }
 
+  @DisplayName("recordReading() updates the matching sensor and stamps the update time")
   @Test
   void recordReading_updatesMatchingSensorWithTimestamp() {
     Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
@@ -225,6 +239,7 @@ class DeviceServiceTest {
     verify(devices).save(device);
   }
 
+  @DisplayName("recordReading() drops a reading for an unknown device")
   @Test
   void recordReading_dropsReadingForUnknownDevice() {
     when(devices.findByExternalId("ghost")).thenReturn(Optional.empty());
@@ -234,6 +249,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("recordReading() drops a reading for a sensor the device did not declare")
   @Test
   void recordReading_dropsReadingForUndeclaredSensor() {
     Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
@@ -245,6 +261,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("applyCommand() sets brightness and turns an off device on")
   @Test
   void applyCommand_setsBrightnessAndTurnsAnOffDeviceOn() {
     Device device = richLight();
@@ -262,6 +279,7 @@ class DeviceServiceTest {
     assertEquals(true, payload.get("on"));
   }
 
+  @DisplayName("applyCommand() sets the color and records the XY color mode")
   @Test
   void applyCommand_setsColorAndRecordsXyColorMode() {
     Device device = richLight();
@@ -276,6 +294,7 @@ class DeviceServiceTest {
     assertEquals("XY", result.getState().get("colorMode"));
   }
 
+  @DisplayName("applyCommand() respects an explicit off request")
   @Test
   void applyCommand_respectsAnExplicitOff() {
     Device device = richLight();
@@ -290,6 +309,7 @@ class DeviceServiceTest {
     assertEquals("false", result.getState().get("on"));
   }
 
+  @DisplayName("applyCommand() rejects color and color temperature in one command")
   @Test
   void applyCommand_rejectsColorAndColorTemperatureTogether() {
     Device device = richLight();
@@ -303,6 +323,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("applyCommand() rejects an attribute for a capability the device lacks")
   @Test
   void applyCommand_rejectsAttributeForCapabilityTheDeviceLacks() {
     Device plug = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -315,6 +336,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("applyCommand() rejects a value outside the contract range")
   @Test
   void applyCommand_rejectsValueOutsideTheContractRange() {
     Device device = richLight();
@@ -327,6 +349,7 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("applyCommand() rejects an empty command")
   @Test
   void applyCommand_rejectsAnEmptyCommand() {
     Device device = richLight();

@@ -7,12 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class DeviceAdapterRegistryTest {
 
   private final DeviceAdapter shelly = new StubAdapter("shelly");
 
+  @DisplayName("get() returns the adapter matching the requested type")
   @Test
   void get_returnsAdapterMatchingType() {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
@@ -20,6 +22,7 @@ class DeviceAdapterRegistryTest {
     assertSame(shelly, registry.get("shelly"));
   }
 
+  @DisplayName("get() throws for an unknown adapter type")
   @Test
   void get_throwsForUnknownType() {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
@@ -27,6 +30,7 @@ class DeviceAdapterRegistryTest {
     assertThrows(UnknownAdapterException.class, () -> registry.get("mqtt"));
   }
 
+  @DisplayName("supports() is true for a registered adapter type")
   @Test
   void supports_isTrueForRegisteredType() {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));
@@ -34,6 +38,7 @@ class DeviceAdapterRegistryTest {
     assertTrue(registry.supports("shelly"));
   }
 
+  @DisplayName("supports() is false for an unknown adapter type")
   @Test
   void supports_isFalseForUnknownType() {
     DeviceAdapterRegistry registry = new DeviceAdapterRegistry(List.of(shelly));

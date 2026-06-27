@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.felixgeisler.smarthome.capability.XyColor;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,11 +30,13 @@ class HueDeviceAdapterTest {
     adapter = new HueDeviceAdapter(bridge);
   }
 
+  @DisplayName("adapterType() reports the adapter as hue")
   @Test
   void adapterType_isHue() {
     assertEquals("hue", adapter.adapterType());
   }
 
+  @DisplayName("sendCommand() translates on and brightness to the native bridge state")
   @Test
   void sendCommand_translatesOnAndBrightnessToNative() {
     adapter.sendCommand("1", Map.of("on", true, "brightness", 50));
@@ -45,6 +48,7 @@ class HueDeviceAdapterTest {
     assertEquals(127, state.get("bri"));
   }
 
+  @DisplayName("sendCommand() translates color to a Hue xy pair")
   @Test
   void sendCommand_translatesColorToXyPair() {
     adapter.sendCommand("1", Map.of("colorXy", new XyColor(0.4571, 0.4097)));
@@ -53,6 +57,7 @@ class HueDeviceAdapterTest {
     assertEquals(List.of(0.4571, 0.4097), stateCaptor.getValue().get("xy"));
   }
 
+  @DisplayName("sendCommand() translates color temperature in Kelvin to mireds")
   @Test
   void sendCommand_translatesColorTemperatureToMireds() {
     adapter.sendCommand("1", Map.of("colorTemperatureK", 2500));
@@ -62,6 +67,7 @@ class HueDeviceAdapterTest {
     assertEquals(400, stateCaptor.getValue().get("ct"));
   }
 
+  @DisplayName("getState() translates the native bridge state back to neutral values")
   @Test
   void getState_translatesNativeStateBackToNeutral() {
     HueLightResource.State state =
