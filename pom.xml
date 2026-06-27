@@ -6,13 +6,14 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.6</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>org.felixgeisler</groupId>
     <artifactId>smarthome</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>SmartHome</name>
     <description>SmartHome</description>
+    <url>https://github.com/FelixGeisler/SmartHome</url>
     <properties>
         <java.version>26</java.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
@@ -20,12 +21,12 @@
         <pmd.plugin.version>3.28.0</pmd.plugin.version>
         <pmd.version>7.25.0</pmd.version>
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
+        <findsecbugs.version>1.13.0</findsecbugs.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.1</wiremock.version>
         <paho.version>1.2.5</paho.version>
         <springdoc.version>3.0.3</springdoc.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
-        <!-- Node toolchain the frontend build installs for itself (active LTS). -->
         <node.version>v24.13.0</node.version>
         <!-- Backend-only iteration: -Dskip.frontend=true skips the npm lifecycle. -->
         <skip.frontend>false</skip.frontend>
@@ -118,7 +119,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Resolve dependency paths (e.g. ${org.mockito:mockito-core:jar}) so Mockito can be
+            <!-- Resolve dependency paths (e.g., ${org.mockito:mockito-core:jar}) so Mockito can be
                  passed as an explicit -javaagent below instead of self-attaching at runtime. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -142,7 +143,7 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo: measure test coverage and fail the build under 70% line coverage.
+            <!-- JaCoCo: measure test coverage and fail the build under 70% line or branch coverage.
                  prepare-agent sets the argLine property that surefire composes via @{argLine}. -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -189,6 +190,11 @@
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.70</minimum>
                                         </limit>
@@ -249,9 +255,9 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <!-- Ruleset made explicit (was the plugin default). bestpractices + errorprone
+                    <!-- Ruleset made explicit (was the plugin default). best practices + error-prone
                          catch real bugs and bad patterns; formatting/codestyle is left to CheckStyle
-                         so the two don't double-report. Add design/performance/security, or swap to a
+                         so the two don't double-report. Add design/performance/security or swap to a
                          pmd-custom-ruleset.xml, as the project grows. -->
                     <rulesets>
                         <ruleset>category/java/bestpractices.xml</ruleset>
@@ -390,6 +396,15 @@
                     <maxHeap>768</maxHeap>
                     <!-- Injected Spring singletons stored as fields: DI, not exposed state. -->
                     <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                    <!-- find-sec-bugs: security detectors (SSRF, crypto, injection, …) on top of
+                         SpotBugs' bug patterns, for course module 6. -->
+                    <plugins>
+                        <plugin>
+                            <groupId>com.h3xstream.findsecbugs</groupId>
+                            <artifactId>findsecbugs-plugin</artifactId>
+                            <version>${findsecbugs.version}</version>
+                        </plugin>
+                    </plugins>
                 </configuration>
                 <executions>
                     <execution>
