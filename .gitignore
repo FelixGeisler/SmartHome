@@ -48,3 +48,6 @@ replay_pid*.log
 *.keystore
 # Personal Claude Code overrides (the shared, committed config is .claude/settings.json).
 .claude/settings.local.json
+
+### cognitive-core runtime state (per-session, machine-local — never commit) ###
+.claude/sessions.json
