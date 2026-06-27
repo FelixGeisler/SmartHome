@@ -1,2 +1,5 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+# Shell-sourced config must stay LF (CRLF/BOM break `source` in bash).
+cognitive-core.conf text eol=lf
+hooks/*.sh text eol=lf
