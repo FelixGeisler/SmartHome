@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -18,6 +19,7 @@ class DeviceRepositoryTest {
   @Autowired private DeviceRepository repository;
   @Autowired private EntityManager entityManager;
 
+  @DisplayName("findByExternalId returns the device saved under that external id")
   @Test
   void findByExternalId_returnsSavedDevice() {
     repository.save(new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly"));
@@ -28,11 +30,13 @@ class DeviceRepositoryTest {
     assertEquals("Plug", found.get().getName());
   }
 
+  @DisplayName("findByExternalId returns empty when no device has that external id")
   @Test
   void findByExternalId_returnsEmptyWhenAbsent() {
     assertTrue(repository.findByExternalId("missing").isEmpty());
   }
 
+  @DisplayName("a device's state entries round-trip through the database")
   @Test
   void save_roundTripsStateEntries() {
     Device device = new Device("ext-2", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -49,6 +53,7 @@ class DeviceRepositoryTest {
     assertEquals("true", found.get().getState().get("on"));
   }
 
+  @DisplayName("a device's capabilities round-trip through the database")
   @Test
   void save_roundTripsCapabilities() {
     Device device =
@@ -69,6 +74,7 @@ class DeviceRepositoryTest {
         Set.of(Capability.SWITCHABLE, Capability.DIMMABLE), found.get().getCapabilities());
   }
 
+  @DisplayName("a device's sensors and their readings round-trip through the database")
   @Test
   void save_roundTripsSensorsAndReadings() {
     Instant readingTime = Instant.parse("2026-06-15T12:00:00Z");

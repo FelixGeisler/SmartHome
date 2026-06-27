@@ -3,10 +3,12 @@ package org.felixgeisler.smarthome.capability;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class AttributeKeyTest {
 
+  @DisplayName("ON_OFF parses and validates booleans")
   @Test
   void onOff_parsesAndValidatesBooleans() {
     assertEquals(true, AttributeKey.ON_OFF.parse("true"));
@@ -14,11 +16,13 @@ class AttributeKeyTest {
     assertTrue(AttributeKey.ON_OFF.validate("nope").isPresent());
   }
 
+  @DisplayName("ON_OFF wire key is pinned to \"on\"")
   @Test
   void onOff_wireKeyIsPinnedToOn() {
     assertEquals("on", AttributeKey.ON_OFF.wireKey());
   }
 
+  @DisplayName("BRIGHTNESS accepts its valid range and rejects values outside it")
   @Test
   void brightness_acceptsItsRangeAndRejectsOutside() {
     assertTrue(AttributeKey.BRIGHTNESS.validate(1).isEmpty());
@@ -28,6 +32,7 @@ class AttributeKeyTest {
     assertEquals("%", AttributeKey.BRIGHTNESS.unit().orElseThrow());
   }
 
+  @DisplayName("COLOR_XY round-trips through its string form")
   @Test
   void colorXy_roundTripsThroughString() {
     XyColor warm = new XyColor(0.4571, 0.4097);
@@ -37,6 +42,7 @@ class AttributeKeyTest {
     assertEquals(warm, AttributeKey.COLOR_XY.parse(formatted));
   }
 
+  @DisplayName("COLOR_XY rejects coordinates outside the unit interval")
   @Test
   void colorXy_rejectsCoordinatesOutsideUnitInterval() {
     assertTrue(AttributeKey.COLOR_XY.validate(new XyColor(0.3, 0.3)).isEmpty());
@@ -44,6 +50,7 @@ class AttributeKeyTest {
     assertTrue(AttributeKey.COLOR_XY.validate("not a color").isPresent());
   }
 
+  @DisplayName("COLOR_TEMPERATURE_K enforces its Kelvin sanity bound")
   @Test
   void colorTemperature_usesKelvinSanityBound() {
     assertTrue(AttributeKey.COLOR_TEMPERATURE_K.validate(2700).isEmpty());
@@ -51,6 +58,7 @@ class AttributeKeyTest {
     assertEquals("K", AttributeKey.COLOR_TEMPERATURE_K.unit().orElseThrow());
   }
 
+  @DisplayName("COLOR_MODE round-trips and validates its values")
   @Test
   void colorMode_roundTripsAndValidates() {
     assertEquals(ColorMode.COLOR_TEMP, AttributeKey.COLOR_MODE.parse("COLOR_TEMP"));

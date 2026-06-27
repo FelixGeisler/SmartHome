@@ -11,7 +11,7 @@ public enum DeviceType {
   /** A node that reports readings from one or more sensors (e.g., over MQTT). */
   SENSOR_NODE(Set.of(Capability.SENSING)),
 
-  /** A Philips Hue light, switched on and off through the bridge. */
+  /** A Philips Hue light switched on and off through the bridge. */
   HUE_LIGHT(Set.of(Capability.SWITCHABLE));
 
   private final Set<Capability> capabilities;

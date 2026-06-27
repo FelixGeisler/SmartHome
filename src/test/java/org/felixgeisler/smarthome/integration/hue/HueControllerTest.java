@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Set;
 import org.felixgeisler.smarthome.device.Capability;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -23,6 +24,7 @@ class HueControllerTest {
   @Autowired private MockMvc mvc;
   @MockitoBean private HueBridgeService bridge;
 
+  @DisplayName("pair endpoint returns paired=true when pairing succeeds")
   @Test
   void pair_returnsPairedTrueOnSuccess() throws Exception {
     when(bridge.pair("192.168.1.10")).thenReturn(true);
@@ -35,6 +37,7 @@ class HueControllerTest {
         .andExpect(jsonPath("$.paired").value(true));
   }
 
+  @DisplayName("pair endpoint returns paired=false when the link button was not pressed")
   @Test
   void pair_returnsPairedFalseWhenLinkButtonNotPressed() throws Exception {
     when(bridge.pair(anyString())).thenReturn(false);
@@ -47,6 +50,7 @@ class HueControllerTest {
         .andExpect(jsonPath("$.paired").value(false));
   }
 
+  @DisplayName("pair endpoint returns 400 when the host is blank")
   @Test
   void pair_returns400WhenHostBlank() throws Exception {
     mvc.perform(
@@ -56,6 +60,7 @@ class HueControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  @DisplayName("lights endpoint returns discovered lights with their capabilities")
   @Test
   void lights_returnsDiscoveredLightsWithCapabilities() throws Exception {
     when(bridge.discoverLights())
@@ -72,6 +77,7 @@ class HueControllerTest {
         .andExpect(jsonPath("$[0].capabilities").isArray());
   }
 
+  @DisplayName("lights endpoint returns 502 when the bridge is unreachable")
   @Test
   void lights_returns502WhenBridgeUnreachable() throws Exception {
     when(bridge.discoverLights()).thenThrow(new HueBridgeException("Could not list lights"));

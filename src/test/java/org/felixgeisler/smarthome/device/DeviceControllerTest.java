@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Set;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -26,6 +27,7 @@ class DeviceControllerTest {
   @Autowired private MockMvc mvc;
   @MockitoBean private DeviceService service;
 
+  @DisplayName("GET /api/devices returns the devices as JSON")
   @Test
   void list_returnsDevicesAsJson() throws Exception {
     Device device = new Device("ext-1", "Living Room Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -38,6 +40,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$[0].type").value("SHELLY_PLUG"));
   }
 
+  @DisplayName("GET /api/devices/{id} returns the device as JSON")
   @Test
   void get_returnsDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -49,6 +52,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.type").value("SHELLY_PLUG"));
   }
 
+  @DisplayName("GET /api/devices/{id} returns 404 when the device is missing")
   @Test
   void get_returns404WhenDeviceMissing() throws Exception {
     when(service.getById(99L)).thenThrow(new DeviceNotFoundException(99L));
@@ -56,6 +60,7 @@ class DeviceControllerTest {
     mvc.perform(get("/api/devices/99")).andExpect(status().isNotFound());
   }
 
+  @DisplayName("POST /api/devices/{id}/toggle returns the updated device")
   @Test
   void toggle_returnsUpdatedDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -68,6 +73,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.capabilities[0]").value("SWITCHABLE"));
   }
 
+  @DisplayName("POST /api/devices/{id}/toggle returns 422 when the device is not switchable")
   @Test
   void toggle_returns422WhenDeviceNotSwitchable() throws Exception {
     when(service.toggle(1L))
@@ -78,6 +84,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.detail").value("Device 1 does not support capability: SWITCHABLE"));
   }
 
+  @DisplayName("POST /api/devices/{id}/toggle returns 404 when the device is missing")
   @Test
   void toggle_returns404WhenDeviceMissing() throws Exception {
     when(service.toggle(99L)).thenThrow(new DeviceNotFoundException(99L));
@@ -85,6 +92,7 @@ class DeviceControllerTest {
     mvc.perform(post("/api/devices/99/toggle")).andExpect(status().isNotFound());
   }
 
+  @DisplayName("POST /api/devices/{id}/toggle returns 500 when the adapter is unknown")
   @Test
   void toggle_returns500WhenAdapterUnknown() throws Exception {
     when(service.toggle(1L)).thenThrow(new UnknownAdapterException("mqtt"));
@@ -94,6 +102,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.detail").doesNotExist());
   }
 
+  @DisplayName("POST /api/devices/{id}/command returns the updated device")
   @Test
   void command_returnsUpdatedDevice() throws Exception {
     Device device =
@@ -112,6 +121,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.state.on").value("true"));
   }
 
+  @DisplayName("POST /api/devices/{id}/command returns 422 when the capability is unsupported")
   @Test
   void command_returns422WhenCapabilityUnsupported() throws Exception {
     when(service.applyCommand(eq(1L), any()))
@@ -125,6 +135,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.detail").value("Device 1 does not support capability: DIMMABLE"));
   }
 
+  @DisplayName("POST /api/devices/{id}/command returns 400 when the command is invalid")
   @Test
   void command_returns400WhenCommandInvalid() throws Exception {
     when(service.applyCommand(eq(1L), any()))
@@ -138,6 +149,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.detail").value("Command sets no attributes"));
   }
 
+  @DisplayName("POST /api/devices creates the device and returns 201 with a Location header")
   @Test
   void register_returnsCreatedDevice() throws Exception {
     Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
@@ -154,6 +166,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.name").value("Plug"));
   }
 
+  @DisplayName("POST /api/devices returns 409 when the device already exists")
   @Test
   void register_returns409WhenDeviceAlreadyExists() throws Exception {
     when(service.register(any(), any(), any(), any(), any(), any()))
@@ -168,6 +181,7 @@ class DeviceControllerTest {
         .andExpect(status().isConflict());
   }
 
+  @DisplayName("POST /api/devices returns 422 with detail when the adapter type is unsupported")
   @Test
   void register_returns422WithDetailWhenAdapterTypeUnsupported() throws Exception {
     when(service.register(any(), any(), any(), any(), any(), any()))
@@ -183,6 +197,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.detail").value("Unsupported adapter type: nest"));
   }
 
+  @DisplayName("POST /api/devices returns 400 when a required field is blank")
   @Test
   void register_returns400WhenRequiredFieldBlank() throws Exception {
     mvc.perform(
@@ -194,6 +209,7 @@ class DeviceControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  @DisplayName("POST /api/devices accepts a sensor device without an adapter")
   @Test
   void register_acceptsSensorDeviceWithoutAdapter() throws Exception {
     Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
@@ -214,6 +230,7 @@ class DeviceControllerTest {
         .andExpect(jsonPath("$.sensors[0].unit").value("%"));
   }
 
+  @DisplayName("POST /api/devices returns 400 when a command device has no adapter type")
   @Test
   void register_returns400WhenCommandDeviceHasNoAdapterType() throws Exception {
     mvc.perform(
@@ -223,6 +240,7 @@ class DeviceControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  @DisplayName("POST /api/devices returns 400 when a sensor element is null")
   @Test
   void register_returns400WhenSensorElementIsNull() throws Exception {
     mvc.perform(
