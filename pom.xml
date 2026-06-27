@@ -23,7 +23,7 @@
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <findsecbugs.version>1.13.0</findsecbugs.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
-        <wiremock.version>3.13.1</wiremock.version>
+        <wiremock.version>3.13.2</wiremock.version>
         <paho.version>1.2.5</paho.version>
         <springdoc.version>3.0.3</springdoc.version>
         <frontend.plugin.version>1.15.1</frontend.plugin.version>
