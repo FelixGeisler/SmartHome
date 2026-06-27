@@ -37,3 +37,14 @@ build/
 ### JVM crash dumps ###
 hs_err_pid*.log
 replay_pid*.log
+
+### Secrets — never commit (see AI-SECURITY-POLICY.md) ###
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+# Personal Claude Code overrides (the shared, committed config is .claude/settings.json).
+.claude/settings.local.json
