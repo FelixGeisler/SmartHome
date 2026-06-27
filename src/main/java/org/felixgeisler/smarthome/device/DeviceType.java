@@ -33,7 +33,7 @@ public enum DeviceType {
   /**
    * Tells whether devices of this type have the given capability.
    *
-   * @param capability the ability to check for
+   * @param capability the capability to check for
    * @return true if devices of this type have it
    */
   public boolean hasCapability(Capability capability) {
