@@ -1,4 +1,4 @@
-﻿= ADR 6: MQTT as a runtime integration; sensor nodes auto-provisioned
+= ADR 6: MQTT as a runtime integration; sensor nodes auto-provisioned
 
 == Status
 Accepted
