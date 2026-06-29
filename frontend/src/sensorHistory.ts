@@ -43,6 +43,9 @@ export function accumulateHistory(previous: SensorHistory, devices: Device[]): S
       const key = seriesKey(device.id, sensor.key)
       const series = next[key] ?? []
       const time = Date.parse(sensor.updatedAt)
+      if (Number.isNaN(time)) {
+        continue
+      }
       if (series.length > 0 && series[series.length - 1].t === time) {
         continue
       }

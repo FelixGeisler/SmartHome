@@ -41,4 +41,8 @@ describe('accumulateHistory', () => {
 
     expect(accumulateHistory({}, [node])).toEqual({})
   })
+
+  it('skips a reading with an unparseable timestamp', () => {
+    expect(accumulateHistory({}, [reading('not-a-date', '21.0')])).toEqual({})
+  })
 })
