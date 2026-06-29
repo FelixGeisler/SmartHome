@@ -1,0 +1,15 @@
+﻿= ADR 6: MQTT as a runtime integration; sensor nodes auto-provisioned
+
+== Status
+Accepted
+
+== Context
+MQTT telemetry ingestion was activated by a startup configuration flag, and every sensor node and each of its sensors had to be registered up front before any reading was accepted. That is inconsistent with ADR 5, where an integration is a connection configured at runtime from the dashboard — as the Hue bridge is — not something decided when the hub is set up. It also puts a manual registration step in the way of simply plugging in a node. A node publishes a bare value per topic (`<prefix>/<node>/<sensor-key>`); the message carries no measurement type or unit.
+
+== Decision
+The MQTT broker connection is a runtime-configured integration, connected and disconnected through the API like the other integrations, not gated by a startup flag. The hub boots without a broker; connecting one starts the telemetry subscription and disconnecting stops it — no integration connected means off, one connected means on.
+
+Inbound telemetry provisions its own source. A reading from an unknown node creates a sensing device for it, and a reading for a recognized measurement key adds that sensor with the measurement's default unit. The recognized keys are a fixed vocabulary — temperature, humidity, pressure, and CO2 — each with a canonical unit. A reading whose key is outside that vocabulary is dropped, so an unrecognized topic cannot create a meaningless sensor.
+
+== Consequences
+Connecting MQTT now matches the mental model of the other integrations, and a node appears in the hub simply by publishing, with no manual registration. The trade-off is that the hub infers a sensor's type and unit from its topic key, so it understands only the fixed measurement vocabulary: nodes must use those keys, and supporting a new measurement is a code change rather than configuration. Auto-provisioned sensors therefore carry inferred metadata rather than the richer declared metadata of ADR 2 and ADR 3; explicit registration remains available for devices that need it. As with the Hue pairing under ADR 5, the MQTT connection is not yet persisted across restarts; persistence is deferred.

@@ -7,11 +7,11 @@ spring:
 
 smarthome:
   mqtt:
-    # Disabled by default so the app and its tests boot without a broker. Enable per
-    # environment and point at a broker; credentials come from the environment, never here.
-    enabled: false
-    broker-url: tcp://localhost:1883
-    topic-filter: home/+/+
+    # The broker is connected at runtime via POST /api/integrations/mqtt/connect, like the Hue
+    # integration — not configured at startup, so the hub boots without a broker. These optional
+    # client settings have sensible defaults (client-id smarthome-hub, topic-filter home/+/+);
+    # broker credentials, if the broker requires them, come from the environment, never here.
+    # topic-filter: home/+/+
     # username: ${SMARTHOME_MQTT_USERNAME}
     # password: ${SMARTHOME_MQTT_PASSWORD}
   hue:

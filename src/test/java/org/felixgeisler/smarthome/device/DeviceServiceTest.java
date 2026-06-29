@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -239,24 +240,53 @@ class DeviceServiceTest {
     verify(devices).save(device);
   }
 
-  @DisplayName("recordReading() drops a reading for an unknown device")
+  @DisplayName("recordReading() auto-provisions an unknown device as a sensor node")
   @Test
-  void recordReading_dropsReadingForUnknownDevice() {
-    when(devices.findByExternalId("ghost")).thenReturn(Optional.empty());
+  void recordReading_autoProvisionsUnknownDeviceAsSensorNode() {
+    when(devices.findByExternalId("living-room")).thenReturn(Optional.empty());
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    service.recordReading("ghost", "temperature", "21.5");
+    service.recordReading("living-room", "temperature", "21.5");
 
-    verify(devices, never()).save(any());
+    ArgumentCaptor<Device> saved = ArgumentCaptor.forClass(Device.class);
+    verify(devices).save(saved.capture());
+    Device device = saved.getValue();
+    assertEquals("living-room", device.getExternalId());
+    assertEquals(DeviceType.SENSOR_NODE, device.getType());
+    assertEquals(1, device.getSensors().size());
+    Sensor sensor = device.getSensors().getFirst();
+    assertEquals("temperature", sensor.getKey());
+    assertEquals(SensorType.TEMPERATURE, sensor.getType());
+    assertEquals("°C", sensor.getUnit());
+    assertEquals("21.5", sensor.getValue());
+    assertEquals(NOW, sensor.getUpdatedAt());
   }
 
-  @DisplayName("recordReading() drops a reading for a sensor the device did not declare")
+  @DisplayName("recordReading() auto-adds a recognized sensor the device had not declared")
   @Test
-  void recordReading_dropsReadingForUndeclaredSensor() {
+  void recordReading_autoAddsRecognizedSensorToExistingDevice() {
     Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
     device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
     when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     service.recordReading("node-1", "humidity", "40");
+
+    Optional<Sensor> humidity =
+        device.getSensors().stream()
+            .filter(sensor -> sensor.getKey().equals("humidity"))
+            .findFirst();
+    assertTrue(humidity.isPresent());
+    assertEquals(SensorType.HUMIDITY, humidity.get().getType());
+    assertEquals("%", humidity.get().getUnit());
+    assertEquals("40", humidity.get().getValue());
+    verify(devices).save(device);
+  }
+
+  @DisplayName("recordReading() drops a reading whose sensor key is not a known measurement")
+  @Test
+  void recordReading_dropsReadingForUnrecognizedSensorKey() {
+    service.recordReading("node-1", "noise", "42");
 
     verify(devices, never()).save(any());
   }
@@ -360,6 +390,26 @@ class DeviceServiceTest {
         () -> service.applyCommand(1L, new CommandRequest(null, null, null, null)));
 
     verify(devices, never()).save(any());
+  }
+
+  @DisplayName("delete() removes an existing device")
+  @Test
+  void delete_removesExistingDevice() {
+    when(devices.existsById(1L)).thenReturn(true);
+
+    service.delete(1L);
+
+    verify(devices).deleteById(1L);
+  }
+
+  @DisplayName("delete() throws when the device does not exist")
+  @Test
+  void delete_throwsWhenDeviceMissing() {
+    when(devices.existsById(99L)).thenReturn(false);
+
+    assertThrows(DeviceNotFoundException.class, () -> service.delete(99L));
+
+    verify(devices, never()).deleteById(any());
   }
 
   private static Device richLight() {
