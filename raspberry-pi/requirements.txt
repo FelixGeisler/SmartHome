@@ -1,7 +1,11 @@
 paho-mqtt>=2.0
-RPi.bme280>=0.2.4
-smbus2>=0.4.0
+
+# BME690 environment sensor (temperature, humidity, pressure) over I2C via Blinka.
+# The BME690 shares the BME680 chip ID (0x61), so the adafruit bme680 driver reads it.
+adafruit-circuitpython-bme680>=1.2.0
+adafruit-blinka>=8.0.0
+# Blinka's GPIO backend on current Raspberry Pi OS (Bookworm) and the Pi 5.
+lgpio>=0.2.2.0
 
 # CO2 sensor (SCD40/SCD41) — only needed when ENABLE_CO2=true.
 adafruit-circuitpython-scd4x>=1.4.0
-adafruit-blinka>=8.0.0

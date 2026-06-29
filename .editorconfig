@@ -1,0 +1,11 @@
+# Keep encodings/line endings consistent so editors don't write a UTF-8 BOM, which javac rejects.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.java]
+indent_style = space
+indent_size = 2

@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,25 +108,47 @@ public class DeviceService {
   }
 
   /**
-   * Records a sensor reading received as inbound telemetry. A reading for an unknown device or an
-   * undeclared sensor is logged and dropped, so a misconfigured node cannot fail the pipeline.
+   * Records a sensor reading received as inbound telemetry, auto-provisioning as needed: an unknown
+   * device is created as a {@link DeviceType#SENSOR_NODE}, and a reading for a recognized but
+   * not-yet-seen sensor key adds that sensor with its default unit. A reading whose key is not a
+   * known measurement is logged and dropped, so an unrecognized topic cannot create junk sensors.
    *
    * @param externalId the reporting device's external id
    * @param sensorKey the key of the sensor the reading is for
    * @param value the reading value
    */
   public void recordReading(String externalId, String sensorKey, String value) {
-    Optional<Device> match = devices.findByExternalId(externalId);
-    if (match.isEmpty()) {
-      log.warn("Dropping reading for unknown device '{}'", externalId);
+    Optional<SensorType> type = SensorType.forKey(sensorKey);
+    if (type.isEmpty()) {
+      log.warn("Unknown sensor key '{}' from device '{}'; dropping reading", sensorKey, externalId);
       return;
     }
-    Device device = match.get();
-    if (!device.recordReading(sensorKey, value, clock.instant())) {
-      log.warn("Device '{}' has no declared sensor '{}'; dropping reading", externalId, sensorKey);
-      return;
+    Device device =
+        devices.findByExternalId(externalId).orElseGet(() -> autoProvision(externalId));
+    Instant at = clock.instant();
+    if (!device.recordReading(sensorKey, value, at)) {
+      device.addSensor(sensorKey, type.get(), type.get().getDefaultUnit());
+      device.recordReading(sensorKey, value, at);
     }
     devices.save(device);
+  }
+
+  private Device autoProvision(String externalId) {
+    log.info("Auto-provisioning sensor node '{}' from inbound telemetry", externalId);
+    return new Device(externalId, externalId, DeviceType.SENSOR_NODE, null);
+  }
+
+  /**
+   * Deletes a device. A still-publishing sensor node is re-provisioned on its next reading.
+   *
+   * @param id the device id
+   * @throws DeviceNotFoundException if no device has the given id
+   */
+  public void delete(Long id) {
+    if (!devices.existsById(id)) {
+      throw new DeviceNotFoundException(id);
+    }
+    devices.deleteById(id);
   }
 
   /**

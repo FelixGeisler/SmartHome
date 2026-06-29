@@ -12,6 +12,7 @@
 ** xref:adr/0003-neutral-state-and-command-contracts.adoc[ADR 3: Neutral state and command contracts]
 ** xref:adr/0004-device-integration-model.adoc[ADR 4: Device integration model]
 ** xref:adr/0005-integrations-as-persisted-ui-configured-connections.adoc[ADR 5: Persisted UI-configured integrations]
+** xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6: MQTT runtime integration and auto-provisioning]
 * xref:10-quality-requirements.adoc[10. Quality Requirements]
 * xref:11-risks-and-technical-debt.adoc[11. Risks and Technical Debt]
 * xref:12-glossary.adoc[12. Glossary]

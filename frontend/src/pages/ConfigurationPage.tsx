@@ -1,6 +1,7 @@
 import type { Device } from '../api/devices'
 import { AddDeviceForm } from '../components/AddDeviceForm'
 import { HuePanel } from '../components/HuePanel'
+import { MqttPanel } from '../components/MqttPanel'
 
 interface ConfigurationPageProps {
   onRegistered: (device: Device) => void
@@ -11,6 +12,7 @@ export function ConfigurationPage({ onRegistered }: ConfigurationPageProps) {
   return (
     <section className="configuration">
       <AddDeviceForm onRegistered={onRegistered} />
+      <MqttPanel />
       <HuePanel onRegistered={onRegistered} />
     </section>
   )

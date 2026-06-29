@@ -2,7 +2,9 @@ package org.felixgeisler.smarthome.device;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -250,5 +252,19 @@ class DeviceControllerTest {
                     "{\"externalId\":\"node-1\",\"name\":\"Climate\","
                         + "\"type\":\"SENSOR_NODE\",\"sensors\":[null]}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @DisplayName("DELETE /api/devices/{id} returns 204")
+  @Test
+  void delete_returns204() throws Exception {
+    mvc.perform(delete("/api/devices/1")).andExpect(status().isNoContent());
+  }
+
+  @DisplayName("DELETE /api/devices/{id} returns 404 when the device is missing")
+  @Test
+  void delete_returns404WhenDeviceMissing() throws Exception {
+    doThrow(new DeviceNotFoundException(99L)).when(service).delete(99L);
+
+    mvc.perform(delete("/api/devices/99")).andExpect(status().isNotFound());
   }
 }

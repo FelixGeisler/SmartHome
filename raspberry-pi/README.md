@@ -1,7 +1,7 @@
 # Raspberry Pi sensor node (reference)
 
 A working reference for an MQTT sensor node: a Raspberry Pi running Mosquitto and a Python
-publisher that reads a BME280 (temperature, humidity, pressure) and an SCD41 (CO₂) over I²C and
+publisher that reads a BME690 (temperature, humidity, pressure) and an SCD41 (CO₂) over I²C and
 publishes to the broker.
 
 For the general integration steps (running a broker, pointing the hub at it, registering the
@@ -11,7 +11,7 @@ this node.
 
 ## Wiring (shared I²C bus)
 
-Both sensors share the I²C pins; their addresses (BME280 `0x76`, SCD41 `0x62`) keep them apart.
+Both sensors share the I²C pins; their addresses (BME690 `0x77`/`0x76`, SCD41 `0x62`) keep them apart.
 
 | Sensor pin | Pi pin | Signal |
 |-----------|--------|--------|
@@ -20,7 +20,7 @@ Both sensors share the I²C pins; their addresses (BME280 `0x76`, SCD41 `0x62`) 
 | SCL | 5 | GPIO3 (SCL1) |
 | SDA | 3 | GPIO2 (SDA1) |
 
-Power the sensors from 3V3. Confirm they're detected with `i2cdetect -y 1` (expect `76` and `62`).
+Power the sensors from 3V3. Confirm they're detected with `i2cdetect -y 1` (expect `77` (or `76`) and `62`).
 
 ## Run
 
@@ -32,7 +32,7 @@ python sensor_node.py
 ```
 
 Install on boot with the provided `sensor-node.service` (systemd). Set `ENABLE_CO2=false` for a
-BME280-only node.
+node without a CO2 sensor.
 
 ## Files
 

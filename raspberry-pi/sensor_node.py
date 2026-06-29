@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Publish BME280 (and optionally SCD4x CO2) readings to the SmartHome MQTT broker.
+"""Publish BME690 (and optionally SCD4x CO2) readings to the SmartHome MQTT broker.
 
-Reads a BME280 over I2C for temperature, humidity, and pressure, and — when enabled — an
+Reads a BME690 over I2C for temperature, humidity, and pressure, and — when enabled — an
 SCD4x (SCD40/SCD41) for CO2, publishing each to ``<prefix>/<node-id>/<sensor-key>`` (e.g.
-``home/living-room/temperature``), which is the topic shape the SmartHome hub subscribes to.
-Values are plain strings; the unit for each reading is declared on the hub when the device is
-registered, not here.
+``home/living-room/temperature``), the topic shape the SmartHome hub subscribes to. Values are
+plain strings; the unit for each reading is declared on the hub when the device is registered,
+not here.
 
 Configuration comes from environment variables (see ``sensor-node.env.example``); no secrets
 are hard-coded.
@@ -16,13 +16,36 @@ import logging
 import os
 import signal
 import time
+from pathlib import Path
 
-import bme280
+import adafruit_bme680  # also drives the BME690 (shared chip ID 0x61)
+import board
 import paho.mqtt.client as mqtt
-import smbus2
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("sensor-node")
+
+
+def _load_env_file(path):
+    """Populate the environment from a KEY=VALUE file; existing variables take precedence.
+
+    Lets ``python sensor_node.py`` pick up ``sensor-node.env`` without a wrapper. The systemd
+    unit still loads the same file via EnvironmentFile, which sets the variables first, so those
+    win and this call becomes a no-op there.
+    """
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        key, sep, value = stripped.partition("=")
+        if sep and key.strip() not in os.environ:
+            os.environ[key.strip()] = value.strip()
+
+
+# Load config from sensor-node.env next to this script, regardless of the working directory.
+_load_env_file(Path(__file__).with_name("sensor-node.env"))
 
 BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "localhost")
 BROKER_PORT = int(os.environ.get("MQTT_BROKER_PORT", "1883"))
@@ -30,9 +53,12 @@ USERNAME = os.environ.get("MQTT_USERNAME")
 PASSWORD = os.environ.get("MQTT_PASSWORD")
 NODE_ID = os.environ.get("NODE_ID", "living-room")
 TOPIC_PREFIX = os.environ.get("TOPIC_PREFIX", "home")
-INTERVAL_SECONDS = float(os.environ.get("INTERVAL_SECONDS", "30"))
-I2C_BUS = int(os.environ.get("I2C_BUS", "1"))
-I2C_ADDRESS = int(os.environ.get("I2C_ADDRESS", "0x76"), 16)
+INTERVAL_SECONDS = float(os.environ.get("INTERVAL_SECONDS", "5"))
+# Optional override; when unset, the BME690 address is auto-detected.
+_configured_address = os.environ.get("I2C_ADDRESS")
+BME690_ADDRESS = int(_configured_address, 16) if _configured_address else None
+# The two addresses BME690 boards use, in probe order.
+BME690_CANDIDATES = (0x77, 0x76)
 ENABLE_CO2 = os.environ.get("ENABLE_CO2", "true").lower() == "true"
 
 _running = True
@@ -53,17 +79,41 @@ def _interruptible_sleep(seconds):
         slept += 1.0
 
 
+def open_environment_sensor():
+    """Initialise the BME690, auto-detecting its I2C address.
+
+    Honours an explicit I2C_ADDRESS; otherwise probes the two common addresses (0x77, 0x76)
+    and uses the first that responds. Raises if none do.
+    """
+    i2c = board.I2C()
+    candidates = (BME690_ADDRESS,) if BME690_ADDRESS is not None else BME690_CANDIDATES
+    last_error = None
+    for address in candidates:
+        try:
+            # The BME690 shares the BME680/BME688 chip ID (0x61), so the Adafruit BME680 driver
+            # reads it.
+            sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=address)
+            log.info("BME690 found at 0x%02x", address)
+            return sensor
+        except (ValueError, OSError, RuntimeError) as exc:  # nothing here: try the next address
+            last_error = exc
+            log.info("No BME690 at 0x%02x (%s)", address, exc)
+    addresses = ", ".join(f"0x{a:02x}" for a in candidates)
+    raise RuntimeError(
+        f"No BME690 found at {addresses}; check wiring and `i2cdetect -y 1`"
+    ) from last_error
+
+
 def open_co2_sensor():
     """Start the SCD4x periodic measurement, or return None if disabled or absent.
 
-    The imports are local so a BME280-only node (ENABLE_CO2=false) needs neither the SCD4x
-    library nor Blinka installed.
+    The import is local so a node without a CO2 sensor (ENABLE_CO2=false) needs neither the
+    SCD4x library installed nor the sensor present.
     """
     if not ENABLE_CO2:
         return None
     try:
         import adafruit_scd4x
-        import board
 
         sensor = adafruit_scd4x.SCD4X(board.I2C())
         sensor.start_periodic_measurement()
@@ -74,13 +124,12 @@ def open_co2_sensor():
         return None
 
 
-def read_environment(bus, calibration):
-    """Sample the BME280: temperature (°C), humidity (%), pressure (hPa)."""
-    sample = bme280.sample(bus, I2C_ADDRESS, calibration)
+def read_environment(sensor):
+    """Sample the BME690: temperature (°C), humidity (%), pressure (hPa)."""
     return {
-        "temperature": f"{sample.temperature:.1f}",
-        "humidity": f"{sample.humidity:.1f}",
-        "pressure": f"{sample.pressure:.1f}",
+        "temperature": f"{sensor.temperature:.1f}",
+        "humidity": f"{sensor.humidity:.1f}",
+        "pressure": f"{sensor.pressure:.1f}",
     }
 
 
@@ -120,8 +169,7 @@ def main():
     signal.signal(signal.SIGINT, _stop)
     signal.signal(signal.SIGTERM, _stop)
 
-    bus = smbus2.SMBus(I2C_BUS)
-    calibration = bme280.load_calibration_params(bus, I2C_ADDRESS)
+    env_sensor = open_environment_sensor()
     co2_sensor = open_co2_sensor()
     client = build_client()
     log.info(
@@ -133,19 +181,18 @@ def main():
         while _running:
             readings = {}
             try:
-                readings.update(read_environment(bus, calibration))
-            except OSError as exc:  # transient I2C read error: log and keep going
-                log.warning("BME280 read failed: %s", exc)
+                readings.update(read_environment(env_sensor))
+            except (OSError, RuntimeError) as exc:  # transient I2C read error: log and keep going
+                log.warning("BME690 read failed: %s", exc)
             try:
                 readings.update(read_co2(co2_sensor))
-            except OSError as exc:
+            except (OSError, RuntimeError) as exc:
                 log.warning("SCD4x read failed: %s", exc)
             publish(client, readings)
             _interruptible_sleep(INTERVAL_SECONDS)
     finally:
         client.loop_stop()
         client.disconnect()
-        bus.close()
     return 0
 
 

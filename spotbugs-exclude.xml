@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-  <!-- Constructor-injected Spring singletons are stored by design — that's dependency injection,
-       not exposed mutable state. HueBridgeService holds the bridge pairing state (host + app key),
-       so SpotBugs treats it as mutable and flags EI_EXPOSE_REP2 on the beans that inject it. The
-       check stays active everywhere else (e.g. the response/request DTOs still need defensive
-       copies). -->
-  <Match>
-    <Bug pattern="EI_EXPOSE_REP2"/>
-    <Or>
-      <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
-      <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>
-    </Or>
-  </Match>
+    <!-- Constructor-injected Spring beans store their collaborators by design — that's dependency
+         injection, not exposed mutable state. SpotBugs raises EI_EXPOSE_REP2 whenever a bean stores
+         a constructor-injected concrete service (HueBridgeService, MqttConnection, DeviceService);
+         the classes below are the ones that inject such a service. The check stays active everywhere
+         else (e.g., the response/request DTOs still need defensive copies). -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
+            <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
+            <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>
+            <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
+            <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
+        </Or>
+    </Match>
 </FindBugsFilter>

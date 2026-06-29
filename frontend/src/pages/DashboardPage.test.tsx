@@ -27,6 +27,8 @@ describe('DashboardPage', () => {
         busyIds={new Set()}
         onToggle={vi.fn()}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -44,6 +46,8 @@ describe('DashboardPage', () => {
         busyIds={new Set()}
         onToggle={vi.fn()}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -77,6 +81,8 @@ describe('DashboardPage', () => {
         busyIds={new Set()}
         onToggle={vi.fn()}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -97,6 +103,8 @@ describe('DashboardPage', () => {
         busyIds={new Set()}
         onToggle={onToggle}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -115,6 +123,8 @@ describe('DashboardPage', () => {
         busyIds={new Set([lamp.id])}
         onToggle={vi.fn()}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -133,6 +143,8 @@ describe('DashboardPage', () => {
         busyIds={new Set()}
         onToggle={vi.fn()}
         onCommand={vi.fn()}
+        onDelete={vi.fn()}
+        history={{}}
         onRetry={onRetry}
       />,
     )

@@ -153,10 +153,22 @@ export function sendCommand(id: number, command: DeviceCommand): Promise<Device>
   })
 }
 
+/**
+ * Deletes a device. A still-publishing sensor node reappears on its next reading.
+ *
+ * @param id the device id
+ */
+export function deleteDevice(id: number): Promise<void> {
+  return request<void>(`/api/devices/${id}`, { method: 'DELETE' })
+}
+
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init)
   if (!response.ok) {
     throw new Error(await errorMessage(response))
+  }
+  if (response.status === 204) {
+    return undefined as T
   }
   return (await response.json()) as T
 }
