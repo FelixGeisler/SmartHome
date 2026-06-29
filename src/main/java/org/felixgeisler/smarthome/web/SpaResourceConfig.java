@@ -51,7 +51,9 @@ public class SpaResourceConfig implements WebMvcConfigurer {
           || resourcePath.startsWith("swagger-ui")) {
         return null;
       }
-      return INDEX;
+      // When the SPA isn't bundled (e.g. a dev run with -Dskip.frontend=true), index.html is
+      // absent; return null for a clean 404 instead of throwing on the missing file.
+      return INDEX.exists() ? INDEX : null;
     }
   }
 }
