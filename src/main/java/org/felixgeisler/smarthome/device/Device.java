@@ -72,7 +72,7 @@ public class Device {
   // Declared sensors and their latest readings; empty for non-sensing devices. Eagerly fetched
   // for the same reason as the state map: the response view is built after the session closes.
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-  @JoinColumn(name = "device_id")
+  @JoinColumn(name = "device_id", nullable = false)
   private List<Sensor> sensors = new ArrayList<>();
 
   /** Required by JPA. */
