@@ -1,6 +1,6 @@
 [Unit]
-Description=SmartHome BME280 MQTT sensor node
-# Start after the network is up and the local broker is running.
+Description=SmartHome BME690 MQTT sensor node
+# Start after the network is up and, on the broker Pi, the local broker.
 After=network-online.target mosquitto.service
 Wants=network-online.target
 
