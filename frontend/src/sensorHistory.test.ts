@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Device } from './api/devices'
-import { accumulateHistory, seriesKey } from './sensorHistory'
+import { accumulateHistory, forgetDevice, seriesKey } from './sensorHistory'
 
 function reading(updatedAt: string, value: string): Device {
   return {
@@ -44,5 +44,14 @@ describe('accumulateHistory', () => {
 
   it('skips a reading with an unparseable timestamp', () => {
     expect(accumulateHistory({}, [reading('not-a-date', '21.0')])).toEqual({})
+  })
+
+  it('forgets the series of a deleted device', () => {
+    const node = reading('2026-06-30T00:00:00Z', '21.0')
+    const history = accumulateHistory({}, [node])
+
+    const pruned = forgetDevice(history, node)
+
+    expect(seriesKey(1, 'temperature') in pruned).toBe(false)
   })
 })

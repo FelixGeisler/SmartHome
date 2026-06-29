@@ -4,7 +4,7 @@ import type { Device, DeviceCommand } from './api/devices'
 import { deleteDevice, listDevices, sendCommand, toggleDevice } from './api/devices'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
-import { accumulateHistory, type SensorHistory } from './sensorHistory'
+import { accumulateHistory, forgetDevice, type SensorHistory } from './sensorHistory'
 
 /** How often the dashboard re-fetches the device list so values update without a reload. */
 const POLL_INTERVAL_MS = 5000
@@ -115,6 +115,7 @@ function App() {
     try {
       await deleteDevice(device.id)
       setDevices((current) => current.filter((existing) => existing.id !== device.id))
+      setHistory((previous) => forgetDevice(previous, device))
     } catch (cause) {
       setError(messageOf(cause))
     } finally {

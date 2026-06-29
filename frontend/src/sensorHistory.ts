@@ -57,3 +57,26 @@ export function accumulateHistory(previous: SensorHistory, devices: Device[]): S
   }
   return next
 }
+
+/**
+ * Drops a device's sensor series from the history, e.g. when the device is deleted, so stale series
+ * do not accumulate as devices are removed and re-provisioned. Returns the same reference when the
+ * device had no recorded series.
+ *
+ * @param history the accumulated history
+ * @param device the device whose series to forget
+ * @returns the history without that device's series
+ */
+export function forgetDevice(history: SensorHistory, device: Device): SensorHistory {
+  const removed = new Set(device.sensors.map((sensor) => seriesKey(device.id, sensor.key)))
+  const next: SensorHistory = {}
+  let changed = false
+  for (const [key, series] of Object.entries(history)) {
+    if (removed.has(key)) {
+      changed = true
+    } else {
+      next[key] = series
+    }
+  }
+  return changed ? next : history
+}
