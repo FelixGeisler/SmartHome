@@ -26,13 +26,20 @@ const plug: Device = {
   sensors: [],
 }
 
-function renderCard(device: Device, onCommand = vi.fn(), onToggle = vi.fn()) {
+function renderCard(device: Device, onCommand = vi.fn(), onToggle = vi.fn(), onDelete = vi.fn()) {
   render(
     <ul>
-      <DeviceCard device={device} busy={false} onToggle={onToggle} onCommand={onCommand} />
+      <DeviceCard
+        device={device}
+        busy={false}
+        history={{}}
+        onToggle={onToggle}
+        onCommand={onCommand}
+        onDelete={onDelete}
+      />
     </ul>,
   )
-  return { onCommand, onToggle }
+  return { onCommand, onToggle, onDelete }
 }
 
 describe('DeviceCard', () => {
@@ -81,5 +88,14 @@ describe('DeviceCard', () => {
     await user.click(screen.getByRole('button', { name: 'Turn Desk Lamp on' }))
 
     expect(onToggle).toHaveBeenCalledWith(plug)
+  })
+
+  it('calls onDelete with the device when Remove is clicked', async () => {
+    const { onDelete } = renderCard(plug)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Remove Desk Lamp' }))
+
+    expect(onDelete).toHaveBeenCalledWith(plug)
   })
 })

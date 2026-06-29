@@ -12,6 +12,8 @@ import {
   isSwitchable,
 } from '../api/devices'
 import { hexToXy, xyToHex } from '../color'
+import { seriesKey, type SensorHistory } from '../sensorHistory'
+import { Sparkline } from './Sparkline'
 
 /** Hue's tunable-white range, also a sensible window for the color-temperature slider. */
 const MIN_KELVIN = 2000
@@ -24,20 +26,42 @@ interface DeviceCardProps {
   device: Device
   /** True, while a command for this device is in flight; disables the toggle. */
   busy: boolean
+  /** Recent readings per sensor, for the sparkline charts. */
+  history: SensorHistory
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
+  onDelete: (device: Device) => void
 }
 
-/** One dashboard tile: device name, metadata, and controls picked per capability. */
-export function DeviceCard({ device, busy, onToggle, onCommand }: DeviceCardProps) {
+/** One dashboard tile: device name, metadata, controls per capability, and sensor charts. */
+export function DeviceCard({
+  device,
+  busy,
+  history,
+  onToggle,
+  onCommand,
+  onDelete,
+}: DeviceCardProps) {
   const on = isSwitchable(device) && isOn(device)
   return (
     <li className={on ? 'device-card device-card--on' : 'device-card'}>
-      <div className="device-card__info">
-        <span className="device-card__name">{device.name}</span>
-        <span className="device-card__meta">
-          {formatType(device.type)} &middot; {device.externalId}
-        </span>
+      <div className="device-card__header">
+        <div className="device-card__info">
+          <span className="device-card__name">{device.name}</span>
+          <span className="device-card__meta">
+            {formatType(device.type)} &middot; {device.externalId}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="device-card__delete"
+          disabled={busy}
+          aria-label={`Remove ${device.name}`}
+          title="Remove device"
+          onClick={() => onDelete(device)}
+        >
+          <TrashIcon />
+        </button>
       </div>
       {isSwitchable(device) && (
         <div className="device-card__state">
@@ -58,9 +82,7 @@ export function DeviceCard({ device, busy, onToggle, onCommand }: DeviceCardProp
       )}
       {(isDimmable(device) || hasColor(device) || hasColorTemperature(device)) && (
         <div className="device-card__controls">
-          {isDimmable(device) && (
-            <BrightnessControl device={device} onCommand={onCommand} />
-          )}
+          {isDimmable(device) && <BrightnessControl device={device} onCommand={onCommand} />}
           {hasColor(device) && <ColorControl device={device} onCommand={onCommand} />}
           {hasColorTemperature(device) && (
             <ColorTemperatureControl device={device} onCommand={onCommand} />
@@ -68,14 +90,17 @@ export function DeviceCard({ device, busy, onToggle, onCommand }: DeviceCardProp
         </div>
       )}
       {isSensing(device) && (
-        <dl className="device-card__readings">
+        <div className="device-card__sensors">
           {device.sensors.map((sensor) => (
-            <div className="device-card__reading" key={sensor.key}>
-              <dt>{sensor.key}</dt>
-              <dd>{formatReading(sensor)}</dd>
+            <div className="sensor" key={sensor.key}>
+              <div className="sensor__head">
+                <span className="sensor__key">{sensor.key}</span>
+                <span className="sensor__value">{formatReading(sensor)}</span>
+              </div>
+              <Sparkline points={history[seriesKey(device.id, sensor.key)] ?? []} />
             </div>
           ))}
-        </dl>
+        </div>
       )}
     </li>
   )
@@ -179,6 +204,29 @@ function CommitInput({ type, value, ariaLabel, min, max, onCommit }: CommitInput
       defaultValue={value}
       aria-label={ariaLabel}
     />
+  )
+}
+
+/** A trash-can glyph for the delete button. */
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
   )
 }
 
