@@ -67,28 +67,39 @@ public class MqttConnection {
     } catch (MqttException ex) {
       String reason = ex.getMessage();
       log.error("Could not connect MQTT integration to {}: {}", brokerUrl, reason);
+      disconnect();
       return false;
     }
   }
 
-  /** Disconnects from the broker if connected; safe to call when not connected. */
+  /**
+   * Disconnects and releases the broker client if present; safe to call when not connected, and
+   * used to clean up a half-open client after a failed {@link #connect(String, int)}. Disconnect
+   * and close run in separate steps so the client's resources are released even if it never
+   * finished connecting.
+   */
   @SuppressWarnings("PMD.NullAssignment")
   public synchronized void disconnect() {
     if (client == null) {
       return;
     }
     try {
-      client.disconnect();
-      client.close();
+      if (client.isConnected()) {
+        client.disconnect();
+      }
     } catch (MqttException ex) {
       String reason = ex.getMessage();
       log.warn("Error while disconnecting from the MQTT broker: {}", reason);
-    } finally {
-      // Nulling the client is the connection state: null means "no broker connected", so a later
-      // connect() and isConnected() start from a clean slate without double-closing a dead client.
-      // (This is why PMD.NullAssignment is suppressed on this method.)
-      client = null;
     }
+    try {
+      client.close();
+    } catch (MqttException ex) {
+      String reason = ex.getMessage();
+      log.warn("Error while closing the MQTT client: {}", reason);
+    }
+    // Null is the connection state: "no broker connected", so connect()/isConnected() start clean.
+    // (This is why PMD.NullAssignment is suppressed on this method.)
+    client = null;
   }
 
   /**
