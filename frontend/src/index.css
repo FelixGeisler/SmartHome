@@ -285,7 +285,6 @@ body {
 
 .sensor-chart--empty {
   width: 100%;
-  height: 40px;
   border-bottom: 1px dashed var(--border);
 }
 

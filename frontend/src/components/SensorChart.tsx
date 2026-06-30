@@ -90,7 +90,7 @@ export function SensorChart({ deviceExternalId, sensorKey, unit }: SensorChartPr
   if (series.length < 2) {
     return (
       <div ref={wrapperRef} className="sensor-chart-wrap">
-        <div className="sensor-chart--empty" aria-hidden="true" />
+        <div className="sensor-chart--empty" aria-hidden="true" style={{ height: HEIGHT }} />
       </div>
     )
   }
