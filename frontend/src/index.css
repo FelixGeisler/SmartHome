@@ -386,6 +386,9 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 16px;
+  /* Each card keeps its natural height instead of stretching to the tallest card in its row, so a
+     sparse plug card next to a tall sensor card does not balloon. */
+  align-items: start;
 }
 
 .device-card {
