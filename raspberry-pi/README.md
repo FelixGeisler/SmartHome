@@ -31,8 +31,26 @@ cp sensor-node.env.example sensor-node.env   # set NODE_ID, broker, etc.
 python sensor_node.py
 ```
 
-Install on boot with the provided `sensor-node.service` (systemd). Set `ENABLE_CO2=false` for a
-node without a CO2 sensor.
+Set `ENABLE_CO2=false` in `sensor-node.env` for a node without a CO2 sensor.
+
+## Install on boot
+
+Once the venv and `sensor-node.env` exist, install the systemd service with the helper:
+
+```bash
+bash install.sh
+```
+
+It fills in this Pi's login user and the actual node directory, then enables and starts the unit —
+so it works whatever the Pi's username is (`pi`, `raspberry`, …) and wherever you copied the node.
+The shipped `sensor-node.service` keeps `pi`/`/home/pi/...` only as placeholders; don't run it
+unedited.
+
+On the Pi that also runs the broker, enable Mosquitto on boot too:
+
+```bash
+sudo systemctl enable --now mosquitto
+```
 
 ## Files
 
@@ -40,4 +58,5 @@ node without a CO2 sensor.
 - `requirements.txt` — Python dependencies.
 - `sensor-node.env.example` — configuration template (copy to `sensor-node.env`).
 - `sensor-node.service` — systemd unit to run the publisher on boot.
+- `install.sh` — installs that unit for this Pi (fills in the user and node directory).
 - `mosquitto.conf` — example broker configuration.
