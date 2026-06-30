@@ -30,7 +30,8 @@ export function assistantStatus(): Promise<AssistantStatus> {
 }
 
 /**
- * Sets the assistant's Anthropic API key on the hub. The key is held for the run, not persisted.
+ * Sets the assistant's Anthropic API key on the hub. The key is persisted in the hub's settings and
+ * restored on the next restart.
  *
  * @param apiKey the API key to use
  * @returns the resulting configuration status

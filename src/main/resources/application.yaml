@@ -53,9 +53,10 @@ smarthome:
     # index: telemetry.readings
     # max-points: 1000
   assistant:
-    # In-app AI assistant (Claude). The API key comes from the environment, never committed; a blank
-    # key disables the feature so the hub still boots. Switch the model to claude-sonnet-4-6 for
-    # faster, cheaper turns.
+    # In-app AI assistant (Claude). The API key seeds from the environment (never committed); a key
+    # set later from the UI is persisted in the hub settings and restored on boot, so the assistant
+    # is disabled only when neither is present. Switch the model to claude-sonnet-4-6 for faster,
+    # cheaper turns.
     api-key: ${SMARTHOME_ANTHROPIC_API_KEY:${ANTHROPIC_API_KEY:}}
     # model: claude-opus-4-8
     # max-tokens: 2048

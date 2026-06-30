@@ -3,8 +3,8 @@ import { assistantStatus, setAssistantKey } from '../api/assistant'
 
 /**
  * Sets the assistant's Anthropic API key at runtime, the way the MQTT broker and Hue bridge are
- * configured here. The key is held for the hub run and never persisted or shown again, so the field
- * shows status, not the value.
+ * configured here. The key is stored in the hub's local settings (so it survives a restart) and
+ * never shown again, so the field shows status, not the value.
  */
 export function AssistantPanel() {
   const [apiKey, setApiKey] = useState('')
@@ -36,8 +36,8 @@ export function AssistantPanel() {
     <section className="mqtt-panel">
       <h2>AI assistant</h2>
       <p className="mqtt-panel__hint">
-        Set an Anthropic API key to enable the Assistant tab. The key is held for this hub run and is
-        never stored or shown again.
+        Set an Anthropic API key to enable the assistant. The key is stored in the hub&apos;s local
+        settings and survives a restart; it is never shown again.
       </p>
       {error !== null && (
         <p className="mqtt-panel__error" role="alert">
