@@ -1,11 +1,13 @@
 package org.felixgeisler.smarthome.integration.hue;
 
+import jakarta.annotation.PostConstruct;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,26 +35,44 @@ public class HueBridgeService {
   /** Hue returns this error type when the bridge link button has not been pressed. */
   private static final int LINK_BUTTON_NOT_PRESSED = 101;
 
+  /** Settings keys under which the paired bridge's host and application key are persisted. */
+  private static final String HOST_SETTING = "hue.host";
+
+  private static final String APP_KEY_SETTING = "hue.appKey";
+
   private static final Duration TIMEOUT = Duration.ofSeconds(2);
 
   private final RestClient restClient;
   private final String deviceType;
   private final AtomicReference<String> bridgeHost = new AtomicReference<>();
   private final AtomicReference<String> appKey = new AtomicReference<>();
+  private final SettingsStore settings;
 
   /**
    * Creates the service, seeding the connection from configuration.
    *
    * @param properties the configured Hue settings
+   * @param settings the store that persists a paired bridge across restarts
    */
-  public HueBridgeService(HueProperties properties) {
+  public HueBridgeService(HueProperties properties, SettingsStore settings) {
     this.bridgeHost.set(properties.bridgeHost());
     this.appKey.set(properties.appKey());
     this.deviceType = properties.deviceType();
+    this.settings = settings;
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout(TIMEOUT);
     requestFactory.setReadTimeout(TIMEOUT);
     this.restClient = RestClient.builder().requestFactory(requestFactory).build();
+  }
+
+  /**
+   * Restores a bridge paired on a previous run, so its credentials survive a restart. A persisted
+   * host and key override the configured seed.
+   */
+  @PostConstruct
+  void restore() {
+    settings.get(HOST_SETTING).ifPresent(bridgeHost::set);
+    settings.get(APP_KEY_SETTING).ifPresent(appKey::set);
   }
 
   /**
@@ -82,8 +102,11 @@ public class HueBridgeService {
     }
     HuePairResponse response = responses[0];
     if (response.success() != null) {
+      String key = response.success().username();
       this.bridgeHost.set(host);
-      this.appKey.set(response.success().username());
+      this.appKey.set(key);
+      settings.save(HOST_SETTING, host);
+      settings.save(APP_KEY_SETTING, key);
       log.info("Paired with Hue bridge at {}", host);
       return true;
     }

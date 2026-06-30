@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { Device, DeviceCommand } from './api/devices'
 import { deleteDevice, listDevices, sendCommand, toggleDevice } from './api/devices'
+import { AssistantWidget } from './components/AssistantWidget'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
 
@@ -167,6 +168,8 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
+
+      <AssistantWidget />
     </div>
   )
 }

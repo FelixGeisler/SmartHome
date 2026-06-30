@@ -98,6 +98,256 @@ body {
   box-shadow: var(--shadow);
 }
 
+.assistant-widget {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.assistant-widget__toggle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.assistant-widget__toggle:hover {
+  background: var(--accent-hover);
+}
+
+.assistant-widget__panel {
+  width: min(380px, calc(100vw - 40px));
+  max-height: min(560px, calc(100vh - 130px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.assistant-widget__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assistant-widget__title {
+  font-weight: 600;
+}
+
+.assistant-widget__close {
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.assistant-widget__close:hover {
+  color: var(--text);
+}
+
+.assistant-widget__actions {
+  display: flex;
+}
+
+.assistant__markdown > :first-child {
+  margin-top: 0;
+}
+
+.assistant__markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.assistant__markdown p {
+  margin: 0 0 8px;
+}
+
+.assistant__markdown ul,
+.assistant__markdown ol {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+}
+
+.assistant__markdown li {
+  margin: 2px 0;
+}
+
+.assistant__markdown code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 0.9em;
+}
+
+.assistant__markdown pre {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  overflow-x: auto;
+}
+
+.assistant__markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.assistant__examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.assistant__example {
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.assistant__example:hover {
+  border-color: var(--accent);
+}
+
+.assistant__suggest {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.assistant__suggest:hover:enabled {
+  border-color: var(--accent);
+}
+
+.assistant__suggest:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.assistant__log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.assistant__msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.assistant__msg--user {
+  background: var(--bg);
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.assistant__role {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.assistant__text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.assistant__text--pending {
+  color: var(--text-muted);
+}
+
+.assistant__error {
+  margin: 0;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.assistant__form {
+  display: flex;
+  gap: 8px;
+}
+
+.assistant__input {
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.assistant__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.assistant__send {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.assistant__send:hover:enabled {
+  background: var(--accent-hover);
+}
+
+.assistant__send:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .configuration {
   display: flex;
   flex-direction: column;
@@ -133,9 +383,11 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  /* A multi-column (masonry-style) flow, not a grid: cards have wildly different heights (a tall
+     multi-chart sensor next to a one-line plug), and a row-based grid would stretch or leave large
+     gaps. Columns let each card keep its natural height and pack tightly down each column. */
+  columns: 280px;
+  column-gap: 16px;
 }
 
 .device-card {
@@ -147,6 +399,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Keep a card whole within one column, and space stacked cards apart (column-gap is horizontal
+     only). break-inside also needs the older WebKit alias to be safe. */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  margin-bottom: 16px;
 }
 
 .device-card__info {

@@ -1,5 +1,6 @@
 package org.felixgeisler.smarthome.web;
 
+import org.felixgeisler.smarthome.assistant.AssistantException;
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
 import org.felixgeisler.smarthome.device.InvalidCommandException;
@@ -74,5 +75,14 @@ public class ApiExceptionHandler {
     log.warn("Could not read telemetry history: {}", reason);
     return ProblemDetail.forStatusAndDetail(
         HttpStatus.BAD_GATEWAY, "Sensor history is currently unavailable.");
+  }
+
+  @ExceptionHandler(AssistantException.class)
+  ProblemDetail handleAssistant(AssistantException ex) {
+    // The assistant depends on the Claude API (an upstream service); surface failures as a bad
+    // gateway. The message is operator-actionable (unconfigured / unreachable), so pass it through.
+    String reason = ex.getMessage();
+    log.warn("Assistant request failed: {}", reason);
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, reason);
   }
 }

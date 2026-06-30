@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -77,11 +78,13 @@ public class TelemetryHistoryService {
   }
 
   // An Elasticsearch _search: filter on the exact device and sensor (the .keyword sub-fields of the
-  // dynamically mapped strings), bound the time window, and return oldest first.
+  // dynamically mapped strings) and bound the time window. Sort newest first so the size cap keeps
+  // the most recent readings (a busy sensor can exceed the cap within the window); toPoints() then
+  // reverses them to oldest first for the chart.
   private Map<String, Object> searchBody(String deviceId, String sensorKey, Duration lookback) {
     return Map.of(
         "size", maxPoints,
-        "sort", List.of(Map.of("timestamp", "asc")),
+        "sort", List.of(Map.of("timestamp", "desc")),
         "query",
             Map.of(
                 "bool",
@@ -116,6 +119,9 @@ public class TelemetryHistoryService {
         log.debug("Skipped a non-numeric reading while building sensor history.");
       }
     }
+    // Elasticsearch returned newest first (so the cap kept the latest readings); the chart wants
+    // oldest first.
+    Collections.reverse(points);
     return points;
   }
 
