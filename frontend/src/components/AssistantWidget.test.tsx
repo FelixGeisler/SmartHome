@@ -32,6 +32,20 @@ describe('AssistantWidget', () => {
     expect(bold.tagName).toBe('STRONG')
   })
 
+  it('sends an example command verbatim when its chip is clicked', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ reply: 'Two lights are on.' }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<AssistantWidget />)
+
+    await user.click(screen.getByRole('button', { name: 'Open assistant' }))
+    await user.click(screen.getByRole('button', { name: 'Which devices are on right now?' }))
+
+    expect(await screen.findByText('Two lights are on.')).toBeInTheDocument()
+    const sentBody = JSON.parse(fetchMock.mock.calls[0][1].body) as { message: string }
+    expect(sentBody.message).toBe('Which devices are on right now?')
+  })
+
   it('asks the assistant to review the home from "Check my home"', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ reply: 'Everything looks fine.' }))
     vi.stubGlobal('fetch', fetchMock)

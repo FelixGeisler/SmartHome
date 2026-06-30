@@ -13,6 +13,13 @@ interface ChatMessage {
 /** The canned prompt behind the "Check my home" quick action. */
 const REVIEW_PROMPT = 'Review my home and flag anything that looks off, with concrete suggestions.'
 
+/** One-tap starter commands, shown until the conversation begins. */
+const EXAMPLE_PROMPTS = [
+  'How is the air in the living room?',
+  'Which devices are on right now?',
+  'Turn the table lamp blue',
+]
+
 /**
  * A floating assistant: a chat button anchored bottom-right on every view that pops a chat window.
  * The assistant can answer about the home, control devices, and proactively flag issues; each turn
@@ -79,8 +86,20 @@ export function AssistantWidget() {
             {messages.length === 0 && !busy && (
               <li className="assistant__msg assistant__msg--assistant">
                 <p className="assistant__text assistant__text--pending">
-                  Ask about your home, control a device, or use &ldquo;Check my home&rdquo;.
+                  Ask about your home, control a device, or try one of these:
                 </p>
+                <div className="assistant__examples">
+                  {EXAMPLE_PROMPTS.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      className="assistant__example"
+                      onClick={() => void ask(prompt)}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
               </li>
             )}
             {messages.map((message) => (
