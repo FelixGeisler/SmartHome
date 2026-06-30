@@ -32,6 +32,9 @@ public class MqttConnection {
 
   private static final String PORT_SETTING = "mqtt.port";
 
+  /** The standard MQTT port, used when no saved port is present or a saved one is unparseable. */
+  private static final int DEFAULT_PORT = 1883;
+
   private static final Logger log = LoggerFactory.getLogger(MqttConnection.class);
 
   private final MqttProperties properties;
@@ -66,10 +69,22 @@ public class MqttConnection {
         .get(HOST_SETTING)
         .ifPresent(
             host -> {
-              int port = settings.get(PORT_SETTING).map(Integer::parseInt).orElse(1883);
+              int port =
+                  settings.get(PORT_SETTING).map(MqttConnection::parsePort).orElse(DEFAULT_PORT);
               log.info("Reconnecting MQTT integration to {}:{} from saved settings", host, port);
               connect(host, port);
             });
+  }
+
+  // Parse a saved port, falling back to the default if it was corrupted or hand-edited. The raw
+  // value is kept out of the log to avoid log injection from a tampered setting.
+  private static int parsePort(String raw) {
+    try {
+      return Integer.parseInt(raw);
+    } catch (NumberFormatException ex) {
+      log.warn("Ignoring an unparseable saved MQTT port; using the default {}.", DEFAULT_PORT);
+      return DEFAULT_PORT;
+    }
   }
 
   /**
