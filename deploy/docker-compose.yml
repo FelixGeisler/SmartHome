@@ -1,7 +1,8 @@
 # Telemetry streaming stack for the IoT project (issue #43). The SmartHome hub runs on the host
 # (not in Docker) and connects to Redpanda's external listener at localhost:19092; containers reach
-# the broker at redpanda:9092. Elasticsearch, Kibana, and the Connect -> Elasticsearch sink are
-# added in the next slice.
+# the broker at redpanda:9092. The pipeline is: hub -> Redpanda (telemetry.readings) -> Kafka
+# Connect (Elasticsearch sink) -> Elasticsearch, browsed in Kibana. The hub writes no code for the
+# sink half; Connect moves messages off the topic on its own.
 name: smarthome-streaming
 
 services:
@@ -37,5 +38,93 @@ services:
     environment:
       KAFKA_BROKERS: redpanda:9092
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: smarthome-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"   # local dev only — no auth in front of the cluster
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"   # REST API: http://localhost:9200
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    container_name: smarthome-kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "5601:5601"   # web UI: http://localhost:5601
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+  connect:
+    image: confluentinc/cp-kafka-connect:7.7.1
+    container_name: smarthome-connect
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "8083:8083"   # Connect REST API
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: redpanda:9092
+      CONNECT_GROUP_ID: smarthome-connect
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      # Connect stores its own state in Kafka; single broker, so replication factor 1.
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      # The hub keys readings as strings and serializes the value as plain JSON; read it back the
+      # same way and treat the JSON as schemaless so Elasticsearch maps the fields dynamically.
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+    # The base image ships without the Elasticsearch sink; install it, then hand off to the normal
+    # entrypoint so the worker starts.
+    command:
+      - bash
+      - -c
+      - >-
+        confluent-hub install --no-prompt
+        confluentinc/kafka-connect-elasticsearch:14.1.2
+        && /etc/confluent/docker/run
+
+  # One-shot: waits for the Connect REST API, registers the Elasticsearch sink, then exits.
+  connect-setup:
+    image: curlimages/curl:8.10.1
+    container_name: smarthome-connect-setup
+    depends_on:
+      connect:
+        condition: service_started
+    restart: "no"
+    volumes:
+      - ./connect/elasticsearch-sink.json:/config/elasticsearch-sink.json:ro
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        until curl -fs http://connect:8083/connectors >/dev/null; do
+        echo 'waiting for Kafka Connect...'; sleep 5; done;
+        curl -fs -X PUT
+        -H 'Content-Type: application/json'
+        --data @/config/elasticsearch-sink.json
+        http://connect:8083/connectors/telemetry-elasticsearch-sink/config;
+        echo 'Elasticsearch sink registered.'
+
 volumes:
   redpanda-data:
+  elasticsearch-data:

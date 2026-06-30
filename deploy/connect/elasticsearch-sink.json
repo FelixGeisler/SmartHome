@@ -1,0 +1,12 @@
+{
+  "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+  "tasks.max": "1",
+  "topics": "telemetry.readings",
+  "connection.url": "http://elasticsearch:9200",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+  "key.ignore": "true",
+  "schema.ignore": "true",
+  "behavior.on.null.values": "ignore"
+}
