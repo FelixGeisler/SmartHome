@@ -29,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,13 +40,14 @@ class DeviceServiceTest {
   @Mock private DeviceRepository devices;
   @Mock private DeviceAdapterRegistry adapters;
   @Mock private DeviceAdapter adapter;
+  @Mock private ApplicationEventPublisher events;
   @Captor private ArgumentCaptor<Map<String, Object>> commandCaptor;
 
   private DeviceService service;
 
   @BeforeEach
   void setUp() {
-    service = new DeviceService(devices, adapters, Clock.fixed(NOW, ZoneOffset.UTC));
+    service = new DeviceService(devices, adapters, events, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @DisplayName("toggle() switches an off device on")
@@ -289,6 +291,29 @@ class DeviceServiceTest {
     service.recordReading("node-1", "noise", "42");
 
     verify(devices, never()).save(any());
+    verify(events, never()).publishEvent(any());
+  }
+
+  @DisplayName("recordReading() publishes a telemetry event for the recorded reading")
+  @Test
+  void recordReading_publishesTelemetryEvent() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("node-1", "temperature", "21.5");
+
+    ArgumentCaptor<SensorReadingRecorded> published =
+        ArgumentCaptor.forClass(SensorReadingRecorded.class);
+    verify(events).publishEvent(published.capture());
+    SensorReadingRecorded event = published.getValue();
+    assertEquals("node-1", event.deviceExternalId());
+    assertEquals("temperature", event.sensorKey());
+    assertEquals(SensorType.TEMPERATURE, event.type());
+    assertEquals("°C", event.unit());
+    assertEquals("21.5", event.value());
+    assertEquals(NOW, event.at());
   }
 
   @DisplayName("applyCommand() sets brightness and turns an off device on")

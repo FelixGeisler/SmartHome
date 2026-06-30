@@ -13,6 +13,7 @@
             <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
+            <Class name="org.felixgeisler.smarthome.streaming.TelemetryKafkaPublisher"/>
         </Or>
     </Match>
 </FindBugsFilter>

@@ -12,6 +12,7 @@ import org.felixgeisler.smarthome.capability.ColorMode;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class DeviceService {
 
   private final DeviceRepository devices;
   private final DeviceAdapterRegistry adapters;
+  private final ApplicationEventPublisher events;
   private final Clock clock;
 
   /**
@@ -33,11 +35,17 @@ public class DeviceService {
    *
    * @param devices the device repository
    * @param adapters the adapter registry used to reach command devices
+   * @param events publisher for domain events such as recorded readings
    * @param clock the clock used to timestamp sensor readings
    */
-  public DeviceService(DeviceRepository devices, DeviceAdapterRegistry adapters, Clock clock) {
+  public DeviceService(
+      DeviceRepository devices,
+      DeviceAdapterRegistry adapters,
+      ApplicationEventPublisher events,
+      Clock clock) {
     this.devices = devices;
     this.adapters = adapters;
+    this.events = events;
     this.clock = clock;
   }
 
@@ -131,6 +139,15 @@ public class DeviceService {
       device.recordReading(sensorKey, value, at);
     }
     devices.save(device);
+    // Tee the reading to outbound integrations (telemetry streaming) without coupling to them.
+    device.getSensors().stream()
+        .filter(sensor -> sensor.getKey().equals(sensorKey))
+        .findFirst()
+        .ifPresent(
+            sensor ->
+                events.publishEvent(
+                    new SensorReadingRecorded(
+                        externalId, sensorKey, sensor.getType(), sensor.getUnit(), value, at)));
   }
 
   private Device autoProvision(String externalId) {

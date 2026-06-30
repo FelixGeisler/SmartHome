@@ -18,6 +18,17 @@ spring:
       # Store enums as portable VARCHAR rather than H2's native ENUM, so the Flyway migrations run
       # unchanged against another database (e.g. PostgreSQL) later and schema validation is simple.
       hibernate.type.preferred_enum_jdbc_type: VARCHAR
+  kafka:
+    # Telemetry streaming (issue #43). Defaults to the local Redpanda external listener; point at
+    # the Docker host via the env var. No broker connection is made until the first reading is sent,
+    # so the hub still boots when the streaming stack is down.
+    bootstrap-servers: ${SMARTHOME_KAFKA_BOOTSTRAP:localhost:19092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Bound the metadata wait so a missing broker can't stall telemetry ingest.
+        max.block.ms: 5000
 
 smarthome:
   mqtt:
