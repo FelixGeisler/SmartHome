@@ -42,17 +42,18 @@ class TelemetryHistoryServiceTest {
     server.stop();
   }
 
-  @DisplayName("history() maps the search hits to points, oldest first")
+  @DisplayName("history() reverses the newest-first hits into points, oldest first")
   @Test
   void history_mapsHitsToPoints() {
+    // Elasticsearch is queried newest first, so the stub returns descending; the service reverses.
     server.stubFor(
         post(urlPathEqualTo(SEARCH_PATH))
             .willReturn(
                 okJson(
                     """
                     {"hits":{"hits":[
-                      {"_source":{"value":"21.5","timestamp":"2026-06-30T08:00:00Z"}},
-                      {"_source":{"value":"22.0","timestamp":"2026-06-30T08:05:00Z"}}
+                      {"_source":{"value":"22.0","timestamp":"2026-06-30T08:05:00Z"}},
+                      {"_source":{"value":"21.5","timestamp":"2026-06-30T08:00:00Z"}}
                     ]}}
                     """)));
 
@@ -78,7 +79,8 @@ class TelemetryHistoryServiceTest {
             .withRequestBody(containing("dev-1"))
             .withRequestBody(containing("sensorKey.keyword"))
             .withRequestBody(containing("temp"))
-            .withRequestBody(containing("now-21600s")));
+            .withRequestBody(containing("now-21600s"))
+            .withRequestBody(containing("desc")));
   }
 
   @DisplayName("history() leaves out readings whose value is not numeric")
