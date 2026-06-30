@@ -18,6 +18,8 @@ import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.List;
+import java.util.Optional;
+import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,9 +28,11 @@ import org.junit.jupiter.api.Test;
 class AssistantServiceTest {
 
   private static final String PATH = "/v1/messages";
+  private static final String API_KEY_SETTING = "assistant.apiKey";
 
   private WireMockServer server;
   private AssistantTools tools;
+  private SettingsStore settings;
 
   @BeforeEach
   void setUp() {
@@ -36,6 +40,8 @@ class AssistantServiceTest {
     server.start();
     tools = mock(AssistantTools.class);
     when(tools.definitions()).thenReturn(List.of());
+    settings = mock(SettingsStore.class);
+    when(settings.get(any())).thenReturn(Optional.empty());
   }
 
   @AfterEach
@@ -48,10 +54,13 @@ class AssistantServiceTest {
   }
 
   private AssistantService service(String apiKey, int rounds) {
+    AssistantProperties properties = properties(apiKey, rounds);
+    return new AssistantService(new AnthropicClient(properties, settings), tools, properties);
+  }
+
+  private AssistantProperties properties(String apiKey, int rounds) {
     String url = "http://localhost:" + server.port() + PATH;
-    AssistantProperties properties =
-        new AssistantProperties(apiKey, "claude-opus-4-8", 100, url, rounds);
-    return new AssistantService(new AnthropicClient(properties), tools, properties);
+    return new AssistantProperties(apiKey, "claude-opus-4-8", 100, url, rounds);
   }
 
   @DisplayName("chat() runs a requested tool and returns the model's final text")
@@ -103,6 +112,26 @@ class AssistantServiceTest {
     service.configure("test-key");
 
     assertTrue(service.isConfigured());
+  }
+
+  @DisplayName("configure() persists the key so it survives a restart")
+  @Test
+  void configure_persistsKey() {
+    service("").configure("test-key");
+
+    verify(settings).save(API_KEY_SETTING, "test-key");
+  }
+
+  @DisplayName("restore() loads a key saved on a previous run")
+  @Test
+  void restore_loadsPersistedKey() {
+    when(settings.get(API_KEY_SETTING)).thenReturn(Optional.of("saved-key"));
+    AnthropicClient client = new AnthropicClient(properties("", 8), settings);
+    assertFalse(client.isConfigured());
+
+    client.restore();
+
+    assertTrue(client.isConfigured());
   }
 
   @DisplayName("chat() throws when the Claude API returns an error")

@@ -9,8 +9,10 @@
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Or>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
+            <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>
+            <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
             <Class name="org.felixgeisler.smarthome.streaming.TelemetryKafkaPublisher"/>

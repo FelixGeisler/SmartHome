@@ -13,12 +13,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.felixgeisler.smarthome.device.Capability;
+import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,12 +34,15 @@ class HueBridgeServiceTest {
 
   private WireMockServer server;
   private String host;
+  private SettingsStore settings;
 
   @BeforeEach
   void setUp() {
     server = new WireMockServer(options().dynamicPort());
     server.start();
     host = "localhost:" + server.port();
+    settings = mock(SettingsStore.class);
+    when(settings.get(any())).thenReturn(Optional.empty());
   }
 
   @AfterEach
@@ -42,11 +51,11 @@ class HueBridgeServiceTest {
   }
 
   private HueBridgeService paired() {
-    return new HueBridgeService(new HueProperties(host, "testkey", "smarthome#hub"));
+    return new HueBridgeService(new HueProperties(host, "testkey", "smarthome#hub"), settings);
   }
 
   private HueBridgeService unpaired() {
-    return new HueBridgeService(new HueProperties(null, null, "smarthome#hub"));
+    return new HueBridgeService(new HueProperties(null, null, "smarthome#hub"), settings);
   }
 
   @DisplayName("pair() succeeds when the link button was pressed")
@@ -91,6 +100,34 @@ class HueBridgeServiceTest {
 
     HueBridgeService service = unpaired();
     service.pair(host);
+
+    assertTrue(service.getLight("1").isOn());
+  }
+
+  @DisplayName("pair() persists the bridge credentials so they survive a restart")
+  @Test
+  void pair_persistsCredentials() {
+    server.stubFor(
+        post(urlPathEqualTo("/api"))
+            .willReturn(okJson("[{\"success\":{\"username\":\"newkey\"}}]")));
+
+    unpaired().pair(host);
+
+    verify(settings).save("hue.host", host);
+    verify(settings).save("hue.appKey", "newkey");
+  }
+
+  @DisplayName("restore() re-pairs from persisted credentials after a restart")
+  @Test
+  void restore_appliesPersistedCredentials() {
+    when(settings.get("hue.host")).thenReturn(Optional.of(host));
+    when(settings.get("hue.appKey")).thenReturn(Optional.of("restoredkey"));
+    server.stubFor(
+        get(urlPathEqualTo("/api/restoredkey/lights/1"))
+            .willReturn(okJson("{\"state\":{\"on\":true}}")));
+
+    HueBridgeService service = unpaired();
+    service.restore();
 
     assertTrue(service.getLight("1").isOn());
   }

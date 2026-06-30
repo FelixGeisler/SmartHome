@@ -3,10 +3,12 @@ package org.felixgeisler.smarthome.assistant;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -26,6 +28,9 @@ class AnthropicClient {
 
   private static final String ANTHROPIC_VERSION = "2023-06-01";
 
+  /** Settings key under which a runtime-set API key is persisted across restarts. */
+  private static final String API_KEY_SETTING = "assistant.apiKey";
+
   private final RestClient http;
   private final String url;
   // Held in a reference so the key can be set at runtime from the Configuration view, the way the
@@ -33,12 +38,14 @@ class AnthropicClient {
   private final AtomicReference<String> apiKey = new AtomicReference<>();
   private final String model;
   private final int maxTokens;
+  private final SettingsStore settings;
 
-  AnthropicClient(AssistantProperties properties) {
+  AnthropicClient(AssistantProperties properties, SettingsStore settings) {
     this.url = properties.url();
     this.apiKey.set(properties.apiKey());
     this.model = properties.model();
     this.maxTokens = properties.maxTokens();
+    this.settings = settings;
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout(Duration.ofSeconds(5));
     // A tool-use turn can take a while; keep the per-call read timeout generous.
@@ -46,9 +53,19 @@ class AnthropicClient {
     this.http = RestClient.builder().requestFactory(requestFactory).build();
   }
 
-  /** Sets the API key at runtime, overriding whatever was seeded from the environment. */
+  /** Restores a previously saved key on startup, so a key set last run survives a restart. */
+  @PostConstruct
+  void restore() {
+    settings.get(API_KEY_SETTING).ifPresent(apiKey::set);
+  }
+
+  /**
+   * Sets the API key at runtime, overriding whatever was seeded from the environment, and persists
+   * it so it is restored on the next boot.
+   */
   void configure(String key) {
     apiKey.set(key);
+    settings.save(API_KEY_SETTING, key);
   }
 
   /** True when an API key is set, so the hub still boots and runs without one. */
