@@ -383,12 +383,11 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  /* Each card keeps its natural height instead of stretching to the tallest card in its row, so a
-     sparse plug card next to a tall sensor card does not balloon. */
-  align-items: start;
+  /* A multi-column (masonry-style) flow, not a grid: cards have wildly different heights (a tall
+     multi-chart sensor next to a one-line plug), and a row-based grid would stretch or leave large
+     gaps. Columns let each card keep its natural height and pack tightly down each column. */
+  columns: 280px;
+  column-gap: 16px;
 }
 
 .device-card {
@@ -400,6 +399,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Keep a card whole within one column, and space stacked cards apart (column-gap is horizontal
+     only). break-inside also needs the older WebKit alias to be safe. */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  margin-bottom: 16px;
 }
 
 .device-card__info {
