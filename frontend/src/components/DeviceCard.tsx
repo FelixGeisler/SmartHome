@@ -93,7 +93,11 @@ export function DeviceCard({
                 <span className="sensor__key">{sensor.key}</span>
                 <span className="sensor__value">{formatReading(sensor)}</span>
               </div>
-              <SensorChart deviceExternalId={device.externalId} sensorKey={sensor.key} />
+              <SensorChart
+                deviceExternalId={device.externalId}
+                sensorKey={sensor.key}
+                unit={sensor.unit}
+              />
             </div>
           ))}
         </div>
