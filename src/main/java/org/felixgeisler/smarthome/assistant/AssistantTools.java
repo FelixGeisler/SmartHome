@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.felixgeisler.smarthome.assistant.AnthropicClient.Tool;
+import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.device.CommandRequest;
 import org.felixgeisler.smarthome.device.Device;
 import org.felixgeisler.smarthome.device.DeviceService;
@@ -49,20 +50,25 @@ class AssistantTools {
                 + "about trends, recent history, or whether a current reading is unusual.",
             schema(
                 Map.of(
-                    DEVICE_ID, prop("string", "device external id, e.g. living-room"),
-                    "sensorKey", prop("string", "sensor key, e.g. temperature or co2"),
-                    "hours", prop("integer", "hours back to read; default 24")),
+                    DEVICE_ID, stringProp("device external id, e.g. living-room"),
+                    "sensorKey", stringProp("sensor key, e.g. temperature or co2"),
+                    "hours", intProp("hours back to read; default 24")),
                 List.of(DEVICE_ID, "sensorKey"))),
         new Tool(
             "control_device",
-            "Turn a device on or off, or set its brightness. Call this when the user asks to "
-                + "control a device. Only command devices (lights, plugs) are controllable; sensor "
-                + "nodes are not.",
+            "Turn a device on or off, set its brightness, or set the color or white color "
+                + "temperature of a color light. Call this when the user asks to control a device. "
+                + "Only command devices (lights, plugs) are controllable; sensor nodes are not.",
             schema(
                 Map.of(
-                    DEVICE_ID, prop("string", "device external id"),
-                    "on", prop("boolean", "true to turn on, false to turn off"),
-                    "brightness", prop("integer", "brightness percentage, 1-100")),
+                    DEVICE_ID, stringProp("device external id"),
+                    "on", boolProp("true to turn on, false to turn off"),
+                    "brightness", intProp("brightness percentage, 1-100"),
+                    "color",
+                    stringProp(
+                        "color as #RRGGBB hex, e.g. #0000FF for blue; only for color lights"),
+                    "colorTemperatureK",
+                    intProp("white color temperature in Kelvin, e.g. 2700 warm, 6500 cool")),
                 List.of(DEVICE_ID))));
   }
 
@@ -72,6 +78,18 @@ class AssistantTools {
 
   private static Map<String, Object> schema(Map<String, Object> props, List<String> required) {
     return Map.of("type", "object", "properties", props, "required", required);
+  }
+
+  private static Map<String, Object> stringProp(String description) {
+    return prop("string", description);
+  }
+
+  private static Map<String, Object> intProp(String description) {
+    return prop("integer", description);
+  }
+
+  private static Map<String, Object> boolProp(String description) {
+    return prop("boolean", description);
   }
 
   private static Map<String, Object> prop(String type, String description) {
@@ -166,8 +184,12 @@ class AssistantTools {
             .orElseThrow(() -> new IllegalArgumentException("no device '" + externalId + "'"));
     Boolean on = args.get("on") instanceof Boolean value ? value : null;
     Integer brightness = args.get("brightness") instanceof Number value ? value.intValue() : null;
+    XyColor color = args.get("color") instanceof String hex ? XyColor.fromHex(hex) : null;
+    Integer colorTemperatureK =
+        args.get("colorTemperatureK") instanceof Number value ? value.intValue() : null;
     Device updated =
-        devices.applyCommand(device.getId(), new CommandRequest(on, brightness, null, null));
+        devices.applyCommand(
+            device.getId(), new CommandRequest(on, brightness, color, colorTemperatureK));
     return "OK: updated " + externalId + "; state now " + updated.getState();
   }
 

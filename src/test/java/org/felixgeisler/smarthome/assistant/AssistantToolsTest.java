@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.assistant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -11,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.device.CommandRequest;
 import org.felixgeisler.smarthome.device.Device;
 import org.felixgeisler.smarthome.device.DeviceService;
@@ -21,6 +23,7 @@ import org.felixgeisler.smarthome.telemetry.TelemetryHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class AssistantToolsTest {
 
@@ -129,6 +132,26 @@ class AssistantToolsTest {
     String result = tools.execute("control_device", Map.of("deviceId", "desk-lamp", "on", false));
 
     assertTrue(result.startsWith("OK: updated desk-lamp"), result);
+  }
+
+  @DisplayName("control_device converts a hex color to CIE xy on the command")
+  @Test
+  void controlDevice_setsColorFromHex() {
+    Device lamp = mock(Device.class);
+    when(lamp.getExternalId()).thenReturn("table");
+    when(lamp.getId()).thenReturn(7L);
+    when(devices.getAllDevices()).thenReturn(List.of(lamp));
+    Device updated = mock(Device.class);
+    when(updated.getState()).thenReturn(Map.of("on", "true"));
+    ArgumentCaptor<CommandRequest> command = ArgumentCaptor.forClass(CommandRequest.class);
+    when(devices.applyCommand(eq(7L), command.capture())).thenReturn(updated);
+
+    tools.execute("control_device", Map.of("deviceId", "table", "on", true, "color", "#0000FF"));
+
+    XyColor color = command.getValue().colorXy();
+    assertNotNull(color);
+    assertEquals(0.15, color.x(), 0.02);
+    assertEquals(0.06, color.y(), 0.02);
   }
 
   @DisplayName("control_device returns an error for an unknown device")
