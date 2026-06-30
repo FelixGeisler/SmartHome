@@ -1,0 +1,15 @@
+= ADR 7: Persist the device registry in an on-disk database with Flyway migrations
+
+== Status
+Accepted
+
+== Context
+The device registry — every device the hub knows, with its capabilities, runtime state, and declared sensors — lived only in an in-memory database, so it was discarded whenever the hub restarted and every device had to be registered again on the next run. That is especially wrong now that nodes auto-provision from telemetry (ADR 6): a node seen once should stay known. The relational schema was also generated from the JPA entities at startup, which is convenient but leaves no reviewable, versioned record of how the schema evolves.
+
+== Decision
+The device registry is stored in an on-disk database so it survives restarts. The schema is owned by versioned Flyway migrations rather than generated from the entities: the migrations are the single source of truth, applied on startup, and the entities are validated against the resulting schema rather than allowed to reshape it. Enum-valued columns are stored as plain strings rather than a database-native enum type, so the same migrations run unchanged against another database.
+
+The store is an embedded file database, which needs no separate server and keeps a single-process hub self-contained. Because the relational model is reached only through JPA and the migrations avoid database-specific types, moving to a client–server database for a networked or multi-instance deployment is a configuration and dialect change, not a rewrite.
+
+== Consequences
+A device registered or auto-provisioned once stays known across restarts, matching what a hub is expected to do. Schema changes become explicit, reviewable migrations with a recorded history, and a mismatch between the entities and the schema fails fast on startup instead of silently reshaping stored data. The cost is the discipline that brings: evolving an entity means writing a migration, and the startup validation means the two must be kept in step. The embedded file database is single-writer and local to the host, which suits one hub instance; concurrent or distributed deployment is the motivation for the later move to a networked database the model is already kept portable for. Integration connections — the Hue app key, the MQTT broker — are session state rather than registry data and stay outside this store; persisting them across restarts remains the separate concern noted in ADR 6.

@@ -1,9 +1,23 @@
 spring:
   application:
     name: SmartHome
+  datasource:
+    # File-based H2 so the device registry survives hub restarts (it used to be in-memory). The
+    # file lives under ./data and is git-ignored; point this at a managed database for a server
+    # deployment.
+    url: jdbc:h2:file:./data/smarthome;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
   jpa:
     # REST API: no view rendering, so don't hold a DB session open per request.
     open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the entities still match it on boot.
+      ddl-auto: validate
+    properties:
+      # Store enums as portable VARCHAR rather than H2's native ENUM, so the Flyway migrations run
+      # unchanged against another database (e.g. PostgreSQL) later and schema validation is simple.
+      hibernate.type.preferred_enum_jdbc_type: VARCHAR
 
 smarthome:
   mqtt:

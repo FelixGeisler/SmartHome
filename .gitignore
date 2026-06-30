@@ -51,3 +51,6 @@ replay_pid*.log
 
 ### cognitive-core runtime state (per-session, machine-local — never commit) ###
 .claude/sessions.json
+
+### Local H2 database files (dev/local persistence — never commit) ###
+/data/

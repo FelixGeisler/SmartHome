@@ -65,6 +65,18 @@
             <version>${paho.version}</version>
         </dependency>
 
+        <!-- Flyway: versioned, reviewable schema migrations that own the schema the JPA entities
+             validate against. Boot 4 splits the auto-configuration (spring-boot-flyway) from the
+             migration engine (flyway-core); both are needed. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
