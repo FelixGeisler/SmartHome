@@ -13,6 +13,7 @@ import {
 } from '../api/devices'
 import { hexToXy, xyToHex } from '../color'
 import { seriesKey, type SensorHistory } from '../sensorHistory'
+import { SensorHistoryChart } from './SensorHistoryChart'
 import { Sparkline } from './Sparkline'
 
 /** Hue's tunable-white range, also a sensible window for the color-temperature slider. */
@@ -98,6 +99,11 @@ export function DeviceCard({
                 <span className="sensor__value">{formatReading(sensor)}</span>
               </div>
               <Sparkline points={history[seriesKey(device.id, sensor.key)] ?? []} />
+              <SensorHistoryChart
+                deviceExternalId={device.externalId}
+                sensorKey={sensor.key}
+                unit={sensor.unit}
+              />
             </div>
           ))}
         </div>
