@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { Device, DeviceCommand } from './api/devices'
 import { deleteDevice, listDevices, sendCommand, toggleDevice } from './api/devices'
+import { AssistantPage } from './pages/AssistantPage'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
 
@@ -139,6 +140,9 @@ function App() {
           <NavLink to="/configuration" className={navClass}>
             Configuration
           </NavLink>
+          <NavLink to="/assistant" className={navClass}>
+            Assistant
+          </NavLink>
         </nav>
       </header>
 
@@ -164,6 +168,7 @@ function App() {
             path="/configuration"
             element={<ConfigurationPage onRegistered={handleRegistered} />}
           />
+          <Route path="/assistant" element={<AssistantPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

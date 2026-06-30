@@ -1,5 +1,6 @@
 import type { Device } from '../api/devices'
 import { AddDeviceForm } from '../components/AddDeviceForm'
+import { AssistantPanel } from '../components/AssistantPanel'
 import { HuePanel } from '../components/HuePanel'
 import { MqttPanel } from '../components/MqttPanel'
 
@@ -14,6 +15,7 @@ export function ConfigurationPage({ onRegistered }: ConfigurationPageProps) {
       <AddDeviceForm onRegistered={onRegistered} />
       <MqttPanel />
       <HuePanel onRegistered={onRegistered} />
+      <AssistantPanel />
     </section>
   )
 }
