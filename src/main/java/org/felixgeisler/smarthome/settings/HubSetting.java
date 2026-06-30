@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "hub_setting")
-class HubSetting {
+public class HubSetting {
 
   @Id
   @Column(name = "setting_key")
