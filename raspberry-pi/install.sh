@@ -16,9 +16,13 @@ if [ ! -f "$dir/sensor-node.env" ]; then
   exit 1
 fi
 
+# Run the service as the real login user, not root — even when this script is invoked with sudo
+# (then $USER is root, but $SUDO_USER holds the original user).
+unit_user="${SUDO_USER:-$USER}"
+
 # Substitute the unit's default user and path with this Pi's real values (works whatever the
 # shipped default user is — matches /home/<anyuser>/smarthome-sensor-node).
-sed -e "s|^User=.*|User=$USER|" \
+sed -e "s|^User=.*|User=$unit_user|" \
     -e "s|/home/[^/]*/smarthome-sensor-node|$dir|g" \
     "$dir/sensor-node.service" | sudo tee /etc/systemd/system/sensor-node.service >/dev/null
 
