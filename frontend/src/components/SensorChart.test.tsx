@@ -22,7 +22,7 @@ describe('SensorChart', () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(points))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<SensorChart deviceExternalId="dev-1" sensorKey="temp" />)
+    render(<SensorChart deviceExternalId="dev-1" sensorKey="temp" unit="°C" />)
 
     expect(
       await screen.findByRole('img', { name: 'temp history, 2 readings' }),
@@ -36,7 +36,7 @@ describe('SensorChart', () => {
   it('shows a baseline placeholder when the sensor has no stored history yet', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([])))
 
-    const { container } = render(<SensorChart deviceExternalId="dev-1" sensorKey="temp" />)
+    const { container } = render(<SensorChart deviceExternalId="dev-1" sensorKey="temp" unit="°C" />)
 
     await waitFor(() => {
       expect(container.querySelector('.sensor-chart--empty')).toBeInTheDocument()
