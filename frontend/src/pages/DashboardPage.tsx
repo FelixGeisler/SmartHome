@@ -1,6 +1,5 @@
 import type { Device, DeviceCommand } from '../api/devices'
 import { DeviceCard } from '../components/DeviceCard'
-import type { SensorHistory } from '../sensorHistory'
 
 export type LoadState = 'loading' | 'ready' | 'error'
 
@@ -9,7 +8,6 @@ interface DashboardPageProps {
   loadState: LoadState
   error: string | null
   busyIds: ReadonlySet<number>
-  history: SensorHistory
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onDelete: (device: Device) => void
@@ -22,7 +20,6 @@ export function DashboardPage({
   loadState,
   error,
   busyIds,
-  history,
   onToggle,
   onCommand,
   onDelete,
@@ -55,7 +52,6 @@ export function DashboardPage({
               key={device.id}
               device={device}
               busy={busyIds.has(device.id)}
-              history={history}
               onToggle={onToggle}
               onCommand={onCommand}
               onDelete={onDelete}
