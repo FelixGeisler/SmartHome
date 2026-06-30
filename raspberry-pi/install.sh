@@ -16,9 +16,10 @@ if [ ! -f "$dir/sensor-node.env" ]; then
   exit 1
 fi
 
-# Substitute the placeholder user and path from the shipped unit with this Pi's real values.
+# Substitute the unit's default user and path with this Pi's real values (works whatever the
+# shipped default user is — matches /home/<anyuser>/smarthome-sensor-node).
 sed -e "s|^User=.*|User=$USER|" \
-    -e "s|/home/pi/smarthome-sensor-node|$dir|g" \
+    -e "s|/home/[^/]*/smarthome-sensor-node|$dir|g" \
     "$dir/sensor-node.service" | sudo tee /etc/systemd/system/sensor-node.service >/dev/null
 
 sudo systemctl daemon-reload

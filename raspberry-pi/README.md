@@ -42,9 +42,9 @@ bash install.sh
 ```
 
 It fills in this Pi's login user and the actual node directory, then enables and starts the unit —
-so it works whatever the Pi's username is (`pi`, `raspberry`, …) and wherever you copied the node.
-The shipped `sensor-node.service` keeps `pi`/`/home/pi/...` only as placeholders; don't run it
-unedited.
+so it works whatever the Pi's username is and wherever you copied the node. The shipped
+`sensor-node.service` defaults to user `raspberry`; on that fleet you can also just `sudo cp` it and
+`systemctl enable --now sensor-node`, but `install.sh` is the safe path for any other user.
 
 On the Pi that also runs the broker, enable Mosquitto on boot too:
 

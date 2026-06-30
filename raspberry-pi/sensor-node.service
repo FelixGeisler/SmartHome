@@ -6,13 +6,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# The User and the three /home/pi/... paths below are placeholders. Install with ./install.sh,
-# which substitutes this Pi's login user and the actual node directory — so a Pi whose user is not
-# "pi" (e.g. "raspberry") works without hand-editing. Edit these by hand only if not using install.sh.
-User=pi
-WorkingDirectory=/home/pi/smarthome-sensor-node
-EnvironmentFile=/home/pi/smarthome-sensor-node/sensor-node.env
-ExecStart=/home/pi/smarthome-sensor-node/.venv/bin/python sensor_node.py
+# Defaults target login user "raspberry" and ~/smarthome-sensor-node. On a Pi with a different user
+# or path, run ./install.sh (it substitutes this Pi's user and directory) instead of hand-editing.
+User=raspberry
+WorkingDirectory=/home/raspberry/smarthome-sensor-node
+EnvironmentFile=/home/raspberry/smarthome-sensor-node/sensor-node.env
+ExecStart=/home/raspberry/smarthome-sensor-node/.venv/bin/python sensor_node.py
 Restart=on-failure
 RestartSec=5
 
