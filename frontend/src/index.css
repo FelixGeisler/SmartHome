@@ -228,19 +228,19 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.sparkline {
+.sensor-chart {
   width: 100%;
   height: 40px;
 }
 
-.sparkline__line {
+.sensor-chart__line {
   fill: none;
   stroke: var(--accent);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
 
-.sparkline--empty {
+.sensor-chart--empty {
   width: 100%;
   height: 40px;
   border-bottom: 1px dashed var(--border);

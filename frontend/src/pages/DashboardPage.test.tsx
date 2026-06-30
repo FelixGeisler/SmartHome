@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { DashboardPage } from './DashboardPage'
 
@@ -18,6 +18,20 @@ const lamp: Device = {
 const heater: Device = { ...lamp, id: 2, name: 'Heater', state: { on: 'true' } }
 
 describe('DashboardPage', () => {
+  // A sensing device's SensorChart reads its history on mount; stub the call to an empty series.
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      ),
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders every device when ready', () => {
     render(
       <DashboardPage
@@ -28,7 +42,6 @@ describe('DashboardPage', () => {
         onToggle={vi.fn()}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -47,7 +60,6 @@ describe('DashboardPage', () => {
         onToggle={vi.fn()}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -82,7 +94,6 @@ describe('DashboardPage', () => {
         onToggle={vi.fn()}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -104,7 +115,6 @@ describe('DashboardPage', () => {
         onToggle={onToggle}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -124,7 +134,6 @@ describe('DashboardPage', () => {
         onToggle={vi.fn()}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={vi.fn()}
       />,
     )
@@ -144,7 +153,6 @@ describe('DashboardPage', () => {
         onToggle={vi.fn()}
         onCommand={vi.fn()}
         onDelete={vi.fn()}
-        history={{}}
         onRetry={onRetry}
       />,
     )

@@ -4,7 +4,6 @@ import type { Device, DeviceCommand } from './api/devices'
 import { deleteDevice, listDevices, sendCommand, toggleDevice } from './api/devices'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
-import { accumulateHistory, forgetDevice, type SensorHistory } from './sensorHistory'
 
 /** How often the dashboard re-fetches the device list so values update without a reload. */
 const POLL_INTERVAL_MS = 5000
@@ -19,7 +18,6 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [busyIds, setBusyIds] = useState<ReadonlySet<number>>(new Set())
   const [loadAttempt, setLoadAttempt] = useState(0)
-  const [history, setHistory] = useState<SensorHistory>({})
   // Latest busy set, read by the poll without re-arming its interval on every change.
   const busyIdsRef = useRef(busyIds)
   useEffect(() => {
@@ -34,7 +32,6 @@ function App() {
       .then((loaded) => {
         if (!stale) {
           setDevices(loaded)
-          setHistory((previous) => accumulateHistory(previous, loaded))
           setLoadState('ready')
         }
       })
@@ -56,7 +53,6 @@ function App() {
       listDevices()
         .then((loaded) => {
           setDevices((current) => mergeDevices(current, loaded, busyIdsRef.current))
-          setHistory((previous) => accumulateHistory(previous, loaded))
         })
         .catch(() => {
           // Keep the last good data on a transient poll failure; the next tick retries.
@@ -115,7 +111,6 @@ function App() {
     try {
       await deleteDevice(device.id)
       setDevices((current) => current.filter((existing) => existing.id !== device.id))
-      setHistory((previous) => forgetDevice(previous, device))
     } catch (cause) {
       setError(messageOf(cause))
     } finally {
@@ -158,7 +153,6 @@ function App() {
                 loadState={loadState}
                 error={error}
                 busyIds={busyIds}
-                history={history}
                 onToggle={(device) => void handleToggle(device)}
                 onCommand={(device, command) => void handleCommand(device, command)}
                 onDelete={(device) => void handleDelete(device)}

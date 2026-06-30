@@ -65,6 +65,19 @@
             <version>${paho.version}</version>
         </dependency>
 
+        <!-- spring-kafka: tees recorded telemetry onto a Kafka-API broker (Redpanda) for the
+             streaming pipeline. Outbound only; no listener container runs in the hub. Boot 4 splits
+             the auto-configuration (spring-boot-kafka, which binds the spring.kafka.* properties)
+             from the client library (spring-kafka); both are needed. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Flyway: versioned, reviewable schema migrations that own the schema the JPA entities
              validate against. Boot 4 splits the auto-configuration (spring-boot-flyway) from the
              migration engine (flyway-core); both are needed. -->

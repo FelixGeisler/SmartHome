@@ -32,7 +32,6 @@ function renderCard(device: Device, onCommand = vi.fn(), onToggle = vi.fn(), onD
       <DeviceCard
         device={device}
         busy={false}
-        history={{}}
         onToggle={onToggle}
         onCommand={onCommand}
         onDelete={onDelete}

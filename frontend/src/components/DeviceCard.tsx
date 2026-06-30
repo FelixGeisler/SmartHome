@@ -12,8 +12,7 @@ import {
   isSwitchable,
 } from '../api/devices'
 import { hexToXy, xyToHex } from '../color'
-import { seriesKey, type SensorHistory } from '../sensorHistory'
-import { Sparkline } from './Sparkline'
+import { SensorChart } from './SensorChart'
 
 /** Hue's tunable-white range, also a sensible window for the color-temperature slider. */
 const MIN_KELVIN = 2000
@@ -26,8 +25,6 @@ interface DeviceCardProps {
   device: Device
   /** True, while a command for this device is in flight; disables the toggle. */
   busy: boolean
-  /** Recent readings per sensor, for the sparkline charts. */
-  history: SensorHistory
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onDelete: (device: Device) => void
@@ -37,7 +34,6 @@ interface DeviceCardProps {
 export function DeviceCard({
   device,
   busy,
-  history,
   onToggle,
   onCommand,
   onDelete,
@@ -97,7 +93,7 @@ export function DeviceCard({
                 <span className="sensor__key">{sensor.key}</span>
                 <span className="sensor__value">{formatReading(sensor)}</span>
               </div>
-              <Sparkline points={history[seriesKey(device.id, sensor.key)] ?? []} />
+              <SensorChart deviceExternalId={device.externalId} sensorKey={sensor.key} />
             </div>
           ))}
         </div>
