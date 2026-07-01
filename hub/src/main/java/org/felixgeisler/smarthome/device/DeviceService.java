@@ -66,7 +66,7 @@ public class DeviceService {
    * @throws DeviceNotFoundException if no device has the given id
    */
   public Device getById(Long id) {
-    return getOrThrow(id);
+    return devices.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
   }
 
   /**
@@ -177,7 +177,7 @@ public class DeviceService {
    * @throws UnsupportedCapabilityException if the device's type is not switchable
    */
   public Device toggle(Long id) {
-    Device device = getOrThrow(id);
+    Device device = getById(id);
     if (!device.getCapabilities().contains(Capability.SWITCHABLE)) {
       throw new UnsupportedCapabilityException(id, Capability.SWITCHABLE);
     }
@@ -202,7 +202,7 @@ public class DeviceService {
    *     color temperature together
    */
   public Device applyCommand(Long id, CommandRequest command) {
-    Device device = getOrThrow(id);
+    Device device = getById(id);
     Map<AttributeKey, Object> requested = neutralAttributes(command);
     if (requested.isEmpty()) {
       throw new InvalidCommandException("Command sets no attributes");
@@ -266,9 +266,5 @@ public class DeviceService {
       attributes.put(AttributeKey.COLOR_TEMPERATURE_K, command.colorTemperatureK());
     }
     return attributes;
-  }
-
-  private Device getOrThrow(Long id) {
-    return devices.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
   }
 }
