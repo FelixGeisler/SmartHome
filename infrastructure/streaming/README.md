@@ -1,7 +1,7 @@
 # Telemetry streaming stack
 
-Local Docker stack for the IoT telemetry pipeline (issue #43). The SmartHome hub runs on the host
-(not in Docker) and publishes every recorded reading to Redpanda, a Kafka-API-compatible broker.
+Local container stack for the IoT telemetry pipeline (issue #43). The SmartHome hub runs on the host
+(not in a container) and publishes every recorded reading to Redpanda, a Kafka-API-compatible broker.
 Kafka Connect then sinks the topic into Elasticsearch, which you browse in Kibana:
 
 ```
@@ -11,10 +11,22 @@ hub (host) ──▶ Redpanda ──▶ Kafka Connect ──▶ Elasticsearch �
 
 The hub writes no code for the sink half — Connect moves messages off the topic on its own.
 
+## Prerequisites
+
+This stack runs on **Podman** with `podman-compose` (install once: `pip install --user podman-compose`).
+Invoke it as a module — plain `podman compose` looks for a missing `docker-compose` binary and fails:
+
+```sh
+python -m podman_compose --version   # confirm it's on the path
+```
+
+> **On Docker instead?** The commands below map 1:1 — use `docker compose` in place of
+> `python -m podman_compose`, and `docker exec` in place of `podman exec`.
+
 ## Run
 
-```
-docker compose -f infrastructure/streaming/docker-compose.yml up -d
+```sh
+python -m podman_compose -f infrastructure/streaming/docker-compose.yml up -d
 ```
 
 First start pulls images and installs the Elasticsearch sink connector, so give it a minute. The
@@ -32,9 +44,9 @@ First start pulls images and installs the Elasticsearch sink connector, so give 
 
 Start the hub, let a sensor node publish (or send an MQTT reading), then check each hop:
 
-```
+```sh
 # 1. On the topic
-docker exec -it smarthome-redpanda rpk topic consume telemetry.readings
+podman exec -it smarthome-redpanda rpk topic consume telemetry.readings
 
 # 2. The sink is running (state should be RUNNING)
 curl -s http://localhost:8083/connectors/telemetry-elasticsearch-sink/status
@@ -48,7 +60,7 @@ the readings.
 
 ## Stop
 
-```
-docker compose -f infrastructure/streaming/docker-compose.yml down       # keep data
-docker compose -f infrastructure/streaming/docker-compose.yml down -v    # also wipe volumes
+```sh
+python -m podman_compose -f infrastructure/streaming/docker-compose.yml down       # keep data
+python -m podman_compose -f infrastructure/streaming/docker-compose.yml down -v    # also wipe volumes
 ```
