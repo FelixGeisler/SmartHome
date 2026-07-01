@@ -4,20 +4,14 @@
     {
       "name": "smarthome-jar",
       "runtimeExecutable": "java",
-      "runtimeArgs": ["-jar", "target/smarthome-0.0.1-SNAPSHOT.jar", "--server.port=18080"],
+      "runtimeArgs": ["-jar", "hub/target/smarthome-0.0.1-SNAPSHOT.jar", "--server.port=18080"],
       "port": 18080
     },
     {
       "name": "frontend-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--port", "5199"],
+      "runtimeArgs": ["--prefix", "hub/frontend", "run", "dev", "--", "--port", "5199"],
       "port": 5199
-    },
-    {
-      "name": "dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173
     }
   ]
 }

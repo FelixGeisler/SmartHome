@@ -47,7 +47,8 @@ smarthome:
     # app-key: ${SMARTHOME_HUE_APP_KEY}
   telemetry:
     # Sensor history (issue #43) is read back from the Elasticsearch index that Kafka Connect fills
-    # from the telemetry topic. Defaults below match the local streaming stack in deploy/; override
+    # from the telemetry topic. Defaults below match the local streaming stack in
+    # infrastructure/streaming/; override
     # the URL for a remote cluster. No connection is made until a history query is served.
     # elasticsearch-url: http://localhost:9200
     # index: telemetry.readings

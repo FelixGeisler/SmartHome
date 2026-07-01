@@ -2,14 +2,14 @@
 
 How AI coding agents (e.g., Claude Code) may act in this repository. It is **defense-in-depth**:
 this policy is the probabilistic layer (the agent reads and mostly follows it); the deterministic
-layers are the `hooks/` (which the agent cannot bypass), the quality gate (`./mvnw clean verify`),
+layers are the `.claude/hooks/` (which the agent cannot bypass), the quality gate (`cd hub && ./mvnw clean verify`),
 and human review on every pull request. A rule here is a guardrail, not the only line of defense.
 
 ## What the AI may do
 
 **Read** — all source, tests, build config, and docs in this repo.
 
-**Write** — source, tests, build/CI config, and docs, then verify with `./mvnw clean verify`.
+**Write** — source, tests, build/CI config, and docs, then verify with `cd hub && ./mvnw clean verify`.
 Every change is reviewed by a human on the PR before merge.
 
 **Requires explicit human approval** — pushing, force-pushing, opening/merging PRs, deleting
@@ -38,7 +38,7 @@ application key, or any personal data. Use placeholders (`${SMARTHOME_*}`) when 
   traffic to the Hue v1 API is already cleartext on the LAN, so the stored key is the asset to
   protect.
 
-## Deterministic hooks (`hooks/`, wired in `.claude/settings.json`)
+## Deterministic hooks (`.claude/hooks/`, wired in `.claude/settings.json`)
 
 - **`validate-write.sh`** (PreToolUse) — blocks a Write/Edit whose content matches a high-confidence
   secret pattern (provider keys, private-key blocks, hard-coded credential assignments).

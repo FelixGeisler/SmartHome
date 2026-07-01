@@ -28,6 +28,7 @@ jobs:
           cache: maven
 
       - name: Build and run the quality gate
+        working-directory: hub
         run: |
           chmod +x mvnw
           ./mvnw -B clean verify

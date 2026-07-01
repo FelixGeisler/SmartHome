@@ -1,5 +1,5 @@
 target/
-.mvn/wrapper/maven-wrapper.jar
+hub/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -53,4 +53,4 @@ replay_pid*.log
 .claude/sessions.json
 
 ### Local H2 database files (dev/local persistence — never commit) ###
-/data/
+/hub/data/

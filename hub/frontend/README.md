@@ -5,15 +5,16 @@ devices, lists them, and toggles them on or off through the REST API.
 
 ## Development
 
-The easiest way is to install the frontend deps once (`npm --prefix frontend install` from the repository root) and then run `npm run dev` from the repository root, which starts the
-backend and this dev server together (see the root README).
+Run the backend and this Vite dev server as two processes. Install the frontend deps once with
+`npm --prefix hub/frontend install` from the repository root (see the root README).
 
-To run the two halves by hand instead — backend first, from the repository root.
+Start the backend first, from `hub/`.
 The skip flag matters: `spring-boot:run` forks the build lifecycle through the
 phase that runs `npm ci`, which wipes `node_modules` on every backend start — and
 fails outright if the Vite dev server is holding files open:
 
 ```sh
+cd hub
 .\mvnw.cmd spring-boot:run "-Dskip.frontend=true"
 ```
 
@@ -34,4 +35,4 @@ npm run build  # type-check + production bundle in dist/
 ```
 
 The Maven build runs all three and bundles `dist/` into the Spring Boot jar, so
-`.\mvnw.cmd clean verify` from the repository root covers the frontend too.
+`.\mvnw.cmd clean verify` from `hub/` covers the frontend too.

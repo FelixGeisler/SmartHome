@@ -18,7 +18,7 @@ esac
 
 note() {
   echo "Heads-up from post-edit-lint: $1 (CLAUDE.md forbidden pattern)." \
-    "Fix before committing; the full gate is './mvnw clean verify'." >&2
+    "Fix before committing; the full gate is '(cd hub && ./mvnw clean verify)'." >&2
   exit 2
 }
 

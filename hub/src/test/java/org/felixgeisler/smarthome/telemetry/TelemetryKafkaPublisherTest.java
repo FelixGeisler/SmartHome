@@ -1,4 +1,4 @@
-package org.felixgeisler.smarthome.streaming;
+package org.felixgeisler.smarthome.telemetry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;

@@ -1,4 +1,4 @@
-package org.felixgeisler.smarthome.streaming;
+package org.felixgeisler.smarthome.telemetry;
 
 /**
  * The wire form of a sensor reading published to the telemetry topic. Kept separate from the domain

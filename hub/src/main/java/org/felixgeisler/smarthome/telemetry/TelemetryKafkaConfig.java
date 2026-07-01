@@ -1,4 +1,4 @@
-package org.felixgeisler.smarthome.streaming;
+package org.felixgeisler.smarthome.telemetry;
 
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;

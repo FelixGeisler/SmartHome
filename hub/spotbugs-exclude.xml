@@ -15,7 +15,7 @@
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
-            <Class name="org.felixgeisler.smarthome.streaming.TelemetryKafkaPublisher"/>
+            <Class name="org.felixgeisler.smarthome.telemetry.TelemetryKafkaPublisher"/>
         </Or>
     </Match>
 </FindBugsFilter>

@@ -14,7 +14,7 @@ The hub writes no code for the sink half — Connect moves messages off the topi
 ## Run
 
 ```
-docker compose -f deploy/docker-compose.yml up -d
+docker compose -f infrastructure/streaming/docker-compose.yml up -d
 ```
 
 First start pulls images and installs the Elasticsearch sink connector, so give it a minute. The
@@ -49,6 +49,6 @@ the readings.
 ## Stop
 
 ```
-docker compose -f deploy/docker-compose.yml down       # keep data
-docker compose -f deploy/docker-compose.yml down -v    # also wipe volumes
+docker compose -f infrastructure/streaming/docker-compose.yml down       # keep data
+docker compose -f infrastructure/streaming/docker-compose.yml down -v    # also wipe volumes
 ```

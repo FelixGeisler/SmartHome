@@ -1,8 +1,8 @@
-/mvnw text eol=lf
+/hub/mvnw text eol=lf
 *.cmd text eol=crlf
 # Shell-sourced config must stay LF (CRLF/BOM break `source` in bash).
 cognitive-core.conf text eol=lf
-hooks/*.sh text eol=lf
+.claude/hooks/*.sh text eol=lf
 # Pi files run on Linux: a CRLF shebang breaks the script, CRLF breaks the systemd unit.
-raspberry-pi/*.sh text eol=lf
-raspberry-pi/*.service text eol=lf
+infrastructure/sensor-node/*.sh text eol=lf
+infrastructure/sensor-node/*.service text eol=lf

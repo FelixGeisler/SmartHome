@@ -1,4 +1,4 @@
-package org.felixgeisler.smarthome.streaming;
+package org.felixgeisler.smarthome.telemetry;
 
 import org.felixgeisler.smarthome.device.SensorReadingRecorded;
 import org.slf4j.Logger;

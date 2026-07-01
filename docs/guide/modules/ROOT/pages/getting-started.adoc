@@ -6,6 +6,7 @@ Build the single jar (it bundles the dashboard) and run it:
 
 [source,bash]
 ----
+cd hub
 ./mvnw clean package
 java -jar target/smarthome-*.jar
 ----
@@ -18,11 +19,15 @@ http://localhost:8080/v3/api-docs.
 
 == Develop with live reload
 
-To iterate on the frontend, run the hub and the Vite dev server together:
+To iterate on the frontend, run the hub and the Vite dev server as two processes:
 
 [source,bash]
 ----
-npm run dev
+# terminal 1 — backend (Vite serves the UI in dev, so skip the bundled build)
+cd hub && ./mvnw spring-boot:run -Dskip.frontend=true
+
+# terminal 2 — Vite dev server
+npm --prefix hub/frontend run dev
 ----
 
 Vite serves the dashboard (default http://localhost:5173) and proxies API calls to the hub.

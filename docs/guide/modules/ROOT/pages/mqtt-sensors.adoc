@@ -50,7 +50,7 @@ mosquitto_pub -h <broker-host> -t home/living-room/temperature -m 21.6
 ----
 +
 A real node runs a small program that reads its sensors and publishes on an interval. A working
-reference — a Raspberry Pi reading a couple of I²C sensors — is in `raspberry-pi/`.
+reference — a Raspberry Pi reading a couple of I²C sensors — is in `infrastructure/sensor-node/`.
 
 The hub stores each reading against the matching sensor, and the dashboard shows it.
 
