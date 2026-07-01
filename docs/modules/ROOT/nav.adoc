@@ -14,6 +14,7 @@
 ** xref:adr/0005-integrations-as-persisted-ui-configured-connections.adoc[ADR 5: Persisted UI-configured integrations]
 ** xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6: MQTT runtime integration and auto-provisioning]
 ** xref:adr/0007-persist-the-device-registry-with-flyway-migrations.adoc[ADR 7: Persisted device registry]
+** xref:adr/0008-persist-integration-connections-in-a-settings-store.adoc[ADR 8: Persisted integration connections]
 * xref:10-quality-requirements.adoc[10. Quality Requirements]
 * xref:11-risks-and-technical-debt.adoc[11. Risks and Technical Debt]
 * xref:12-glossary.adoc[12. Glossary]

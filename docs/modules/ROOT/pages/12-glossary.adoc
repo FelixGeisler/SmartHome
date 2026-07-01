@@ -1,1 +1,16 @@
 = 12. Glossary
+
+[cols="1,3",options="header"]
+|===
+| Term | Meaning
+| Neutral device model | The vendor-agnostic state and command vocabulary the core speaks. Adapters map each ecosystem onto it, so the rest of the system stays unaware of any vendor's model.
+| Capability | A neutral, self-describing unit of what a device can do or report (e.g. switchable, brightness, color), independent of any vendor.
+| Adapter | A component that translates one device ecosystem's protocol to and from the neutral model, plugged in behind the `DeviceAdapter` port.
+| Registry | The lookup that routes a command to the adapter registered for a device's type.
+| Auto-provisioning | Creating a device record automatically from its first inbound telemetry, rather than requiring explicit registration.
+| Telemetry | Time-stamped sensor readings that nodes publish and the hub records and streams onward.
+| Reading event | The internal domain event the core emits when it records a reading, decoupling persistence from outbound streaming.
+| Sink | A connector that moves messages off the streaming pipeline into an external store (the search index) with no hub-side consumer code.
+| Read-model | A query-optimized store (the search index) the hub reads history from, kept separate from the write path.
+| Tool-use | How the AI assistant acts: the model invokes the hub's own services as callable tools to answer or carry out a prompt.
+|===

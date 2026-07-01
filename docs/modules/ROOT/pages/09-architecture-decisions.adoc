@@ -15,3 +15,6 @@ points to its successor through its status line.
 * xref:adr/0003-neutral-state-and-command-contracts.adoc[ADR 3: Neutral state and command contracts]
 * xref:adr/0004-device-integration-model.adoc[ADR 4: Device integration model]
 * xref:adr/0005-integrations-as-persisted-ui-configured-connections.adoc[ADR 5: Integrations as persisted, UI-configured connections]
+* xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6: MQTT as a runtime integration; sensor nodes auto-provisioned]
+* xref:adr/0007-persist-the-device-registry-with-flyway-migrations.adoc[ADR 7: Persist the device registry in an on-disk database with Flyway migrations]
+* xref:adr/0008-persist-integration-connections-in-a-settings-store.adoc[ADR 8: Persist integration connections in a settings store]
