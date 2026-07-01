@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.felixgeisler.smarthome.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -44,10 +44,7 @@ public class TelemetryHistoryService {
   public TelemetryHistoryService(TelemetryHistoryProperties properties) {
     this.maxPoints = properties.maxPoints();
     this.searchUrl = properties.elasticsearchUrl() + "/" + properties.index() + "/_search";
-    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-    requestFactory.setConnectTimeout(TIMEOUT);
-    requestFactory.setReadTimeout(TIMEOUT);
-    this.restClient = RestClient.builder().requestFactory(requestFactory).build();
+    this.restClient = HttpClients.withTimeouts(TIMEOUT, TIMEOUT);
   }
 
   /**

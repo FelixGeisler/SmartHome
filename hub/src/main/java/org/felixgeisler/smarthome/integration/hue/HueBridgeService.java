@@ -7,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.felixgeisler.smarthome.HttpClients;
 import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -59,10 +59,7 @@ public class HueBridgeService {
     this.appKey.set(properties.appKey());
     this.deviceType = properties.deviceType();
     this.settings = settings;
-    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-    requestFactory.setConnectTimeout(TIMEOUT);
-    requestFactory.setReadTimeout(TIMEOUT);
-    this.restClient = RestClient.builder().requestFactory(requestFactory).build();
+    this.restClient = HttpClients.withTimeouts(TIMEOUT, TIMEOUT);
   }
 
   /**

@@ -8,10 +8,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.felixgeisler.smarthome.HttpClients;
 import org.felixgeisler.smarthome.settings.SettingsStore;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -46,11 +46,8 @@ class AnthropicClient {
     this.model = properties.model();
     this.maxTokens = properties.maxTokens();
     this.settings = settings;
-    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-    requestFactory.setConnectTimeout(Duration.ofSeconds(5));
     // A tool-use turn can take a while; keep the per-call read timeout generous.
-    requestFactory.setReadTimeout(Duration.ofSeconds(60));
-    this.http = RestClient.builder().requestFactory(requestFactory).build();
+    this.http = HttpClients.withTimeouts(Duration.ofSeconds(5), Duration.ofSeconds(60));
   }
 
   /** Restores a previously saved key on startup, so a key set last run survives a restart. */
