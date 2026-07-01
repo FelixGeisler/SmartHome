@@ -3,7 +3,7 @@
 The hub is a single Spring Boot JAR that serves the dashboard SPA and the REST API from one
 origin (xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It controls command
 devices directly over the LAN, and ingests sensor telemetry by subscribing to an MQTT broker that
-sensor nodes publish to (xref:adr/0003-device-integration-model.adoc[ADR 3]).
+sensor nodes publish to (xref:adr/0004-device-integration-model.adoc[ADR 4]).
 
 [plantuml,deployment,svg]
 ----
