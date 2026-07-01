@@ -40,3 +40,62 @@ Both are returned as RFC 9457 `ProblemDetail` by the `web` error handler.
 * Invalid body (blank or missing fields) -> *400*, before the service runs.
 * `externalId` already registered -> `DeviceAlreadyExistsException` -> *409*.
 * Success -> *201 Created* with a `Location: /api/devices/\{id}` header.
+
+== Ingest a sensor reading
+
+[plantuml,reading-sequence,svg]
+----
+@startuml
+participant "Sensor node" as N
+participant "MQTT broker" as B
+participant MqttSensorListener as L
+participant DeviceService as S
+participant DeviceRepository as R
+participant TelemetryKafkaPublisher as P
+participant "Streaming pipeline" as K
+
+N -> B : publish home/<device>/<sensor>
+B -> L : deliver message
+L -> S : recordReading(externalId, sensor, value)
+S -> R : save latest value
+S ->> P : SensorReadingRecorded (domain event)
+P -> K : publish, keyed by device
+@enduml
+----
+
+Recording never waits on the pipeline: publishing is fire-and-forget, so a broker that is unreachable
+is logged, not fatal to ingest. From the pipeline, a sink lands each reading in the search index with
+no hub-side consumer, and the dashboard and Kibana read the history back from there. Unknown sensor
+keys are dropped; an unknown device is auto-provisioned (xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6]).
+
+== Ask the assistant
+
+[plantuml,assistant-sequence,svg]
+----
+@startuml
+actor User
+participant AssistantController as C
+participant AssistantService as S
+participant AnthropicClient as AI
+participant "Claude API" as Claude
+participant "device / telemetry\nservices" as Tools
+
+User -> C : POST /api/assistant (prompt)
+C -> S : ask(prompt)
+S -> AI : prompt + tool definitions
+AI -> Claude : messages request
+Claude --> AI : tool call
+AI --> S : tool call
+S -> Tools : e.g. read sensor history / control a device
+Tools --> S : result
+S -> AI : messages + tool result
+AI -> Claude : messages request
+Claude --> AI : answer
+AI --> S : answer
+S --> C : answer
+C --> User : 200
+@enduml
+----
+
+The assistant keeps no data model of its own — its tools call the same services the REST API and UI
+use, so it can only do what a user could do through the API.

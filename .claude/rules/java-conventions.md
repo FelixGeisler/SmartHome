@@ -1,11 +1,11 @@
 ---
 description: Java coding conventions for SmartHome, applied when editing Java sources
-globs: src/**/*.java
+globs: hub/src/**/*.java
 ---
 
 # Java conventions
 
-Applies to all Java under `src/`. These mirror and reinforce the rules in `CLAUDE.md`.
+Applies to all Java under `hub/src/`. These mirror and reinforce the rules in `CLAUDE.md`.
 
 - **Google Java Style** (`google_checks.xml`): 2-space indentation, no wildcard imports,
   ~100-column lines. CheckStyle enforces it — match the surrounding code.

@@ -5,13 +5,13 @@ description: Review SmartHome code quality — run all three analysers, report v
 Run the three static analyzers in report mode (they write full reports without failing the build,
 so one pass gives you everything). Compile first so SpotBugs has bytecode to read:
 
-    ./mvnw compile checkstyle:checkstyle pmd:pmd spotbugs:spotbugs
+    cd hub && ./mvnw compile checkstyle:checkstyle pmd:pmd spotbugs:spotbugs
 
 - CheckStyle → Google Java Style / formatting
 - PMD → bad patterns, dead code, smells
 - SpotBugs → bytecode-level real bugs
 
-Then read the XML reports the plugins write under `target/` (by default `checkstyle-result.xml`,
+Then read the XML reports the plugins write under `hub/target/` (by default `checkstyle-result.xml`,
 `pmd.xml`, `spotbugsXml.xml`) and:
 
 - Group every violation by tool.

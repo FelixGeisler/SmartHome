@@ -3,6 +3,5 @@
 [cols="1,3",options="header"]
 |===
 | Item | Description
-| In-memory persistence | The database runs in-memory, so registered devices are lost on restart. Cheap to pay down: switching to a persistent store is mostly configuration — the Spring Data JPA code is unaffected.
 | Unauthenticated API | Any network client can register and control devices; the API has no authentication or authorization yet.
 |===

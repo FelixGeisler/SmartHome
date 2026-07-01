@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: SmartHome
+  datasource:
+    # File-based H2 so the device registry survives hub restarts (it used to be in-memory). The
+    # file lives under ./data and is git-ignored; point this at a managed database for a server
+    # deployment.
+    url: jdbc:h2:file:./data/smarthome;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+  jpa:
+    # REST API: no view rendering, so don't hold a DB session open per request.
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the entities still match it on boot.
+      ddl-auto: validate
+    properties:
+      # Store enums as portable VARCHAR rather than H2's native ENUM, so the Flyway migrations run
+      # unchanged against another database (e.g. PostgreSQL) later and schema validation is simple.
+      hibernate.type.preferred_enum_jdbc_type: VARCHAR
+  kafka:
+    # Telemetry streaming (issue #43). Defaults to the local Redpanda external listener; point at
+    # the Docker host via the env var. No broker connection is made until the first reading is sent,
+    # so the hub still boots when the streaming stack is down.
+    bootstrap-servers: ${SMARTHOME_KAFKA_BOOTSTRAP:localhost:19092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Bound the metadata wait so a missing broker can't stall telemetry ingest.
+        max.block.ms: 5000
+
+smarthome:
+  mqtt:
+    # The broker is connected at runtime via POST /api/integrations/mqtt/connect, like the Hue
+    # integration — not configured at startup, so the hub boots without a broker. These optional
+    # client settings have sensible defaults (client-id smarthome-hub, topic-filter home/+/+);
+    # broker credentials, if the broker requires them, come from the environment, never here.
+    # topic-filter: home/+/+
+    # username: ${SMARTHOME_MQTT_USERNAME}
+    # password: ${SMARTHOME_MQTT_PASSWORD}
+  hue:
+    # Pair a bridge at runtime via POST /api/integrations/hue/pair (press the bridge link button
+    # first). The app key obtained by pairing is held for the run; to keep it across restarts set
+    # it here or via the environment — never commit a real key.
+    # bridge-host: 192.168.1.10
+    # app-key: ${SMARTHOME_HUE_APP_KEY}
+  telemetry:
+    # Sensor history (issue #43) is read back from the Elasticsearch index that Kafka Connect fills
+    # from the telemetry topic. Defaults below match the local streaming stack in
+    # infrastructure/streaming/; override
+    # the URL for a remote cluster. No connection is made until a history query is served.
+    # elasticsearch-url: http://localhost:9200
+    # index: telemetry.readings
+    # max-points: 1000
+  assistant:
+    # In-app AI assistant (Claude). The API key seeds from the environment (never committed); a key
+    # set later from the UI is persisted in the hub settings and restored on boot, so the assistant
+    # is disabled only when neither is present. Switch the model to claude-sonnet-4-6 for faster,
+    # cheaper turns.
+    api-key: ${SMARTHOME_ANTHROPIC_API_KEY:${ANTHROPIC_API_KEY:}}
+    # model: claude-opus-4-8
+    # max-tokens: 2048

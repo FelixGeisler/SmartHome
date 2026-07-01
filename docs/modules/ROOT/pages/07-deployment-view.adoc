@@ -2,8 +2,10 @@
 
 The hub is a single Spring Boot JAR that serves the dashboard SPA and the REST API from one
 origin (xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It controls command
-devices directly over the LAN, and ingests sensor telemetry by subscribing to an MQTT broker that
-sensor nodes publish to (xref:adr/0003-device-integration-model.adoc[ADR 3]).
+devices directly over the LAN, ingests sensor telemetry by subscribing to an MQTT broker that
+sensor nodes publish to (xref:adr/0004-device-integration-model.adoc[ADR 4]), streams each recorded
+reading onto a local streaming stack (Kafka → Kafka Connect → Elasticsearch → Kibana) for history
+and analysis, and reaches out to the Anthropic Claude API for the AI assistant.
 
 [plantuml,deployment,svg]
 ----
@@ -16,13 +18,27 @@ node "Host" {
   database "Database" as db
   app --> db
 }
-node "Command device\n(e.g. Shelly)" as plug
+node "Command device\n(e.g. Shelly / Hue)" as plug
 node "MQTT broker" as broker
 node "Sensor node" as sensor
+node "Streaming stack (Podman)" as stack {
+  node "Kafka (Redpanda)" as kafka
+  node "Kafka Connect" as connect
+  database "Elasticsearch" as es
+  node "Kibana" as kibana
+}
+cloud "Anthropic Claude API" as claude
+
 spa --> app : HTTP, same origin\n(static assets + /api)
 app --> plug : HTTP (LAN)
 sensor --> broker : publish\nhome/<device>/<sensor>
 app --> broker : subscribe home/+/+\n(MQTT, LAN)
+app --> kafka : publish telemetry
+kafka --> connect
+connect --> es : sink
+app --> es : history queries
+es --> kibana
+app --> claude : HTTPS (tool-use)
 @enduml
 ----
 
@@ -34,4 +50,6 @@ app --> broker : subscribe home/+/+\n(MQTT, LAN)
 | Command device | Reached directly over the LAN, addressed by host (e.g. a Shelly plug over HTTP)
 | MQTT broker | Carries sensor telemetry; the hub subscribes to `home/+/+`
 | Sensor node | Publishes readings to `home/<device>/<sensor>`; setup is in the xref:guide::mqtt-sensors.adoc[MQTT sensors guide]
+| Streaming stack (Podman) | Kafka (Redpanda), Kafka Connect, Elasticsearch, and Kibana; the hub publishes readings to Kafka, Connect sinks them into Elasticsearch, and the dashboard and Kibana read history back
+| Anthropic Claude API | External service the AI assistant reaches over HTTPS for tool-use turns
 |===

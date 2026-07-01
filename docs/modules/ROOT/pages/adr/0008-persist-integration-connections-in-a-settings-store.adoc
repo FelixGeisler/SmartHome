@@ -1,0 +1,13 @@
+= ADR 8: Persist integration connections in a settings store
+
+== Status
+Accepted
+
+== Context
+Integrations are configured at runtime rather than from static config (ADR 5): a Hue bridge is paired, an MQTT broker is pointed at, an assistant key is entered. ADR 6 and ADR 7 deliberately deferred persisting those connection credentials, treating them as session state that lived only for the run and sat outside the device registry. In practice that is the wrong behavior for a hub: a bridge paired once, or a key entered once, should not have to be re-established on every restart. These values are also a poor fit for the relational registry — they are a handful of singular settings, not rows in the device model.
+
+== Decision
+Integration connection settings — the paired Hue bridge host and application key, the MQTT broker connection, and the assistant API key — are persisted in a dedicated key-value settings store, a `hub_setting` table owned by a Flyway migration and kept separate from the device registry (ADR 7). On startup the hub reads each setting back and re-establishes the connection, so a paired bridge, a configured broker, and a saved key survive a restart and the hub returns to how it was configured. The stored secrets are held at rest in the same local database; they are never logged and never returned in API responses.
+
+== Consequences
+A configured hub comes back exactly as it was left — no re-pairing, no re-entering keys — which is what a hub is expected to do. Because a setting is a simple key-value entry rather than part of the relational model, persisting a new kind of connection is a new key, not a schema change. The trade-off is secrets at rest in the local store; this is accepted because the store sits on the same trusted, single-host machine as the hub, and it is the asset the security policy calls out to protect. A networked or multi-tenant deployment would need encryption at rest and stricter handling of those credentials. This completes the integration-connection persistence that ADR 6 and ADR 7 recorded as deferred.

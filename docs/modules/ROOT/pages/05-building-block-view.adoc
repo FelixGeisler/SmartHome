@@ -6,31 +6,52 @@
 skinparam componentStyle rectangle
 
 [frontend] #line.dashed
+[assistant]
 [web]
 [device]
+[capability]
 package "integration" {
   interface "DeviceAdapter\n(port)" as port
   [registry]
   [adapter]
 }
+[settings]
+[telemetry]
 database "Database" as db
+database "Search index" as idx
+node "MQTT broker" as broker
+node "Streaming pipeline" as pipeline
 node "Device" as dev
 
 [frontend] --> [device] : REST (/api)
+[frontend] --> [telemetry] : history (/api)
+[frontend] --> [assistant] : chat (/api)
+[assistant] ..> [device] : tool-use
+[assistant] ..> [telemetry] : tool-use
 [web] ..> [device] : maps errors
+[device] --> [capability] : neutral vocabulary
 [device] --> db : JPA
 [device] --> [registry] : route command
 [registry] --> port
 [adapter] ..|> port
 [adapter] --> dev
+broker --> [device] : sensor readings
+[device] --> [telemetry] : reading events
+[telemetry] --> pipeline : publish
+[telemetry] --> idx : query history
+[settings] --> db : JPA
 @enduml
 ----
 
 [cols="1,3",options="header"]
 |===
 | Block | Responsibility
-| `frontend` | The device dashboard: a React SPA (own toolchain under `frontend/`) that registers, lists, and toggles devices through the REST API. It only sees the REST contract, never the domain model.
-| `web` | Maps exceptions to RFC 9457 `ProblemDetail` responses.
-| `device` | Application core: the REST API plus register / list / toggle logic and persistence.
-| `integration` | The `DeviceAdapter` port and the registry that routes to it; one adapter per device technology plugs in here.
+| `frontend` | The dashboard: a React SPA (own toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, and hosts the AI chat — all over the REST API. It only sees the REST contract, never the domain model.
+| `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
+| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side.
+| `capability` | The neutral state and command vocabulary (on/off, brightness, color as CIE xy / Kelvin / %) that every adapter speaks, so the core never learns a vendor's model.
+| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem (bridge/cloud and MQTT adapters) plugs in here.
+| `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, or assistant key survives a restart.
+| `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline.
+| `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
 |===
