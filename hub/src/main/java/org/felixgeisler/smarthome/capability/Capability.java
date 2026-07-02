@@ -1,8 +1,7 @@
-package org.felixgeisler.smarthome.device;
+package org.felixgeisler.smarthome.capability;
 
 import java.util.Optional;
 import java.util.Set;
-import org.felixgeisler.smarthome.capability.AttributeKey;
 
 /**
  * Something a class of devices can do.

@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

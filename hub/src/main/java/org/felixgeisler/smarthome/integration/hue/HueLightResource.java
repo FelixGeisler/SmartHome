@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import org.felixgeisler.smarthome.device.Capability;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /** A light as the bridge returns it; the state fields it reports reveal what the light can do. */
 @JsonIgnoreProperties(ignoreUnknown = true)

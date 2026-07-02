@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /**
  * Request body for registering a device.

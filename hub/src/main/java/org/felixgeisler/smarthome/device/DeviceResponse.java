@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /**
  * Client-facing view of a {@link Device}, decoupling the REST contract from the persistence model.

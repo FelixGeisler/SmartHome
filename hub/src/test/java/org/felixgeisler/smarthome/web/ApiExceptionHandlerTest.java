@@ -3,7 +3,7 @@ package org.felixgeisler.smarthome.web;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.felixgeisler.smarthome.device.Capability;
+import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
 import org.felixgeisler.smarthome.device.InvalidCommandException;

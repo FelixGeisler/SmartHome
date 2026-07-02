@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /** Categories of a device the hub can control, each declaring what its devices can do. */
 public enum DeviceType {

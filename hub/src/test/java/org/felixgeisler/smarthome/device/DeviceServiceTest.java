@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;

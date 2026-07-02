@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.AttributeKey;
+import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.capability.ColorMode;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.slf4j.Logger;

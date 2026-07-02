@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import java.io.Serial;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /** Thrown when a command requires a capability the target device's type does not have. */
 public class UnsupportedCapabilityException extends RuntimeException {

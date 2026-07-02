@@ -1,7 +1,7 @@
 package org.felixgeisler.smarthome.integration.hue;
 
 import java.util.Set;
-import org.felixgeisler.smarthome.device.Capability;
+import org.felixgeisler.smarthome.capability.Capability;
 
 /**
  * A light discovered on the Hue bridge.
