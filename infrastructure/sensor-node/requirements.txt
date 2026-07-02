@@ -7,5 +7,5 @@ adafruit-blinka>=8.0.0
 # Blinka's GPIO backend on current Raspberry Pi OS (Bookworm) and the Pi 5.
 lgpio>=0.2.2.0
 
-# CO2 sensor (SCD40/SCD41) — only needed when ENABLE_CO2=true.
+# CO2 sensor (SCD40/SCD41); only needed when ENABLE_CO2=true.
 adafruit-circuitpython-scd4x>=1.4.0

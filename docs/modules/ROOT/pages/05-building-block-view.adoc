@@ -46,7 +46,7 @@ broker --> [device] : sensor readings
 [cols="1,3",options="header"]
 |===
 | Block | Responsibility
-| `frontend` | The dashboard: a React SPA (own toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, and hosts the AI chat — all over the REST API. It only sees the REST contract, never the domain model.
+| `frontend` | The dashboard: a React SPA (own toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, and hosts the AI chat, all over the REST API. It only sees the REST contract, never the domain model.
 | `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
 | `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side.
 | `capability` | The neutral state and command vocabulary (on/off, brightness, color as CIE xy / Kelvin / %) that every adapter speaks, so the core never learns a vendor's model.

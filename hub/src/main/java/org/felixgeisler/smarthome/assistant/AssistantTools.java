@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * The assistant's tools, mapping the model's calls onto the hub's existing services. Results are
- * returned as compact text the model reads back; a tool never throws — a failure becomes an error
+ * returned as compact text the model reads back; a tool never throws; a failure becomes an error
  * string so the model can explain it.
  */
 @Component
@@ -146,7 +146,7 @@ class AssistantTools {
   }
 
   private static String reading(Sensor sensor) {
-    String value = sensor.getValue() == null ? "—" : sensor.getValue() + " " + sensor.getUnit();
+    String value = sensor.getValue() == null ? "n/a" : sensor.getValue() + " " + sensor.getUnit();
     return sensor.getKey() + "=" + value;
   }
 
@@ -172,7 +172,7 @@ class AssistantTools {
         min,
         max,
         "co2".equals(sensorKey) && max > CO2_CONCERN_PPM ? " (CO2 above " + CO2_CONCERN_PPM
-            + " ppm — consider ventilating)" : "");
+            + " ppm; consider ventilating)" : "");
   }
 
   private String controlDevice(Map<String, Object> args) {

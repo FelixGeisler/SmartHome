@@ -177,7 +177,7 @@ interface CommitInputProps {
 
 /**
  * An uncontrolled input that lets the browser handle the live dragging but only commits a command
- * on the native {@code change} event — slider release or color-picker close — so a single gesture
+ * on the native {@code change} event (slider release or color-picker close), so a single gesture
  * sends one command, not one per step. The {@code key} resets the input to the committed value
  * whenever it changes elsewhere (e.g., another client moved it).
  */
@@ -230,9 +230,9 @@ function TrashIcon() {
   )
 }
 
-/** Renders a reading as value plus unit, or an em dash before the first reading arrives. */
+/** Renders a reading as value plus unit, or an en dash before the first reading arrives. */
 function formatReading(sensor: Sensor): string {
-  return sensor.value === null ? '—' : `${sensor.value} ${sensor.unit}`
+  return sensor.value === null ? '–' : `${sensor.value} ${sensor.unit}`
 }
 
 /** Renders an enum constant like SHELLY_PLUG as "Shelly Plug". */

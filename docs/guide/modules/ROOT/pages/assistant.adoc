@@ -1,7 +1,7 @@
 = The assistant
 
 The dashboard includes an AI assistant: ask about your home in plain language and it answers from
-live device state and sensor history — or acts, when you ask it to switch or adjust something. It
+live device state and sensor history, or acts when you ask it to switch or adjust something. It
 works through the same operations as the dashboard, so it can never do more than you could
 yourself.
 
@@ -17,6 +17,6 @@ The hub stores the key and it survives restarts; once set, it is masked and neve
 
 == Use it
 
-Open the chat from any page and ask — what a sensor reads, what is on, or for a change:
+Open the chat from any page. Ask what a sensor reads or what is on, or ask for a change:
 "turn off the desk lamp", "dim the living room to 30%". Answers about readings come from the
 hub's own data, not from the model's imagination.

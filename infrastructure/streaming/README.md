@@ -9,18 +9,18 @@ hub (host) ──▶ Redpanda ──▶ Kafka Connect ──▶ Elasticsearch �
               telemetry.readings   ES sink
 ```
 
-The hub writes no code for the sink half — Connect moves messages off the topic on its own.
+The hub writes no code for the sink half; Connect moves messages off the topic on its own.
 
 ## Prerequisites
 
 This stack runs on **Podman** with `podman-compose` (install once: `pip install --user podman-compose`).
-Invoke it as a module — plain `podman compose` looks for a missing `docker-compose` binary and fails:
+Invoke it as a module: plain `podman compose` looks for a missing `docker-compose` binary and fails:
 
 ```sh
 python -m podman_compose --version   # confirm it's on the path
 ```
 
-> **On Docker instead?** The commands below map 1:1 — use `docker compose` in place of
+> **On Docker instead?** The commands below map 1:1: use `docker compose` in place of
 > `python -m podman_compose`, and `docker exec` in place of `podman exec`.
 
 ## Run

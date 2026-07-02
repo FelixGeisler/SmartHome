@@ -23,7 +23,7 @@ class AssistantService {
       You are the assistant built into a SmartHome hub. You can answer questions about the home, \
       control devices, and proactively point out anything that looks off.
 
-      Ground every factual answer in the tools — never guess device state or readings:
+      Ground every factual answer in the tools; never guess device state or readings:
       - list_devices: the current devices, their state, and each sensor's latest reading.
       - get_sensor_history: a sensor's recent readings over a time window, for trends.
       - control_device: turn a device on/off or set its brightness.
@@ -57,7 +57,7 @@ class AssistantService {
   String chat(String userMessage) {
     if (!claude.isConfigured()) {
       throw new AssistantException(
-          "The assistant has no API key — add one under Configuration → AI assistant.");
+          "The assistant has no API key; add one under Configuration → AI assistant.");
     }
     List<Tool> toolDefs = tools.definitions();
     List<Message> messages = new ArrayList<>();

@@ -78,7 +78,7 @@ class AssistantToolsTest {
     String result = tools.execute("list_devices", Map.of());
 
     assertTrue(result.contains("co2=805 ppm"), result);
-    assertTrue(result.contains("temperature=—"), result);
+    assertTrue(result.contains("temperature=n/a"), result);
     assertTrue(result.contains("state {on=true}"), result);
   }
 

@@ -52,7 +52,7 @@ export function AssistantPanel() {
             type="password"
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
-            placeholder={configured ? '•••••• (set — paste to replace)' : 'paste your key'}
+            placeholder={configured ? '•••••• (set; paste to replace)' : 'paste your key'}
             aria-label="Anthropic API key"
             disabled={busy}
           />

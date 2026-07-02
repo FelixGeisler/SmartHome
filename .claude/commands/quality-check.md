@@ -1,5 +1,5 @@
 ---
-description: Review SmartHome code quality — run all three analysers, report violations grouped by tool
+description: Review SmartHome code quality: run all three analysers, report violations grouped by tool
 ---
 
 Run the three static analyzers in report mode (they write full reports without failing the build,
@@ -15,7 +15,7 @@ Then read the XML reports the plugins write under `hub/target/` (by default `che
 `pmd.xml`, `spotbugsXml.xml`) and:
 
 - Group every violation by tool.
-- For each: file, line, rule name, and one line on *why* the rule exists — the real-world risk it
+- For each: file, line, rule name, and one line on *why* the rule exists, the real-world risk it
   guards against.
 - Propose a concrete fix for each, but **do not apply any** unless I confirm.
 - Finish with a summary: total per tool, and which are quick formatting fixes vs. genuine

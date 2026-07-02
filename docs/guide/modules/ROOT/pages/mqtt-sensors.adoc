@@ -1,7 +1,7 @@
 = MQTT sensors
 
 A sensor node reports readings to the hub over MQTT: the node publishes each reading to a topic,
-an MQTT broker relays it, and the hub — subscribed to that broker — stores the reading against the
+an MQTT broker relays it, and the hub (subscribed to that broker) stores the reading against the
 matching device.
 
 [plantuml,mqtt-sensors,svg]
@@ -18,7 +18,7 @@ hub --> broker : subscribe\nhome/+/+
 == Run a broker
 
 The hub subscribes to one MQTT broker. Any broker works; Mosquitto is a common choice, and it can
-run on any always-on host on the LAN — a small board, a NAS, or a server. Install it, have it
+run on any always-on host on the LAN: a small board, a NAS, or a server. Install it, have it
 listen on the LAN so the hub can reach it, and require authentication for anything beyond a
 trusted network.
 
@@ -33,11 +33,11 @@ The hub subscribes to `home/+/+`.
 
 == Add a sensor
 
-. *Register the device* on the hub so it has declared sensors to route readings into — see
+. *Register the device* on the hub so it has declared sensors to route readings into; see
 xref:adding-devices.adoc[Adding devices]. The device's `externalId` is the node id, and each
 declared sensor `key` matches a published topic key.
 . *Publish readings* from the node to `home/<node-id>/<sensor-key>`, with the value as the
-payload. Any MQTT client can do it — for example, to test:
+payload. Any MQTT client can do it; for example, to test:
 +
 [source,bash]
 ----
@@ -45,7 +45,7 @@ mosquitto_pub -h <broker-host> -t home/living-room/temperature -m 21.6
 ----
 +
 A real node runs a small program that reads its sensors and publishes on an interval. A working
-reference — a Raspberry Pi reading a couple of I²C sensors — is in `infrastructure/sensor-node/`.
+reference (a Raspberry Pi reading a couple of I²C sensors) is in `infrastructure/sensor-node/`.
 
 The hub stores each reading against the matching sensor, and the dashboard shows it. With the
 streaming stack from `infrastructure/streaming/` running, the dashboard also charts each sensor's
@@ -54,5 +54,5 @@ recent history.
 == Broker and node on one host (optional)
 
 The broker and a sensor node need not be separate machines: one host can run the broker and also
-publish its own sensors. That is a convenience, not a requirement — any arrangement of a broker and
+publish its own sensors. That is a convenience, not a requirement; any arrangement of a broker and
 nodes on the LAN works.

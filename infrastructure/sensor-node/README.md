@@ -41,7 +41,7 @@ Once the venv and `sensor-node.env` exist, install the systemd service with the 
 bash install.sh
 ```
 
-It fills in this Pi's login user and the actual node directory, then enables and starts the unit —
+It fills in this Pi's login user and the actual node directory, then enables and starts the unit,
 so it works whatever the Pi's username is and wherever you copied the node. The shipped
 `sensor-node.service` defaults to user `raspberry`; on that fleet you can also just `sudo cp` it and
 `systemctl enable --now sensor-node`, but `install.sh` is the safe path for any other user.
@@ -54,9 +54,9 @@ sudo systemctl enable --now mosquitto
 
 ## Files
 
-- `sensor_node.py` — reads the sensors over I²C and publishes readings over MQTT.
-- `requirements.txt` — Python dependencies.
-- `sensor-node.env.example` — configuration template (copy to `sensor-node.env`).
-- `sensor-node.service` — systemd unit to run the publisher on boot.
-- `install.sh` — installs that unit for this Pi (fills in the user and node directory).
-- `mosquitto.conf` — example broker configuration.
+- `sensor_node.py`: reads the sensors over I²C and publishes readings over MQTT.
+- `requirements.txt`: Python dependencies.
+- `sensor-node.env.example`: configuration template (copy to `sensor-node.env`).
+- `sensor-node.service`: systemd unit to run the publisher on boot.
+- `install.sh`: installs that unit for this Pi (fills in the user and node directory).
+- `mosquitto.conf`: example broker configuration.

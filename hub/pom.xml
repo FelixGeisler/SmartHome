@@ -396,7 +396,7 @@
                 </executions>
             </plugin>
 
-            <!-- Vite writes dist/ outside target/, so teach `clean` to remove it too —
+            <!-- Vite writes dist/ outside target/, so teach `clean` to remove it too;
                  otherwise a stale bundle could be packaged after a skipped frontend build. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

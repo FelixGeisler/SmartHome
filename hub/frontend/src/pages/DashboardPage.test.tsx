@@ -64,7 +64,7 @@ describe('DashboardPage', () => {
       />,
     )
 
-    expect(screen.getByText('No devices yet — add one in Configuration.')).toBeInTheDocument()
+    expect(screen.getByText('No devices yet. Add one in Configuration.')).toBeInTheDocument()
   })
 
   it('renders sensor readings for a sensing device', () => {

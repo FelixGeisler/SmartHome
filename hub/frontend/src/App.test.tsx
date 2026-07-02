@@ -66,7 +66,7 @@ describe('App', () => {
     vi.mocked(listDevices).mockResolvedValue([])
     const user = userEvent.setup()
     renderApp()
-    await screen.findByText('No devices yet — add one in Configuration.')
+    await screen.findByText('No devices yet. Add one in Configuration.')
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
 
@@ -79,7 +79,7 @@ describe('App', () => {
     vi.mocked(registerDevice).mockResolvedValue(heater)
     const user = userEvent.setup()
     renderApp()
-    await screen.findByText('No devices yet — add one in Configuration.')
+    await screen.findByText('No devices yet. Add one in Configuration.')
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
     await user.type(screen.getByLabelText('Name'), 'Heater')

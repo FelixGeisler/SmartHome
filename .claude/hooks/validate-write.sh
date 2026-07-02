@@ -9,7 +9,7 @@ payload="$(cat | tr -d '\\')"
 
 block() {
   echo "Blocked by validate-write: $1 Secrets come from environment variables, never source" \
-    "— see AI-SECURITY-POLICY.md." >&2
+    "(see AI-SECURITY-POLICY.md)." >&2
   exit 2
 }
 
@@ -23,7 +23,7 @@ printf '%s' "$payload" | grep -Eq 'xox[baprs]-[A-Za-z0-9-]{10,}' && block "Slack
 printf '%s' "$payload" | grep -Eq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----' && block "Private key detected."
 
 # Hand-pasted credential assignment with an inline literal value. Environment-variable
-# placeholders (${...}) are allowed — that is how config is supposed to reference secrets.
+# placeholders (${...}) are allowed; that is how config is supposed to reference secrets.
 if printf '%s' "$payload" \
   | grep -Eiq '(password|passwd|secret|api[_-]?key|access[_-]?token)["'"'"' ]*[:=] *"[^"$][^"]{5,}'; then
   block "A credential appears to be hard-coded."

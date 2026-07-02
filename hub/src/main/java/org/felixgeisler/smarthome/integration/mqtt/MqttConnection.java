@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  * broker client and subscribes {@link MqttSensorListener} to the telemetry topic filter.
  *
  * <p>The broker is chosen at runtime via {@link #connect(String, int)} rather than at startup, so
- * the hub boots without a broker and connects only once one is configured — mirroring the Hue
+ * the hub boots without a broker and connects only once one is configured, mirroring the Hue
  * integration. This is connection wiring with no parsing logic; that lives in the listener.
  */
 @Service

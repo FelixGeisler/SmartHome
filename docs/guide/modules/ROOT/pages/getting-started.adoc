@@ -23,10 +23,10 @@ To iterate on the frontend, run the hub and the Vite dev server as two processes
 
 [source,bash]
 ----
-# terminal 1 — backend (Vite serves the UI in dev, so skip the bundled build)
+# terminal 1: backend (Vite serves the UI in dev, so skip the bundled build)
 cd hub && ./mvnw spring-boot:run -Dskip.frontend=true
 
-# terminal 2 — Vite dev server
+# terminal 2: Vite dev server
 npm --prefix hub/frontend run dev
 ----
 

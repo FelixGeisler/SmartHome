@@ -97,5 +97,5 @@ C --> User : 200
 @enduml
 ----
 
-The assistant keeps no data model of its own — its tools call the same services the REST API and UI
+The assistant keeps no data model of its own; its tools call the same services the REST API and UI
 use, so it can only do what a user could do through the API.

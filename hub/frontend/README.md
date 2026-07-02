@@ -10,7 +10,7 @@ Run the backend and this Vite dev server as two processes. Install the frontend 
 
 Start the backend first, from `hub/`.
 The skip flag matters: `spring-boot:run` forks the build lifecycle through the
-phase that runs `npm ci`, which wipes `node_modules` on every backend start — and
+phase that runs `npm ci`, which wipes `node_modules` on every backend start, and
 fails outright if the Vite dev server is holding files open:
 
 ```sh
@@ -21,7 +21,7 @@ cd hub
 Then run the dev server, which serves the dashboard on `http://localhost:5173` and proxies
 `/api` to the Spring Boot app on `http://localhost:8080` (see `vite.config.ts`). Careful with
 the working directory: the repository root has its own `package.json` (the docs toolchain), so
-bare `npm` commands must run from `hub/frontend/` — or use the prefix form from the root:
+bare `npm` commands must run from `hub/frontend/`, or use the prefix form from the root:
 
 ```sh
 npm --prefix hub/frontend run dev

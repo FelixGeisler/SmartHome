@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Publish BME690 (and optionally SCD4x CO2) readings to the SmartHome MQTT broker.
 
-Reads a BME690 over I2C for temperature, humidity, and pressure, and — when enabled — an
+Reads a BME690 over I2C for temperature, humidity, and pressure, and, when enabled, an
 SCD4x (SCD40/SCD41) for CO2, publishing each to ``<prefix>/<node-id>/<sensor-key>`` (e.g.
 ``home/living-room/temperature``), the topic shape the SmartHome hub subscribes to. Values are
 plain strings; the unit for each reading is declared on the hub when the device is registered,

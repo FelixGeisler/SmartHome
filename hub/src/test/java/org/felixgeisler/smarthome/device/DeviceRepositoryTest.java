@@ -17,7 +17,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
 // @DataJpaTest's slice doesn't include Flyway, so pull it in to run the real migrations against
-// the test database — the repository is then exercised on the same schema the application uses.
+// the test database; the repository is then exercised on the same schema the application uses.
 @DataJpaTest
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 class DeviceRepositoryTest {

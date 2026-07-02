@@ -42,7 +42,7 @@ export function DashboardPage({
       )}
 
       {loadState === 'ready' && devices.length === 0 && (
-        <p className="dashboard__hint">No devices yet — add one in Configuration.</p>
+        <p className="dashboard__hint">No devices yet. Add one in Configuration.</p>
       )}
 
       {loadState === 'ready' && devices.length > 0 && (

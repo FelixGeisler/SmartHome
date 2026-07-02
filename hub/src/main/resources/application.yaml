@@ -33,7 +33,7 @@ spring:
 smarthome:
   mqtt:
     # The broker is connected at runtime via POST /api/integrations/mqtt/connect, like the Hue
-    # integration — not configured at startup, so the hub boots without a broker. These optional
+    # integration, not configured at startup, so the hub boots without a broker. These optional
     # client settings have sensible defaults (client-id smarthome-hub, topic-filter home/+/+);
     # broker credentials, if the broker requires them, come from the environment, never here.
     # topic-filter: home/+/+
@@ -42,7 +42,7 @@ smarthome:
   hue:
     # Pair a bridge at runtime via POST /api/integrations/hue/pair (press the bridge link button
     # first). The app key obtained by pairing is held for the run; to keep it across restarts set
-    # it here or via the environment — never commit a real key.
+    # it here or via the environment; never commit a real key.
     # bridge-host: 192.168.1.10
     # app-key: ${SMARTHOME_HUE_APP_KEY}
   telemetry:
