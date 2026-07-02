@@ -1,7 +1,7 @@
 # SmartHome frontend
 
-The device dashboard: a Vite + React + TypeScript single-page app that registers
-devices, lists them, and toggles them on or off through the REST API.
+The device dashboard: a Vite + React + TypeScript single-page app that registers,
+controls, and charts devices through the REST API.
 
 ## Development
 
@@ -18,15 +18,18 @@ cd hub
 .\mvnw.cmd spring-boot:run "-Dskip.frontend=true"
 ```
 
-Then run the dev server, which proxies `/api` to the Spring Boot app on
-`http://localhost:8080` (see `vite.config.ts`):
+Then run the dev server, which serves the dashboard on `http://localhost:5173` and proxies
+`/api` to the Spring Boot app on `http://localhost:8080` (see `vite.config.ts`). Careful with
+the working directory: the repository root has its own `package.json` (the docs toolchain), so
+bare `npm` commands must run from `hub/frontend/` — or use the prefix form from the root:
 
 ```sh
-npm install
-npm run dev
+npm --prefix hub/frontend run dev
 ```
 
 ## Quality gate
+
+Run from `hub/frontend/`:
 
 ```sh
 npm run lint   # ESLint
