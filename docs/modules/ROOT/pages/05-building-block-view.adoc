@@ -50,7 +50,7 @@ broker --> [device] : sensor readings
 | `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
 | `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side.
 | `capability` | The neutral state and command vocabulary (on/off, brightness, color as CIE xy / Kelvin / %) that every adapter speaks, so the core never learns a vendor's model.
-| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem (bridge/cloud and MQTT adapters) plugs in here.
+| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Command adapters implement the port; the MQTT sub-package only listens for inbound telemetry.
 | `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, or assistant key survives a restart.
 | `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
