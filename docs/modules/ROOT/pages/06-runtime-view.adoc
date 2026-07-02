@@ -80,7 +80,7 @@ participant AnthropicClient as AI
 participant "Claude API" as Claude
 participant "device / telemetry\nservices" as Tools
 
-User -> C : POST /api/assistant (prompt)
+User -> C : POST /api/assistant/chat (prompt)
 C -> S : ask(prompt)
 S -> AI : prompt + tool definitions
 AI -> Claude : messages request
