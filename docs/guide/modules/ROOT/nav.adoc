@@ -2,3 +2,4 @@
 * xref:getting-started.adoc[Getting started]
 * xref:adding-devices.adoc[Adding devices]
 * xref:mqtt-sensors.adoc[MQTT sensors]
+* xref:assistant.adoc[The assistant]
