@@ -18,3 +18,5 @@ points to its successor through its status line.
 * xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6: MQTT as a runtime integration; sensor nodes auto-provisioned]
 * xref:adr/0007-persist-the-device-registry-with-flyway-migrations.adoc[ADR 7: Persist the device registry in an on-disk database with Flyway migrations]
 * xref:adr/0008-persist-integration-connections-in-a-settings-store.adoc[ADR 8: Persist integration connections in a settings store]
+* xref:adr/0009-call-the-claude-api-through-a-thin-client-with-bounded-tool-use.adoc[ADR 9: Call the Claude API through a thin client with bounded tool use]
+* xref:adr/0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10: Stream telemetry through a broker into a search-index read model]

@@ -1,0 +1,13 @@
+= ADR 9: Call the Claude API through a thin client with bounded tool use
+
+== Status
+Accepted
+
+== Context
+The hub has an AI assistant that answers questions about the home and acts on it from natural language. Anthropic ships SDKs, and LLM frameworks would wrap the Messages API, its tool-use protocol, and conversation handling behind their own abstractions. The assistant's needs are small: send a conversation, offer a fixed set of tools, execute the calls the model makes, and return the answer. Its API key cannot live in static config — like every other integration connection it is entered at runtime and persisted (ADR 5, ADR 8).
+
+== Decision
+The assistant calls the Claude API through the hub's own thin HTTP client rather than an SDK or LLM framework. The tools it offers are a fixed, hub-defined set mapped directly onto the same services the REST API uses, so the assistant can do exactly what any API client can do — nothing more. The tool-use loop is bounded: tool results are fed back to the model for at most a configured number of rounds, after which the request fails rather than loops. The key is runtime-configured and persisted in the settings store (ADR 8).
+
+== Consequences
+There is no SDK or framework dependency to track: the hub owns a small, inspectable contract with the one endpoint it calls, and an API change lands in one client class. Routing every tool through the existing service layer means the assistant inherits the domain's validation and capability gating and can never bypass them. The bounded loop turns a runaway conversation into a clear error instead of an unbounded bill. The trade-off is that protocol features arrive only when the hub implements them — accepted while the assistant needs so little of the protocol.
