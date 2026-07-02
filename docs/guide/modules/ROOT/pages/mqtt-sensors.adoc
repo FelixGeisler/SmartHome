@@ -1,7 +1,7 @@
 = MQTT sensors
 
 A sensor node reports readings to the hub over MQTT: the node publishes each reading to a topic,
-an MQTT broker relays it, and the hub — subscribed to that broker — stores the reading against the
+an MQTT broker relays it, and the hub (subscribed to that broker) stores the reading against the
 matching device.
 
 [plantuml,mqtt-sensors,svg]
@@ -18,31 +18,26 @@ hub --> broker : subscribe\nhome/+/+
 == Run a broker
 
 The hub subscribes to one MQTT broker. Any broker works; Mosquitto is a common choice, and it can
-run on any always-on host on the LAN — a small board, a NAS, or a server. Install it, have it
+run on any always-on host on the LAN: a small board, a NAS, or a server. Install it, have it
 listen on the LAN so the hub can reach it, and require authentication for anything beyond a
 trusted network.
 
 == Point the hub at the broker
 
-The hub ships with MQTT off. Enable it and set the broker URL — in `application.yaml` or as
-environment variables:
-
-[source,bash]
-----
-SMARTHOME_MQTT_ENABLED=true
-SMARTHOME_MQTT_BROKER_URL=tcp://<broker-host>:1883
-# SMARTHOME_MQTT_USERNAME / SMARTHOME_MQTT_PASSWORD if the broker requires auth
-----
+The broker is connected from the web UI, not from static config: open *Configuration*, enter
+the broker's host under *Connect an MQTT broker*, and connect. The hub remembers the connection
+and re-establishes it on restart. If the broker requires authentication, supply the credentials
+to the hub as `SMARTHOME_MQTT_USERNAME` / `SMARTHOME_MQTT_PASSWORD` environment variables.
 
 The hub subscribes to `home/+/+`.
 
 == Add a sensor
 
-. *Register the device* on the hub so it has declared sensors to route readings into — see
+. *Register the device* on the hub so it has declared sensors to route readings into; see
 xref:adding-devices.adoc[Adding devices]. The device's `externalId` is the node id, and each
 declared sensor `key` matches a published topic key.
 . *Publish readings* from the node to `home/<node-id>/<sensor-key>`, with the value as the
-payload. Any MQTT client can do it — for example, to test:
+payload. Any MQTT client can do it; for example, to test:
 +
 [source,bash]
 ----
@@ -50,12 +45,14 @@ mosquitto_pub -h <broker-host> -t home/living-room/temperature -m 21.6
 ----
 +
 A real node runs a small program that reads its sensors and publishes on an interval. A working
-reference — a Raspberry Pi reading a couple of I²C sensors — is in `raspberry-pi/`.
+reference (a Raspberry Pi reading a couple of I²C sensors) is in `infrastructure/sensor-node/`.
 
-The hub stores each reading against the matching sensor, and the dashboard shows it.
+The hub stores each reading against the matching sensor, and the dashboard shows it. With the
+streaming stack from `infrastructure/streaming/` running, the dashboard also charts each sensor's
+recent history.
 
 == Broker and node on one host (optional)
 
 The broker and a sensor node need not be separate machines: one host can run the broker and also
-publish its own sensors. That is a convenience, not a requirement — any arrangement of a broker and
+publish its own sensors. That is a convenience, not a requirement; any arrangement of a broker and
 nodes on the LAN works.

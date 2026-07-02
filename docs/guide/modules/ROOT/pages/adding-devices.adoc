@@ -19,10 +19,11 @@ Connect the hub to the bridge once; how its devices appear then depends on what 
 The bridge reports its own lights, so you pick them rather than entering each by hand.
 
 . Use *Pair a Hue bridge* and enter the bridge's host (its IP address or hostname).
-. Press the round link button on the bridge, then start pairing — the bridge only hands out an
+. Press the round link button on the bridge, then start pairing; the bridge only hands out an
   access key for a few seconds after the button is pressed.
-. Once paired, the hub lists the bridge's lights. Select the ones to add; each becomes a
-  switchable device with an on/off toggle.
+. Once paired, the hub lists the bridge's lights. Select the ones to add; each arrives with the
+  capabilities the bridge reports, and the dashboard shows the matching controls: an on/off
+  toggle, and where the light supports it, brightness, color, and color temperature.
 
 The access key the bridge returns is connection state, never committed to source.
 

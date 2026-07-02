@@ -4,14 +4,12 @@
   "private": true,
   "description": "SmartHome architecture documentation (arc42) built with Antora.",
   "scripts": {
-    "dev": "concurrently -k -n spring,vite -c green,cyan \"node scripts/mvnw.mjs spring-boot:run -Dskip.frontend=true\" \"npm --prefix frontend run dev\"",
     "docs:build": "antora --fetch --clean antora-playbook.yml"
   },
   "devDependencies": {
     "@antora/cli": "^3.1.0",
     "@antora/lunr-extension": "1.0.0-alpha.13",
     "@antora/site-generator": "^3.1.0",
-    "asciidoctor-kroki": "^0.18.1",
-    "concurrently": "^10.0.3"
+    "asciidoctor-kroki": "^0.18.1"
   }
 }

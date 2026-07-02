@@ -1,41 +1,40 @@
 # SmartHome
 
-A home automation application built with Spring Boot, with a React device dashboard
-served from the same jar.
+[![CI](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml/badge.svg)](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml)
+[![Docs](https://github.com/FelixGeisler/SmartHome/actions/workflows/docs.yml/badge.svg)](https://felixgeisler.github.io/SmartHome/)
 
-## Tech Stack
+A self-hosted smart-home hub. It brings devices from different ecosystems into a single dashboard, records their sensor
+history, and includes an AI assistant that can query and control
+everything.
 
-- **Java 26**
-- **Spring Boot 4**
-- **Maven**
-- **Vite + React + TypeScript** (`frontend/` — see its [README](frontend/README.md))
+## Supported devices
 
-## Run (development)
+- **Philips Hue** lights, through a Hue bridge. On/off, plus brightness, color,
+  and color temperature where the bulb supports them.
+- **Shelly** plugs, over HTTP on the local network. On/off.
+- **MQTT sensor nodes** reporting temperature, humidity, pressure, or CO₂.
 
-```sh
-npm install                    # repo root (docs + dev tooling)
-npm --prefix frontend install  # once (frontend deps)
-npm run dev
-```
+Each integration is a single adapter that maps its ecosystem onto a shared,
+capability-based device model. The dashboard, the REST API, and the assistant
+all work on that model, so to support a new ecosystem, you only need to add a new adapter.
 
-Starts the backend (port 8080) and the Vite dev server together; open
-<http://localhost:5173> — frontend edits hot-reload, backend edits need a rerun.
-
-## Run (packaged)
+## Quick start
 
 ```sh
+cd hub
 ./mvnw clean verify
 java -jar target/smarthome-*.jar
 ```
 
-UI and API together on <http://localhost:8080>, exactly as deployed.
+Dashboard and API run on <http://localhost:8080>.
 
-## Build
+Devices, MQTT sensors, and the assistant are all set up in the UI, as described
+in the [user guide](https://felixgeisler.github.io/SmartHome/guide/). Connections are
+persisted, so the hub restores them after a restart. Sensor history charts
+require the streaming stack in
+[infrastructure/streaming](infrastructure/streaming/README.md).
 
-```sh
-./mvnw clean verify
-```
+## Documentation
 
-One gate for everything: backend tests and analysers plus the frontend's ESLint,
-Vitest, and production build, which the jar then serves at `/`. Iterating on the
-backend only? `-Dskip.frontend=true` skips the npm lifecycle.
+The architecture documentation and the user guide are published at
+[felixgeisler.github.io/SmartHome](https://felixgeisler.github.io/SmartHome/).

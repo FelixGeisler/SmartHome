@@ -7,7 +7,7 @@ Accepted
 Devices vary: some switch, some dim or change color, some only report readings. Deriving behavior from a fixed device category can't tell two same-category devices with different abilities apart and makes every new behavior a schema change.
 
 == Decision
-A device declares a set of capabilities — on/off, brightness, color, color temperature — each a typed contract that owns the neutral attributes it reports and the commands it accepts. Capabilities compose. They aren't inherited from a category. The set is detected at discovery and stored on the device. A command using a capability the device doesn't have is rejected. Category is used only for grouping and icons, never to gate commands. Sensor readings aren't capabilities. They're separate measurement channels.
+A device declares a set of capabilities (on/off, brightness, color, color temperature), each a typed contract that owns the neutral attributes it reports and the commands it accepts. Capabilities compose. They aren't inherited from a category. The set is detected at discovery and stored on the device. A command using a capability the device doesn't have is rejected. Category is used only for grouping and icons, never to gate commands. Sensor readings aren't capabilities. They're separate measurement channels.
 
 == Consequences
 Adding a device kind means listing its capabilities. Adding a behavior means one capability plus its contract. The capability set is the source of truth for the command gate, the adapter, and the dashboard's controls. State is stored as strings. The contract, not the database, enforces shape.

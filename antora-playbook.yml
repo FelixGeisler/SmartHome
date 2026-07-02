@@ -18,7 +18,7 @@ ui:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
     snapshot: true
   # Trim the stock UI's placeholder navbar (Home/Products/Services/Download).
-  supplemental_files: ./supplemental-ui
+  supplemental_files: ./docs/supplemental-ui
 
 asciidoc:
   attributes:

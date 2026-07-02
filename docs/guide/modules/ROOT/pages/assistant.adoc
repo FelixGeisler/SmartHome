@@ -1,0 +1,22 @@
+= The assistant
+
+The dashboard includes an AI assistant: ask about your home in plain language and it answers from
+live device state and sensor history, or acts when you ask it to switch or adjust something. It
+works through the same operations as the dashboard, so it can never do more than you could
+yourself.
+
+== Enable it
+
+The assistant stays off until it has an API key (it is backed by Anthropic's Claude, which the hub
+calls on your behalf).
+
+. Create an API key in the https://console.anthropic.com/[Anthropic console].
+. Open *Configuration* and paste it under *AI assistant*.
+
+The hub stores the key and it survives restarts; once set, it is masked and never shown again.
+
+== Use it
+
+Open the chat from any page. Ask what a sensor reads or what is on, or ask for a change:
+"turn off the desk lamp", "dim the living room to 30%". Answers about readings come from the
+hub's own data, not from the model's imagination.

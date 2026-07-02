@@ -4,13 +4,13 @@
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "bash hooks/validate-write.sh" }
+          { "type": "command", "command": "bash .claude/hooks/validate-write.sh" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "bash hooks/validate-bash.sh" }
+          { "type": "command", "command": "bash .claude/hooks/validate-bash.sh" }
         ]
       }
     ],
@@ -18,7 +18,7 @@
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "bash hooks/post-edit-lint.sh" }
+          { "type": "command", "command": "bash .claude/hooks/post-edit-lint.sh" }
         ]
       }
     ]
