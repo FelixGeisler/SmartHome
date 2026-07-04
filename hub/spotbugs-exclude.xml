@@ -8,6 +8,7 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Or>
+            <Class name="org.felixgeisler.smarthome.dashboard.DashboardLayoutService"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>

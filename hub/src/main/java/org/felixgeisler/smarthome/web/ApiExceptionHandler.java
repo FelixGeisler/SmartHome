@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.web;
 
 import org.felixgeisler.smarthome.assistant.AssistantException;
+import org.felixgeisler.smarthome.dashboard.DashboardLayoutException;
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
 import org.felixgeisler.smarthome.device.InvalidCommandException;
@@ -49,6 +50,12 @@ public class ApiExceptionHandler {
     // Client-actionable: the command is malformed for the neutral contract (empty, out of range,
     // or setting color and color temperature together).
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
+  @ExceptionHandler(DashboardLayoutException.class)
+  ProblemDetail handleDashboardLayout(DashboardLayoutException ex) {
+    // Client-actionable: the submitted dashboard layout is too large to store.
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(UnknownAdapterException.class)

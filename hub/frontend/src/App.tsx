@@ -1,9 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import type { Layout } from 'react-grid-layout'
+import type { CardLayout } from './api/dashboard'
+import { getLayout, saveLayout } from './api/dashboard'
 import type { Device, DeviceCommand } from './api/devices'
-import { deleteDevice, listDevices, sendCommand, toggleDevice } from './api/devices'
+import { listDevices, sendCommand, toggleDevice } from './api/devices'
 import { openDeviceStream } from './api/events'
 import { AssistantWidget } from './components/AssistantWidget'
+import {
+  addCard,
+  available,
+  curate,
+  displayCards,
+  fromGridLayout,
+  removeCard,
+  toGridLayout,
+} from './dashboardLayout'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
 
@@ -24,6 +36,14 @@ function App() {
   // Bumped on every stream (re)connect; charts refetch their history window when it changes,
   // since readings that arrived during a stream gap were never pushed.
   const [syncToken, setSyncToken] = useState(0)
+
+  // The saved dashboard arrangement, or null until one has ever been saved (a first-run dashboard
+  // shows every device; a saved-but-empty layout stays empty). `draft` holds the unsaved edit copy
+  // while `editing`; the committed `layout` is what other views and a reload see.
+  const [layout, setLayout] = useState<CardLayout[] | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<CardLayout[]>([])
+  const [saving, setSaving] = useState(false)
 
   // Re-sync bookkeeping: the newest sync wins (seq), and events that arrive while its fetch is in
   // flight are collected so they can be replayed over the fetched snapshot.
@@ -66,6 +86,16 @@ function App() {
   useEffect(() => {
     sync()
   }, [sync])
+
+  // Load the saved dashboard arrangement once. A missing or unreadable layout just leaves the
+  // default device order; the layout is advisory and reconciled against the live device list.
+  useEffect(() => {
+    getLayout()
+      .then((saved) => setLayout(saved ? saved.cards : null))
+      .catch(() => {
+        // The hub is briefly unreachable; leave the layout unset (every device shows).
+      })
+  }, [])
 
   // Stay live over the event stream instead of polling. Events also apply during an in-flight
   // sync (recorded for replay), so the UI reacts immediately without racing the fetch.
@@ -126,26 +156,56 @@ function App() {
     }
   }
 
-  async function handleDelete(device: Device) {
-    setBusyIds((ids) => new Set(ids).add(device.id))
-    setError(null)
-    try {
-      await deleteDevice(device.id)
-      setDevices((current) => remove(current, device.id))
-    } catch (cause) {
-      setError(messageOf(cause))
-    } finally {
-      setBusyIds((ids) => {
-        const next = new Set(ids)
-        next.delete(device.id)
-        return next
-      })
-    }
-  }
-
   function handleRegistered(device: Device) {
     // The stream also pushes the new device; upsert so the two paths never double-add it.
     setDevices((current) => upsert(current, device))
+  }
+
+  // The cards on the dashboard: the curated draft while editing, else the committed layout (with a
+  // tidy every-device default before the dashboard has ever been arranged). Live stream events (a
+  // device added or removed elsewhere) flow through, so the grid stays consistent.
+  const gridLayout = useMemo(
+    () => toGridLayout(editing ? curate(devices, draft) : displayCards(devices, layout)),
+    [devices, editing, draft, layout],
+  )
+  // The devices the add-card picker can offer: those not already on the (draft) dashboard.
+  const addableDevices = useMemo(() => available(devices, draft), [devices, draft])
+
+  function enterEdit() {
+    // Seed the draft from what is on screen, so arranging starts from the current cards.
+    setDraft(displayCards(devices, layout))
+    setEditing(true)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
+  }
+
+  async function commitEdit() {
+    setSaving(true)
+    setError(null)
+    try {
+      await saveLayout({ cards: draft })
+      setLayout(draft)
+      setEditing(false)
+    } catch (cause) {
+      setError(messageOf(cause))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Each drag or resize hands back the whole new grid layout; keep the draft in step with it.
+  function handleLayoutChange(next: Layout) {
+    setDraft(fromGridLayout(next))
+  }
+
+  function handleAddCard(device: Device) {
+    setDraft((current) => addCard(current, device))
+  }
+
+  function handleRemoveCard(device: Device) {
+    setDraft((current) => removeCard(current, device.id))
   }
 
   return (
@@ -172,14 +232,23 @@ function App() {
             element={
               <DashboardPage
                 devices={devices}
+                layout={gridLayout}
                 loadState={loadState}
                 error={error}
                 busyIds={busyIds}
                 syncToken={syncToken}
+                editing={editing}
+                saving={saving}
+                addable={addableDevices}
                 onToggle={(device) => void handleToggle(device)}
                 onCommand={(device, command) => void handleCommand(device, command)}
-                onDelete={(device) => void handleDelete(device)}
+                onRemoveCard={handleRemoveCard}
                 onRetry={retry}
+                onEnterEdit={enterEdit}
+                onSave={() => void commitEdit()}
+                onCancel={cancelEdit}
+                onLayoutChange={handleLayoutChange}
+                onAddCard={handleAddCard}
               />
             }
           />

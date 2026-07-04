@@ -1,9 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from './api/devices'
-import { deleteDevice, listDevices, registerDevice, sendCommand, toggleDevice } from './api/devices'
+import { listDevices, registerDevice, sendCommand, toggleDevice } from './api/devices'
 import { type DeviceStreamHandlers, openDeviceStream } from './api/events'
 import App from './App'
 
@@ -14,13 +15,20 @@ vi.mock('./api/devices', async (importOriginal) => ({
   registerDevice: vi.fn(),
   toggleDevice: vi.fn(),
   sendCommand: vi.fn(),
-  deleteDevice: vi.fn(),
 }))
 
 // The live stream is opened by App; mock it so tests can drive events directly. A test that needs
 // to push events overrides the implementation to capture the handlers.
 vi.mock('./api/events', () => ({
   openDeviceStream: vi.fn(() => () => {}),
+}))
+
+// Render react-grid-layout as a plain container so the dashboard's cards render under jsdom without
+// RGL's DOM measurement and drag internals (which don't run there).
+vi.mock('react-grid-layout', () => ({
+  __esModule: true,
+  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  useContainerWidth: () => ({ width: 1200, containerRef: { current: null }, mounted: true }),
 }))
 
 /** Renders App and returns the handlers it registered with the (mocked) event stream. */
@@ -89,7 +97,7 @@ describe('App', () => {
     vi.mocked(listDevices).mockResolvedValue([])
     const user = userEvent.setup()
     renderApp()
-    await screen.findByText('No devices yet. Add one in Configuration.')
+    await screen.findByText('No devices yet. Register one in Configuration.')
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
 
@@ -102,7 +110,7 @@ describe('App', () => {
     vi.mocked(registerDevice).mockResolvedValue(heater)
     const user = userEvent.setup()
     renderApp()
-    await screen.findByText('No devices yet. Add one in Configuration.')
+    await screen.findByText('No devices yet. Register one in Configuration.')
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
     await user.type(screen.getByLabelText('Name'), 'Heater')
@@ -267,7 +275,7 @@ describe('App', () => {
     const handlers = captureStreamHandlers()
     const user = userEvent.setup()
     renderApp()
-    await screen.findByText('No devices yet. Add one in Configuration.')
+    await screen.findByText('No devices yet. Register one in Configuration.')
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
     await user.type(screen.getByLabelText('Name'), 'Heater')
@@ -292,19 +300,6 @@ describe('App', () => {
       handlers().onDeviceRemoved(lamp.id)
     })
 
-    await waitFor(() => expect(screen.queryByText('Desk Lamp')).not.toBeInTheDocument())
-    expect(screen.getByText('Heater')).toBeInTheDocument()
-  })
-
-  it('deletes a device and drops it from the dashboard', async () => {
-    vi.mocked(listDevices).mockResolvedValue([lamp, heater])
-    vi.mocked(deleteDevice).mockResolvedValue(undefined)
-    const user = userEvent.setup()
-    renderApp()
-
-    await user.click(await screen.findByRole('button', { name: 'Remove Desk Lamp' }))
-
-    expect(deleteDevice).toHaveBeenCalledWith(lamp.id)
     await waitFor(() => expect(screen.queryByText('Desk Lamp')).not.toBeInTheDocument())
     expect(screen.getByText('Heater')).toBeInTheDocument()
   })

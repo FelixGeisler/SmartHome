@@ -27,9 +27,12 @@ interface DeviceCardProps {
   busy: boolean
   /** Bumped on every event-stream (re)connect; charts refetch their history when it changes. */
   syncToken?: number
+  /** True when the dashboard is in edit mode; shows the card as draggable/resizable. */
+  editing?: boolean
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
-  onDelete: (device: Device) => void
+  /** Removes this card from the dashboard (edit mode only); the device stays registered. */
+  onRemove: (device: Device) => void
 }
 
 /** One dashboard tile: device name, metadata, controls per capability, and sensor charts. */
@@ -37,13 +40,17 @@ export function DeviceCard({
   device,
   busy,
   syncToken = 0,
+  editing = false,
   onToggle,
   onCommand,
-  onDelete,
+  onRemove,
 }: DeviceCardProps) {
   const on = isSwitchable(device) && isOn(device)
+  const className = ['device-card', on ? 'device-card--on' : '', editing ? 'device-card--editing' : '']
+    .filter(Boolean)
+    .join(' ')
   return (
-    <li className={on ? 'device-card device-card--on' : 'device-card'}>
+    <div className={className}>
       <div className="device-card__header">
         <div className="device-card__info">
           <span className="device-card__name">{device.name}</span>
@@ -51,16 +58,17 @@ export function DeviceCard({
             {formatType(device.type)} &middot; {device.externalId}
           </span>
         </div>
-        <button
-          type="button"
-          className="device-card__delete"
-          disabled={busy}
-          aria-label={`Remove ${device.name}`}
-          title="Remove device"
-          onClick={() => onDelete(device)}
-        >
-          <TrashIcon />
-        </button>
+        {editing && (
+          <button
+            type="button"
+            className="device-card__delete"
+            aria-label={`Remove ${device.name}`}
+            title="Remove card"
+            onClick={() => onRemove(device)}
+          >
+            <TrashIcon />
+          </button>
+        )}
       </div>
       {isSwitchable(device) && (
         <div className="device-card__state">
@@ -105,7 +113,7 @@ export function DeviceCard({
           ))}
         </div>
       )}
-    </li>
+    </div>
   )
 }
 

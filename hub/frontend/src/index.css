@@ -380,17 +380,15 @@ body {
 }
 
 .device-grid {
+  /* react-grid-layout positions the cards; the container just clears default list styling. */
   list-style: none;
   margin: 0;
   padding: 0;
-  /* A multi-column (masonry-style) flow, not a grid: cards have wildly different heights (a tall
-     multi-chart sensor next to a one-line plug), and a row-based grid would stretch or leave large
-     gaps. Columns let each card keep its natural height and pack tightly down each column. */
-  columns: 280px;
-  column-gap: 16px;
 }
 
 .device-card {
+  height: 100%;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -399,11 +397,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  /* Keep a card whole within one column, and space stacked cards apart (column-gap is horizontal
-     only). break-inside also needs the older WebKit alias to be safe. */
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  margin-bottom: 16px;
+  /* The card is a fixed-size grid cell; taller content scrolls rather than spilling over. */
+  overflow: auto;
+}
+
+.device-card--editing {
+  cursor: move;
+  border-style: dashed;
 }
 
 .device-card__info {
@@ -947,4 +947,144 @@ body {
 .device-card__delete:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* Layout edit mode: the toolbar, the add-device modal, and the drag/resize grid theming. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--accent);
+  opacity: 0.18;
+  border-radius: 12px;
+}
+
+.dashboard__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dashboard__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-toolbar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-toolbar__icon:hover:enabled {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.edit-toolbar__icon:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.edit-toolbar__save {
+  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.edit-toolbar__save:hover:enabled {
+  color: #ffffff;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.card-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.card-picker__panel {
+  width: min(420px, 100%);
+  margin: auto;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.card-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-picker__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.card-picker__close {
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.card-picker__empty {
+  margin: 0;
+  padding: 20px;
+  color: var(--text-muted);
+}
+
+.card-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.card-picker__item {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.card-picker__item:hover {
+  border-color: var(--accent);
 }
