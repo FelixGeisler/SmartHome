@@ -1,0 +1,15 @@
+= ADR 11: Push live dashboard updates with Server-Sent Events
+
+== Status
+Accepted
+
+== Context
+The dashboard has to reflect changes it did not cause: a reading arriving from a sensor node, a device auto-provisioned from telemetry, or a light another client just switched. It used to re-fetch the whole device list on a timer, which is wasteful, adds latency up to the poll interval, and scales badly as devices and clients grow. The hub emits domain events when a device changes or a reading is recorded, so the missing piece is a way to push those to the browser. The data flow is one-directional: the browser needs to hear about changes, but it never sends anything back over this channel because commands go through the existing REST API.
+
+== Decision
+The hub pushes device changes to the dashboard over Server-Sent Events (SSE) rather than WebSocket. A single endpoint streams named events (a device changed, a device was removed) as they happen; the browser subscribes once with the built-in `EventSource` and applies each event to its local state. The push path listens for the device domain events the hub publishes on every mutation, so it stays decoupled from the device service. Commands continue to flow over REST, unchanged.
+
+WebSocket was considered and rejected: it is a bidirectional, separately negotiated protocol, and its only advantage here would be client-to-server messages over the socket, which this design does not need. SSE runs over ordinary HTTP on the same origin as the API, needs no new dependency or handshake, and the browser reconnects on its own when a stream drops.
+
+== Consequences
+Changes appear as they happen instead of on the next poll, and an idle dashboard makes no repeated requests. Because the stream carries only what changed, the client applies small updates rather than replacing the whole list. The trade-offs follow from SSE being fire-and-forget over a plain connection: an event emitted while a client is momentarily disconnected is not redelivered, so the client re-syncs with a full fetch when the stream reconnects; and a broadcast holds no per-client history, so state is corrected by the next event or that re-sync, not replayed. Server push means the hub holds one open connection per client, bounded by a stream timeout after which the client transparently reconnects. Fan-out runs on its own thread with the payload serialized once per event, so a slow or stalled client can never hold up telemetry ingest or a command request.

@@ -15,13 +15,13 @@ export interface ReadingPoint {
  *
  * @param deviceExternalId the device's external id
  * @param sensorKey the sensor's key within its device
- * @param hours how many hours back to read
+ * @param hours how many hours back to read; the caller owns the window size
  * @returns the readings over that window
  */
 export function fetchSensorHistory(
   deviceExternalId: string,
   sensorKey: string,
-  hours = 24,
+  hours: number,
 ): Promise<ReadingPoint[]> {
   const query = new URLSearchParams({
     deviceId: deviceExternalId,

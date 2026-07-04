@@ -25,6 +25,8 @@ interface DeviceCardProps {
   device: Device
   /** True, while a command for this device is in flight; disables the toggle. */
   busy: boolean
+  /** Bumped on every event-stream (re)connect; charts refetch their history when it changes. */
+  syncToken?: number
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onDelete: (device: Device) => void
@@ -34,6 +36,7 @@ interface DeviceCardProps {
 export function DeviceCard({
   device,
   busy,
+  syncToken = 0,
   onToggle,
   onCommand,
   onDelete,
@@ -95,8 +98,8 @@ export function DeviceCard({
               </div>
               <SensorChart
                 deviceExternalId={device.externalId}
-                sensorKey={sensor.key}
-                unit={sensor.unit}
+                sensor={sensor}
+                syncToken={syncToken}
               />
             </div>
           ))}

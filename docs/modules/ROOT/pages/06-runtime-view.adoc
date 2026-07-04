@@ -65,7 +65,9 @@ P -> K : publish, keyed by device
 
 Recording never waits on the pipeline: publishing is fire-and-forget, so a broker that is unreachable
 is logged, not fatal to ingest. From the pipeline, a sink lands each reading in the search index with
-no hub-side consumer, and the dashboard and Kibana read the history back from there. Unknown sensor
+no hub-side consumer, and the dashboard and Kibana read the history back from there, while the
+device's new latest values are pushed straight to any open dashboard
+(xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11]). Unknown sensor
 keys are dropped; an unknown device is auto-provisioned (xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6]).
 
 == Ask the assistant

@@ -17,6 +17,7 @@ package "integration" {
 }
 [settings]
 [telemetry]
+[realtime]
 database "Database" as db
 database "Search index" as idx
 node "MQTT broker" as broker
@@ -26,6 +27,8 @@ node "Device" as dev
 [frontend] --> [device] : REST (/api)
 [frontend] --> [telemetry] : history (/api)
 [frontend] --> [assistant] : chat (/api)
+[realtime] --> [frontend] : live updates (SSE)
+[device] ..> [realtime] : change events
 [assistant] ..> [device] : tool-use
 [assistant] ..> [telemetry] : tool-use
 [web] ..> [device] : maps errors
@@ -53,5 +56,6 @@ broker --> [device] : sensor readings
 | `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Command adapters implement the port; the MQTT sub-package only listens for inbound telemetry.
 | `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, or assistant key survives a restart.
 | `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline.
+| `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
 |===
