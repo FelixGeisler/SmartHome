@@ -1,5 +1,6 @@
 package org.felixgeisler.smarthome.dashboard;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,11 +26,14 @@ public class DashboardLayoutController {
   /**
    * Reads the saved dashboard layout.
    *
-   * @return the saved layout, or an empty layout when none is saved
+   * @return the saved layout, or 204 No Content when the dashboard has not been arranged yet
    */
   @GetMapping
-  public DashboardLayout get() {
-    return service.getLayout();
+  public ResponseEntity<DashboardLayout> get() {
+    return service
+        .findLayout()
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.noContent().build());
   }
 
   /**

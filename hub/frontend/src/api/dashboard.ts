@@ -14,9 +14,14 @@ export interface DashboardLayout {
   cards: CardLayout[]
 }
 
-/** Reads the saved dashboard layout. */
-export function getLayout(): Promise<DashboardLayout> {
-  return request<DashboardLayout>('/api/dashboard/layout')
+/**
+ * Reads the saved dashboard layout, or null when none has been saved yet. The hub answers a
+ * never-arranged dashboard with 204 (an empty body); surfacing that as null lets the caller tell a
+ * first-run dashboard apart from one a user intentionally emptied.
+ */
+export async function getLayout(): Promise<DashboardLayout | null> {
+  const layout = await request<DashboardLayout | undefined>('/api/dashboard/layout')
+  return layout ?? null
 }
 
 /**

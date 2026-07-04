@@ -39,22 +39,23 @@ public class DashboardLayoutService {
   }
 
   /**
-   * Reads the saved layout, or an empty layout when none is saved. A stored blob that no longer
-   * parses (written by another version, or corrupted) is ignored rather than surfaced, so a bad
-   * setting can never keep the dashboard from loading.
+   * Reads the saved layout, or empty when none is saved. A stored blob that no longer parses
+   * (written by another version, or corrupted) is treated as unsaved, so a bad setting can never
+   * keep the dashboard from loading. The empty result lets the caller tell "not arranged yet" apart
+   * from an intentionally empty layout.
    *
-   * @return the saved layout, or the empty layout
+   * @return the saved layout, or empty when none is saved
    */
-  public DashboardLayout getLayout() {
+  public Optional<DashboardLayout> findLayout() {
     Optional<String> stored = settings.get(LAYOUT_KEY);
     if (stored.isEmpty()) {
-      return DashboardLayout.empty();
+      return Optional.empty();
     }
     try {
-      return json.readValue(stored.get(), DashboardLayout.class);
+      return Optional.of(json.readValue(stored.get(), DashboardLayout.class));
     } catch (JacksonException ex) {
       log.warn("Stored dashboard layout is not valid JSON; ignoring it", ex);
-      return DashboardLayout.empty();
+      return Optional.empty();
     }
   }
 

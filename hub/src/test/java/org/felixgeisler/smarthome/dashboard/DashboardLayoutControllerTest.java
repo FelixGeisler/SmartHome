@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 import org.felixgeisler.smarthome.dashboard.DashboardLayout.CardLayout;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,11 @@ class DashboardLayoutControllerTest {
   @Autowired private MockMvc mvc;
   @MockitoBean private DashboardLayoutService service;
 
-  @DisplayName("GET returns the saved cards")
+  @DisplayName("GET returns the saved layout")
   @Test
-  void get_returnsSavedCards() throws Exception {
-    when(service.getLayout())
-        .thenReturn(new DashboardLayout(List.of(new CardLayout(12L, 0, 0, 4, 7))));
+  void get_returnsSavedLayout() throws Exception {
+    when(service.findLayout())
+        .thenReturn(Optional.of(new DashboardLayout(List.of(new CardLayout(12L, 0, 0, 4, 7)))));
 
     mvc.perform(get("/api/dashboard/layout"))
         .andExpect(status().isOk())
@@ -40,15 +41,12 @@ class DashboardLayoutControllerTest {
         .andExpect(jsonPath("$.cards[0].w").value(4));
   }
 
-  @DisplayName("GET returns an empty cards array when no layout is saved")
+  @DisplayName("GET returns 204 when no layout is saved")
   @Test
-  void get_returnsEmptyCardsWhenUnset() throws Exception {
-    when(service.getLayout()).thenReturn(DashboardLayout.empty());
+  void get_returns204WhenUnset() throws Exception {
+    when(service.findLayout()).thenReturn(Optional.empty());
 
-    mvc.perform(get("/api/dashboard/layout"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.cards").isArray())
-        .andExpect(jsonPath("$.cards").isEmpty());
+    mvc.perform(get("/api/dashboard/layout")).andExpect(status().isNoContent());
   }
 
   @DisplayName("PUT saves the submitted layout and echoes it back")

@@ -37,9 +37,10 @@ function App() {
   // since readings that arrived during a stream gap were never pushed.
   const [syncToken, setSyncToken] = useState(0)
 
-  // The saved dashboard arrangement (order + card sizes). `draft` holds the unsaved edit copy while
-  // `editing`; the committed `layout` is what other views and a reload see.
-  const [layout, setLayout] = useState<CardLayout[]>([])
+  // The saved dashboard arrangement, or null until one has ever been saved (a first-run dashboard
+  // shows every device; a saved-but-empty layout stays empty). `draft` holds the unsaved edit copy
+  // while `editing`; the committed `layout` is what other views and a reload see.
+  const [layout, setLayout] = useState<CardLayout[] | null>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<CardLayout[]>([])
   const [saving, setSaving] = useState(false)
@@ -90,9 +91,9 @@ function App() {
   // default device order; the layout is advisory and reconciled against the live device list.
   useEffect(() => {
     getLayout()
-      .then((saved) => setLayout(saved.cards))
+      .then((saved) => setLayout(saved ? saved.cards : null))
       .catch(() => {
-        // No saved layout, or the hub is briefly unreachable; fall back to device order.
+        // The hub is briefly unreachable; leave the layout unset (every device shows).
       })
   }, [])
 

@@ -34,15 +34,16 @@ export function curate(devices: Device[], cards: CardLayout[]): CardLayout[] {
 }
 
 /**
- * The cards to show for a committed layout: the curated set once the dashboard has been arranged,
- * or every device (a tidy default) before then. An empty saved layout means "not arranged yet".
+ * The cards to show for a committed layout: the curated set once the dashboard has been arranged
+ * (`saved` is a list, even an empty one), or every device (a tidy default) before then (`saved` is
+ * null, meaning nothing has been saved yet).
  *
  * @param devices the live devices
- * @param saved the saved card placements
+ * @param saved the saved card placements, or null when nothing has been saved
  * @returns the cards to show
  */
-export function displayCards(devices: Device[], saved: CardLayout[]): CardLayout[] {
-  return saved.length > 0 ? curate(devices, saved) : placeAll(devices)
+export function displayCards(devices: Device[], saved: CardLayout[] | null): CardLayout[] {
+  return saved === null ? placeAll(devices) : curate(devices, saved)
 }
 
 /** The registered devices not currently on the dashboard; the choices the add-card picker offers. */

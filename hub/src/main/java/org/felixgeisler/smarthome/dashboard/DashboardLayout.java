@@ -17,15 +17,6 @@ public record DashboardLayout(List<CardLayout> cards) {
   }
 
   /**
-   * The empty layout, used when nothing has been saved yet.
-   *
-   * @return a layout with no cards
-   */
-  public static DashboardLayout empty() {
-    return new DashboardLayout(List.of());
-  }
-
-  /**
    * One dashboard card's placement: the device it shows and its position and size in grid units.
    *
    * @param deviceId the id of the device shown in the card

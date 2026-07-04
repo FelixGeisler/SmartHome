@@ -24,6 +24,12 @@ describe('dashboard api client', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/dashboard/layout', undefined)
   })
 
+  it('returns null when no layout has been saved (204)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })))
+
+    await expect(getLayout()).resolves.toBeNull()
+  })
+
   it('saves the layout via PUT /api/dashboard/layout', async () => {
     const layout: DashboardLayout = { cards: [{ deviceId: 7, x: 1, y: 2, w: 4, h: 7 }] }
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(layout))

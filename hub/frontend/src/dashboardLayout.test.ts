@@ -56,8 +56,12 @@ describe('curate', () => {
 })
 
 describe('displayCards', () => {
-  it('shows every device when no layout has been saved', () => {
-    expect(displayCards([device(1), device(2)], []).map((card) => card.deviceId)).toEqual([1, 2])
+  it('shows every device when no layout has been saved (null)', () => {
+    expect(displayCards([device(1), device(2)], null).map((card) => card.deviceId)).toEqual([1, 2])
+  })
+
+  it('shows an empty dashboard for a saved-but-empty layout', () => {
+    expect(displayCards([device(1), device(2)], [])).toEqual([])
   })
 
   it('shows only the curated cards once a layout is saved', () => {

@@ -36,31 +36,31 @@ class DashboardLayoutServiceTest {
     service = new DashboardLayoutService(settings, json);
   }
 
-  @DisplayName("getLayout() parses the stored cards when the layout is set")
+  @DisplayName("findLayout() returns the stored cards when the layout is set")
   @Test
-  void getLayout_parsesStoredCards() {
+  void findLayout_returnsStoredCards() {
     when(settings.get(LAYOUT_KEY))
         .thenReturn(Optional.of("{\"cards\":[{\"deviceId\":12,\"x\":0,\"y\":0,\"w\":4,\"h\":7}]}"));
 
-    DashboardLayout layout = service.getLayout();
+    DashboardLayout layout = service.findLayout().orElseThrow();
 
     assertEquals(List.of(new CardLayout(12L, 0, 0, 4, 7)), layout.cards());
   }
 
-  @DisplayName("getLayout() returns an empty layout when nothing is saved")
+  @DisplayName("findLayout() is empty when nothing is saved")
   @Test
-  void getLayout_returnsEmptyWhenUnset() {
+  void findLayout_emptyWhenUnset() {
     when(settings.get(LAYOUT_KEY)).thenReturn(Optional.empty());
 
-    assertTrue(service.getLayout().cards().isEmpty());
+    assertTrue(service.findLayout().isEmpty());
   }
 
-  @DisplayName("getLayout() ignores a corrupt blob and returns an empty layout")
+  @DisplayName("findLayout() is empty when the stored blob is corrupt")
   @Test
-  void getLayout_ignoresCorruptBlob() {
+  void findLayout_emptyWhenCorrupt() {
     when(settings.get(LAYOUT_KEY)).thenReturn(Optional.of("{not valid json"));
 
-    assertTrue(service.getLayout().cards().isEmpty());
+    assertTrue(service.findLayout().isEmpty());
   }
 
   @DisplayName("saveLayout() serializes the layout and stores it under the layout key")
