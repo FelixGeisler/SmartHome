@@ -12,9 +12,11 @@ class FakeEventSource {
   onerror: (() => void) | null = null
   readyState = FakeEventSource.CONNECTING
   closed = false
+  readonly url: string
   private readonly listeners = new Map<string, (event: MessageEvent) => void>()
 
-  constructor(readonly url: string) {
+  constructor(url: string) {
+    this.url = url
     FakeEventSource.instances.push(this)
   }
 
