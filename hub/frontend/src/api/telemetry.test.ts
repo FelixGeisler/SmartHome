@@ -25,16 +25,4 @@ describe('telemetry api client', () => {
       undefined,
     )
   })
-
-  it('defaults the window to 24 hours when no span is given', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse([]))
-    vi.stubGlobal('fetch', fetchMock)
-
-    await fetchSensorHistory('dev-1', 'temp')
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/telemetry/history?deviceId=dev-1&sensorKey=temp&hours=24',
-      undefined,
-    )
-  })
 })

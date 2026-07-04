@@ -8,6 +8,8 @@ interface DashboardPageProps {
   loadState: LoadState
   error: string | null
   busyIds: ReadonlySet<number>
+  /** Bumped on every event-stream (re)connect; charts refetch their history when it changes. */
+  syncToken?: number
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onDelete: (device: Device) => void
@@ -20,6 +22,7 @@ export function DashboardPage({
   loadState,
   error,
   busyIds,
+  syncToken = 0,
   onToggle,
   onCommand,
   onDelete,
@@ -52,6 +55,7 @@ export function DashboardPage({
               key={device.id}
               device={device}
               busy={busyIds.has(device.id)}
+              syncToken={syncToken}
               onToggle={onToggle}
               onCommand={onCommand}
               onDelete={onDelete}
