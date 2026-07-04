@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -305,16 +306,92 @@ class DeviceServiceTest {
 
     service.recordReading("node-1", "temperature", "21.5");
 
-    ArgumentCaptor<SensorReadingRecorded> published =
-        ArgumentCaptor.forClass(SensorReadingRecorded.class);
-    verify(events).publishEvent(published.capture());
-    SensorReadingRecorded event = published.getValue();
+    SensorReadingRecorded event = publishedEventOfType(SensorReadingRecorded.class);
     assertEquals("node-1", event.deviceExternalId());
     assertEquals("temperature", event.sensorKey());
     assertEquals(SensorType.TEMPERATURE, event.type());
     assertEquals("°C", event.unit());
     assertEquals("21.5", event.value());
     assertEquals(NOW, event.at());
+  }
+
+  @DisplayName("recordReading() pushes the device's new latest reading to live clients")
+  @Test
+  void recordReading_publishesDeviceChangedSnapshot() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("node-1", "temperature", "21.5");
+
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertEquals("node-1", event.device().externalId());
+    assertEquals("21.5", event.device().sensors().getFirst().value());
+  }
+
+  @DisplayName("toggle() pushes the device's new state to live clients")
+  @Test
+  void toggle_publishesDeviceChanged() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("shelly")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.toggle(1L);
+
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertEquals("ext-1", event.device().externalId());
+    assertEquals("true", event.device().state().get("on"));
+  }
+
+  @DisplayName("register() pushes the new device to live clients")
+  @Test
+  void register_publishesDeviceChanged() {
+    when(adapters.supports("shelly")).thenReturn(true);
+    when(devices.findByExternalId("ext-1")).thenReturn(Optional.empty());
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.register("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly", Set.of(), List.of());
+
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertEquals("ext-1", event.device().externalId());
+  }
+
+  @DisplayName("applyCommand() pushes the device's new state to live clients")
+  @Test
+  void applyCommand_publishesDeviceChanged() {
+    Device device = richLight();
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.applyCommand(1L, new CommandRequest(null, 60, null, null));
+
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertEquals("light-1", event.device().externalId());
+    assertEquals("60", event.device().state().get("brightness"));
+  }
+
+  @DisplayName("delete() tells live clients the device is gone")
+  @Test
+  void delete_publishesDeviceRemoved() {
+    when(devices.existsById(1L)).thenReturn(true);
+
+    service.delete(1L);
+
+    verify(events).publishEvent(new DeviceRemoved(1L));
+  }
+
+  private <T> T publishedEventOfType(Class<T> type) {
+    ArgumentCaptor<Object> published = ArgumentCaptor.forClass(Object.class);
+    verify(events, atLeastOnce()).publishEvent(published.capture());
+    return published.getAllValues().stream()
+        .filter(type::isInstance)
+        .map(type::cast)
+        .findFirst()
+        .orElseThrow(
+            () -> new AssertionError("no published event of type " + type.getSimpleName()));
   }
 
   @DisplayName("applyCommand() sets brightness and turns an off device on")

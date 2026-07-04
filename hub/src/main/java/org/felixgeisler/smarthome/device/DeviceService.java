@@ -109,7 +109,7 @@ public class DeviceService {
       sensors.forEach(sensor -> device.addSensor(sensor.key(), sensor.type(), sensor.unit()));
     }
     try {
-      return devices.save(device);
+      return saveAndPublish(device);
     } catch (DataIntegrityViolationException ex) {
       // Lost a race: another request inserted the same externalId between the check and the save.
       throw new DeviceAlreadyExistsException(externalId, ex);
@@ -139,9 +139,11 @@ public class DeviceService {
       device.addSensor(sensorKey, type.get(), type.get().getDefaultUnit());
       device.recordReading(sensorKey, value, at);
     }
-    devices.save(device);
+    // Saving also pushes the device's new latest values to any live dashboard (surfacing a freshly
+    // auto-provisioned node without a reload).
+    Device saved = saveAndPublish(device);
     // Tee the reading to outbound integrations (telemetry streaming) without coupling to them.
-    device.getSensors().stream()
+    saved.getSensors().stream()
         .filter(sensor -> sensor.getKey().equals(sensorKey))
         .findFirst()
         .ifPresent(
@@ -167,6 +169,7 @@ public class DeviceService {
       throw new DeviceNotFoundException(id);
     }
     devices.deleteById(id);
+    events.publishEvent(new DeviceRemoved(id));
   }
 
   /**
@@ -186,7 +189,7 @@ public class DeviceService {
     Map<String, Object> command = Map.of(ON_STATE, desired);
     adapters.get(device.getAdapterType()).sendCommand(device.getExternalId(), command);
     device.putState(ON_STATE, String.valueOf(desired));
-    return devices.save(device);
+    return saveAndPublish(device);
   }
 
   /**
@@ -233,7 +236,21 @@ public class DeviceService {
     }
     dispatch(device, requested);
     persist(device, requested);
-    return devices.save(device);
+    return saveAndPublish(device);
+  }
+
+  /**
+   * The single choke point for device mutations: persists the device and pushes its new view to
+   * live clients. Every state-changing path must save through here, so a future mutation cannot
+   * silently skip the live-update push.
+   *
+   * @param device the mutated device
+   * @return the persisted device
+   */
+  private Device saveAndPublish(Device device) {
+    Device saved = devices.save(device);
+    events.publishEvent(new DeviceChanged(DeviceResponse.from(saved)));
+    return saved;
   }
 
   private void dispatch(Device device, Map<AttributeKey, Object> attributes) {
