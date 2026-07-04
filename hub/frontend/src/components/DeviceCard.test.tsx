@@ -26,19 +26,21 @@ const plug: Device = {
   sensors: [],
 }
 
-function renderCard(device: Device, onCommand = vi.fn(), onToggle = vi.fn(), onDelete = vi.fn()) {
+function renderCard(device: Device, editing = false) {
+  const onCommand = vi.fn()
+  const onToggle = vi.fn()
+  const onRemove = vi.fn()
   render(
-    <ul>
-      <DeviceCard
-        device={device}
-        busy={false}
-        onToggle={onToggle}
-        onCommand={onCommand}
-        onDelete={onDelete}
-      />
-    </ul>,
+    <DeviceCard
+      device={device}
+      busy={false}
+      editing={editing}
+      onToggle={onToggle}
+      onCommand={onCommand}
+      onRemove={onRemove}
+    />,
   )
-  return { onCommand, onToggle, onDelete }
+  return { onCommand, onToggle, onRemove }
 }
 
 describe('DeviceCard', () => {
@@ -89,12 +91,18 @@ describe('DeviceCard', () => {
     expect(onToggle).toHaveBeenCalledWith(plug)
   })
 
-  it('calls onDelete with the device when Remove is clicked', async () => {
-    const { onDelete } = renderCard(plug)
+  it('shows no remove button outside edit mode', () => {
+    renderCard(plug)
+
+    expect(screen.queryByRole('button', { name: 'Remove Desk Lamp' })).not.toBeInTheDocument()
+  })
+
+  it('removes the card in edit mode', async () => {
+    const { onRemove } = renderCard(plug, true)
     const user = userEvent.setup()
 
     await user.click(screen.getByRole('button', { name: 'Remove Desk Lamp' }))
 
-    expect(onDelete).toHaveBeenCalledWith(plug)
+    expect(onRemove).toHaveBeenCalledWith(plug)
   })
 })
