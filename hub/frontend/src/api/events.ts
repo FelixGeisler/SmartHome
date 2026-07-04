@@ -32,20 +32,23 @@ export function openDeviceStream(handlers: DeviceStreamHandlers): () => void {
   let disposed = false
 
   function connect() {
-    source = new EventSource('/api/events')
-    source.onopen = () => handlers.onSync()
-    source.onerror = () => {
+    // Bind every handler to this connection's own instance, not the mutable `source`, so a rebuilt
+    // stream can never be closed or retried by a handler left over from the connection it replaced.
+    const es = new EventSource('/api/events')
+    source = es
+    es.onopen = () => handlers.onSync()
+    es.onerror = () => {
       // While CONNECTING the browser is already retrying by itself; only a CLOSED
       // stream is dead for good and needs to be rebuilt.
-      if (!disposed && source?.readyState === EventSource.CLOSED) {
-        source.close()
+      if (!disposed && es.readyState === EventSource.CLOSED) {
+        es.close()
         retryTimer = setTimeout(connect, RETRY_MS)
       }
     }
-    source.addEventListener('device-changed', (event) => {
+    es.addEventListener('device-changed', (event) => {
       handlers.onDeviceChanged(JSON.parse((event as MessageEvent).data) as Device)
     })
-    source.addEventListener('device-removed', (event) => {
+    es.addEventListener('device-removed', (event) => {
       const { id } = JSON.parse((event as MessageEvent).data) as { id: number }
       handlers.onDeviceRemoved(id)
     })
