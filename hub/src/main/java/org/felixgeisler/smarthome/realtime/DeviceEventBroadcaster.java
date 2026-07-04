@@ -67,8 +67,8 @@ public class DeviceEventBroadcaster {
 
   /**
    * Builds the single broadcast thread. The executor lives as long as the bean and is shut down in
-   * {@link #completeAll()}; when its queue fills because the thread is stuck on a dead connection,
-   * further events are dropped with a warning rather than blocking the publisher.
+   * {@link #completeAll(ContextClosedEvent)}; when its queue fills because the thread is stuck on a
+   * dead connection, further events are dropped with a warning rather than blocking the publisher.
    *
    * @return the broadcast executor
    */
