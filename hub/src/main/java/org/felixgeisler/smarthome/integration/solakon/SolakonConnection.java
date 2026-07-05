@@ -96,11 +96,13 @@ public class SolakonConnection {
    * @return true if the inverter answered a probe read and polling started
    */
   public synchronized boolean connect(String host, int port, int unitId) {
-    stopPolling();
     Endpoint candidate = new Endpoint(host, port, unitId);
     if (!probe(candidate)) {
+      // Probe before touching the current connection, so a failed attempt leaves any existing
+      // inverter still polling rather than stopping it and lying about being connected.
       return false;
     }
+    stopPolling();
     ensureDeviceRegistered();
     settings.save(HOST_SETTING, host);
     settings.save(PORT_SETTING, Integer.toString(port));

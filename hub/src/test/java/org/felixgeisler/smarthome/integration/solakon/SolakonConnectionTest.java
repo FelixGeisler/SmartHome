@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
@@ -116,6 +117,27 @@ class SolakonConnectionTest {
     assertFalse(connection.isConnected());
     verify(devices, never()).register(any(), any(), any(), any(), any(), any());
     verify(settings, never()).save(eq("solakon.host"), anyString());
+  }
+
+  @DisplayName("a failed connect attempt leaves an existing connection polling")
+  @Test
+  void connect_failedAttemptKeepsExistingConnectionPolling() throws IOException {
+    connection.connect("localhost", inverter.port(), 1);
+    verify(devices, timeout(3000).atLeastOnce())
+        .recordReading(eq("solakon-one"), anyString(), anyString());
+    int deadPort;
+    try (ServerSocket free = new ServerSocket(0)) {
+      deadPort = free.getLocalPort();
+    }
+
+    boolean reconnected = connection.connect("localhost", deadPort, 1);
+
+    assertFalse(reconnected);
+    assertTrue(connection.isConnected());
+    // The original inverter must still be polled after the failed reconnect, not silently stopped.
+    clearInvocations(devices);
+    verify(devices, timeout(3000).atLeastOnce())
+        .recordReading(eq("solakon-one"), anyString(), anyString());
   }
 
   @DisplayName("disconnect() stops polling and forgets the saved endpoint")
