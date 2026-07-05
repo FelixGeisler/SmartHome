@@ -25,8 +25,8 @@ export function SolakonPanel() {
     setError(null)
     setStatus(null)
     try {
-      const parsedPort = port.trim() === '' ? undefined : Number(port.trim())
-      const parsedUnitId = unitId.trim() === '' ? undefined : Number(unitId.trim())
+      const parsedPort = parseNumericField(port, 'Port', 1, 65535)
+      const parsedUnitId = parseNumericField(unitId, 'Unit ID', 1, 247)
       const result = await connectSolakon(host.trim(), parsedPort, parsedUnitId)
       setConnected(result.connected)
       setStatus(result.message)
@@ -112,4 +112,26 @@ export function SolakonPanel() {
 
 function messageOf(cause: unknown): string {
   return cause instanceof Error ? cause.message : 'Something went wrong'
+}
+
+/**
+ * Parses an optional numeric field: a blank value returns undefined so the backend applies its
+ * default, while a non-blank value must be a whole number within range, otherwise it throws so the
+ * caller surfaces the error instead of sending NaN (which JSON encodes as null and silently defaults).
+ */
+function parseNumericField(
+  raw: string,
+  label: string,
+  min: number,
+  max: number,
+): number | undefined {
+  const trimmed = raw.trim()
+  if (trimmed === '') {
+    return undefined
+  }
+  const value = Number(trimmed)
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new Error(`${label} must be a whole number between ${min} and ${max}.`)
+  }
+  return value
 }

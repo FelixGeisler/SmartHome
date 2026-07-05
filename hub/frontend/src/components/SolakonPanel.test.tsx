@@ -48,6 +48,21 @@ describe('SolakonPanel', () => {
     expect(await screen.findByRole('button', { name: 'Connect' })).toBeDisabled()
   })
 
+  it('rejects a non-numeric port with an error and does not attempt to connect', async () => {
+    const user = userEvent.setup()
+    render(<SolakonPanel />)
+
+    await user.type(screen.getByLabelText('Inverter host'), '192.168.1.50')
+    await user.clear(screen.getByLabelText('Port'))
+    await user.type(screen.getByLabelText('Port'), 'abc')
+    await user.click(screen.getByRole('button', { name: 'Connect' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Port must be a whole number between 1 and 65535.',
+    )
+    expect(connectSolakon).not.toHaveBeenCalled()
+  })
+
   it('surfaces an error when the connection attempt fails', async () => {
     vi.mocked(connectSolakon).mockRejectedValue(new Error('Could not reach the inverter'))
     const user = userEvent.setup()
