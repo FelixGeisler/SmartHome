@@ -16,8 +16,18 @@
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
+            <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonConnection"/>
+            <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
             <Class name="org.felixgeisler.smarthome.telemetry.TelemetryKafkaPublisher"/>
             <Class name="org.felixgeisler.smarthome.realtime.DeviceEventStreamController"/>
         </Or>
+    </Match>
+
+    <!-- Modbus TCP is an inherently unencrypted, plaintext protocol; the target inverter exposes no
+         TLS variant, so the client that speaks it must open a plain socket. That is mandated by the
+         protocol, not an oversight, so UNENCRYPTED_SOCKET is excluded for that one client only. -->
+    <Match>
+        <Bug pattern="UNENCRYPTED_SOCKET"/>
+        <Class name="org.felixgeisler.smarthome.integration.solakon.ModbusTcpClient"/>
     </Match>
 </FindBugsFilter>

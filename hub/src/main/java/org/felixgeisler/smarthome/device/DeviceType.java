@@ -13,7 +13,10 @@ public enum DeviceType {
   SENSOR_NODE(Set.of(Capability.SENSING)),
 
   /** A Philips Hue light switched on and off through the bridge. */
-  HUE_LIGHT(Set.of(Capability.SWITCHABLE));
+  HUE_LIGHT(Set.of(Capability.SWITCHABLE)),
+
+  /** A solar inverter with battery storage reporting power/energy readings (e.g. Solakon ONE). */
+  SOLAR_INVERTER(Set.of(Capability.SENSING));
 
   private final Set<Capability> capabilities;
 
