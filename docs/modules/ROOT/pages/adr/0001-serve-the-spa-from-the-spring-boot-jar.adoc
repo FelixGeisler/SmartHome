@@ -4,7 +4,7 @@
 Accepted
 
 == Context
-The dashboard is an SPA and the only client of the REST API. A separate origin or reverse proxy would add CORS and independently deploys we don't need.
+The dashboard is an SPA and the only client of the REST API. A separate origin or reverse proxy would add CORS and an independent deployment we don't need.
 
 == Decision
 The Maven build compiles the SPA into the jar under classpath:/static. Spring serves it at /, with non-/api routes falling back to index.html. In development, the Vite dev server proxies /api to Spring.

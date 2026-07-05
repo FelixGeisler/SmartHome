@@ -3,7 +3,7 @@
 [cols="1,3",options="header"]
 |===
 | Term | Meaning
-| Neutral device model | The vendor-agnostic state and command vocabulary the core speaks. Adapters map each ecosystem onto it, so the rest of the system stays unaware of any vendor's model.
+| Neutral device model | The vendor-agnostic state and command vocabulary the core speaks; adapters map each ecosystem onto it (xref:adr/0003-neutral-state-and-command-contracts.adoc[ADR 3]).
 | Capability | A neutral, self-describing unit of what a device can do or report (e.g. switchable, brightness, color), independent of any vendor.
 | Adapter | A component that translates one device ecosystem's protocol to and from the neutral model, plugged in behind the `DeviceAdapter` port.
 | Registry | The lookup that routes a command to the adapter registered for a device's type.

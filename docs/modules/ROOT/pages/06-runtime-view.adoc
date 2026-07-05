@@ -31,7 +31,7 @@ C --> Client : 200 DeviceResponse
 Error cases:
 
 * Unknown `id` -> `DeviceNotFoundException` -> *404*.
-* `adapterType` with no registered adapter -> `UnknownAdapterException` -> *500*.
+* A persisted `adapterType` no adapter handles -> `UnknownAdapterException` -> *500* (logged server-side, detail withheld from the client).
 
 Both are returned as RFC 9457 `ProblemDetail` by the `web` error handler.
 
@@ -63,10 +63,9 @@ P -> K : publish, keyed by device
 @enduml
 ----
 
-Recording never waits on the pipeline: publishing is fire-and-forget, so a broker that is unreachable
-is logged, not fatal to ingest. From the pipeline, a sink lands each reading in the search index with
-no hub-side consumer, and the dashboard and Kibana read the history back from there, while the
-device's new latest values are pushed straight to any open dashboard
+Recording never waits on the pipeline; publishing is fire-and-forget, so a pipeline that is unreachable
+is logged, not fatal to ingest (xref:adr/0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10]).
+The changed device is pushed to any open dashboard
 (xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11]). Unknown sensor
 keys are dropped; an unknown device is auto-provisioned (xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6]).
 
@@ -99,5 +98,5 @@ C --> User : 200
 @enduml
 ----
 
-The assistant keeps no data model of its own; its tools call the same services the REST API and UI
-use, so it can only do what a user could do through the API.
+The assistant's tools call the same services as the REST API, so it can only do what an API client
+could (xref:adr/0009-call-the-claude-api-through-a-thin-client-with-bounded-tool-use.adoc[ADR 9]).

@@ -7,7 +7,7 @@ Accepted
 MQTT telemetry ingestion was activated by a startup configuration flag, and every sensor node and each of its sensors had to be registered up front before any reading was accepted. That is inconsistent with ADR 5, where an integration is a connection configured at runtime from the dashboard (as the Hue bridge is), not something decided when the hub is set up. It also puts a manual registration step in the way of simply plugging in a node. A node publishes a bare value per topic (`<prefix>/<node>/<sensor-key>`); the message carries no measurement type or unit.
 
 == Decision
-The MQTT broker connection is a runtime-configured integration, connected and disconnected through the API like the other integrations, not gated by a startup flag. The hub boots without a broker; connecting one starts the telemetry subscription and disconnecting stops it: no integration connected means off, one connected means on.
+The MQTT broker connection is a runtime-configured integration, connected and disconnected through the API like the other integrations, not gated by a startup flag. The hub boots without a broker; connecting one starts the telemetry subscription and disconnecting stops it.
 
 Inbound telemetry provisions its own source. A reading from an unknown node creates a sensing device for it, and a reading for a recognized measurement key adds that sensor with the measurement's default unit. The recognized keys are a fixed vocabulary (temperature, humidity, pressure, and CO2), each with a canonical unit. A reading whose key is outside that vocabulary is dropped, so an unrecognized topic cannot create a meaningless sensor.
 
