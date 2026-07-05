@@ -20,7 +20,28 @@ public enum SensorType {
   PRESSURE("pressure", "hPa"),
 
   /** Carbon dioxide concentration, in parts per million. */
-  CO2("co2", "ppm");
+  CO2("co2", "ppm"),
+
+  /** Photovoltaic (solar) power, in watts. */
+  PV_POWER("pvPower", "W"),
+
+  /** Battery state of charge, as a percentage. */
+  BATTERY_SOC("batterySoc", "%"),
+
+  /** Battery power, in watts (positive while charging, negative while discharging). */
+  BATTERY_POWER("batteryPower", "W"),
+
+  /** Inverter AC output power, in watts. */
+  OUTPUT_POWER("outputPower", "W"),
+
+  /** Energy generated over the system's lifetime, in kilowatt-hours. */
+  ENERGY_TOTAL("energyTotal", "kWh"),
+
+  /** Battery temperature, in degrees Celsius. */
+  BATTERY_TEMPERATURE("batteryTemp", "°C"),
+
+  /** Inverter internal temperature, in degrees Celsius. */
+  INVERTER_TEMPERATURE("inverterTemp", "°C");
 
   private final String key;
   private final String defaultUnit;
@@ -28,6 +49,15 @@ public enum SensorType {
   SensorType(String key, String defaultUnit) {
     this.key = key;
     this.defaultUnit = defaultUnit;
+  }
+
+  /**
+   * Returns the canonical telemetry key for this type.
+   *
+   * @return the key (e.g. {@code "temperature"})
+   */
+  public String getKey() {
+    return key;
   }
 
   /**

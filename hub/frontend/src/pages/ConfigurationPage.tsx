@@ -3,6 +3,7 @@ import { AddDeviceForm } from '../components/AddDeviceForm'
 import { AssistantPanel } from '../components/AssistantPanel'
 import { HuePanel } from '../components/HuePanel'
 import { MqttPanel } from '../components/MqttPanel'
+import { SolakonPanel } from '../components/SolakonPanel'
 
 interface ConfigurationPageProps {
   onRegistered: (device: Device) => void
@@ -14,6 +15,7 @@ export function ConfigurationPage({ onRegistered }: ConfigurationPageProps) {
     <section className="configuration">
       <AddDeviceForm onRegistered={onRegistered} />
       <MqttPanel />
+      <SolakonPanel />
       <HuePanel onRegistered={onRegistered} />
       <AssistantPanel />
     </section>

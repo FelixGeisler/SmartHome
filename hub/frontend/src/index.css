@@ -859,7 +859,8 @@ body {
   gap: 8px;
 }
 
-.mqtt-panel {
+.mqtt-panel,
+.solakon-panel {
   margin-top: 32px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -868,17 +869,20 @@ body {
   padding: 16px;
 }
 
-.mqtt-panel h2 {
+.mqtt-panel h2,
+.solakon-panel h2 {
   font-size: 16px;
   margin: 0 0 12px;
 }
 
-.mqtt-panel__hint {
+.mqtt-panel__hint,
+.solakon-panel__hint {
   color: var(--text-muted);
   margin: 0 0 12px;
 }
 
-.mqtt-panel__error {
+.mqtt-panel__error,
+.solakon-panel__error {
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
   color: var(--danger-text);
@@ -887,24 +891,28 @@ body {
   margin: 0 0 12px;
 }
 
-.mqtt-panel__status {
+.mqtt-panel__status,
+.solakon-panel__status {
   color: var(--text-muted);
   margin: 0 0 12px;
 }
 
-.mqtt-panel__state {
+.mqtt-panel__state,
+.solakon-panel__state {
   font-size: 14px;
   margin: 0 0 12px;
 }
 
-.mqtt-panel__connect {
+.mqtt-panel__connect,
+.solakon-panel__connect {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 12px;
 }
 
-.mqtt-panel__connect button {
+.mqtt-panel__connect button,
+.solakon-panel__connect button {
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -915,11 +923,13 @@ body {
   padding: 9px 16px;
 }
 
-.mqtt-panel__connect button:hover:enabled {
+.mqtt-panel__connect button:hover:enabled,
+.solakon-panel__connect button:hover:enabled {
   background: var(--accent-hover);
 }
 
-.mqtt-panel__connect button:disabled {
+.mqtt-panel__connect button:disabled,
+.solakon-panel__connect button:disabled {
   opacity: 0.55;
   cursor: default;
 }

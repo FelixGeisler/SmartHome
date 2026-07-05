@@ -1,5 +1,8 @@
 package org.felixgeisler.smarthome.realtime;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -9,6 +12,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import java.io.IOException;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -20,6 +27,7 @@ import org.felixgeisler.smarthome.device.DeviceType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -127,19 +135,42 @@ class DeviceEventBroadcasterTest {
     verify(emitter).complete();
   }
 
-  @DisplayName("an unserializable payload is dropped without reaching any client")
+  @DisplayName("an unserializable payload is dropped, and the failure is logged not propagated")
   @Test
-  void unserializablePayload_isDroppedWithoutReachingClients() throws IOException {
+  void unserializablePayload_isDroppedAndLogged() throws IOException {
     ObjectMapper failing = mock(ObjectMapper.class);
     when(failing.writeValueAsString(any())).thenThrow(new JacksonException("boom") {});
     DeviceEventBroadcaster subject = new DeviceEventBroadcaster(failing, Runnable::run);
     SseEmitter emitter = mock(SseEmitter.class);
     subject.add(emitter);
+    Logger logger = (Logger) LoggerFactory.getLogger(DeviceEventBroadcaster.class);
+    ListAppender<ILoggingEvent> logged = new ListAppender<>();
+    logged.start();
+    logger.addAppender(logged);
+    // Capture the expected error here and keep it off the console, so the drop is asserted rather
+    // than left as an alarming stack trace in the build output.
+    logger.setAdditive(false);
 
-    subject.onDeviceChanged(new DeviceChanged(sampleDevice()));
+    try {
+      subject.onDeviceChanged(new DeviceChanged(sampleDevice()));
+    } finally {
+      logger.setAdditive(true);
+      logger.detachAppender(logged);
+    }
 
+    // The bad event reaches no client: the serialization failure is swallowed, not propagated.
     verify(emitter, never()).send(any(SseEmitter.SseEventBuilder.class));
     verify(emitter, never()).send(anyString());
+    // And it is recorded, so a real serialization bug would surface in the logs rather than vanish.
+    assertEquals(1, logged.list.size(), "the drop should be logged exactly once");
+    ILoggingEvent event = logged.list.get(0);
+    assertEquals(Level.ERROR, event.getLevel());
+    assertTrue(
+        event.getFormattedMessage().contains("Cannot serialize a live-update payload"),
+        "the log should explain that the payload could not be serialized");
+    assertNotNull(
+        event.getThrowableProxy(), "the serialization failure should be attached to the log");
+    assertEquals("boom", event.getThrowableProxy().getMessage());
   }
 
   private static DeviceResponse sampleDevice() {

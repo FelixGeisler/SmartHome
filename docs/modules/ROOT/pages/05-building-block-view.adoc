@@ -1,48 +1,47 @@
 = 5. Building Block View
 
+The hub is a single Spring Boot backend built from feature packages, where the model, repository,
+service, and controller for a feature live together, with a bundled React SPA as its browser client.
+Level 1 shows the backend's blocks and how it connects to the outside world; the collaboration
+between the blocks is left to the Level 2 whiteboxes, which zoom into the three that carry real
+internal structure: the `device` core, the `integration` package, and the `telemetry` side.
+
+== Level 1
+
 [plantuml,building-blocks,svg]
 ----
 @startuml
 skinparam componentStyle rectangle
 
-[frontend] #line.dashed
-[assistant]
-[web]
-[device]
-[capability]
-package "integration" {
-  interface "DeviceAdapter\n(port)" as port
-  [registry]
-  [adapter]
+actor "API client" as client
+[frontend] as fe #line.dashed
+
+rectangle "SmartHome Hub" {
+  [web]
+  [assistant]
+  [device]
+  [capability]
+  [integration]
+  [telemetry]
+  [realtime]
+  [settings]
 }
-[settings]
-[telemetry]
-[realtime]
+
 database "Database" as db
 database "Search index" as idx
-node "MQTT broker" as broker
+node "Device ecosystems\n(plugs, bridges, broker, inverter)" as world
 node "Streaming pipeline" as pipeline
-node "Device" as dev
+cloud "Claude API" as claude
 
-[frontend] --> [device] : REST (/api)
-[frontend] --> [telemetry] : history (/api)
-[frontend] --> [assistant] : chat (/api)
-[realtime] --> [frontend] : live updates (SSE)
-[device] ..> [realtime] : change events
-[assistant] ..> [device] : tool-use
-[assistant] ..> [telemetry] : tool-use
-[web] ..> [device] : maps errors
-[device] --> [capability] : neutral vocabulary
-[device] --> db : JPA
-[device] --> [registry] : route command
-[registry] --> port
-[adapter] ..|> port
-[adapter] --> dev
-broker --> [device] : sensor readings
-[device] --> [telemetry] : reading events
-[telemetry] --> pipeline : publish
-[telemetry] --> idx : query history
-[settings] --> db : JPA
+client --> fe
+fe --> device : REST (/api)
+realtime --> fe : live updates (SSE)
+assistant --> claude : chat
+integration --> world : device I/O
+telemetry --> pipeline : publish
+telemetry --> idx : query history
+device --> db : JPA
+settings --> db : JPA
 @enduml
 ----
 
@@ -51,11 +50,135 @@ broker --> [device] : sensor readings
 | Block | Responsibility
 | `frontend` | The dashboard: a React SPA (own toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, and hosts the AI chat, all over the REST API. It only sees the REST contract, never the domain model.
 | `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
-| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side.
+| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side. Its parts are its <<wb-device,whitebox>>.
 | `capability` | The neutral state and command vocabulary (on/off, brightness, color as CIE xy / Kelvin / %) that every adapter speaks, so the core never learns a vendor's model.
-| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Command adapters implement the port; the MQTT sub-package only listens for inbound telemetry.
-| `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, or assistant key survives a restart.
-| `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline.
+| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Its parts are its <<wb-integration,whitebox>>.
+| `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, inverter, or assistant key survives a restart.
+| `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline. Its parts are its <<wb-telemetry,whitebox>>.
 | `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
+|===
+
+== Level 2
+
+Three blocks carry structure worth their own whitebox; the rest are leaves at Level 1.
+
+[#wb-device]
+=== The `device` core
+
+[plantuml,bb-device,svg]
+----
+@startuml
+skinparam componentStyle rectangle
+
+package "device" {
+  [DeviceController] as ctl
+  [DeviceService] as svc
+  [DeviceRepository] as repo
+  [Device model] as model
+}
+[capability] as cap
+interface "DeviceAdapter\n(port)" as port
+[telemetry]
+[realtime]
+database "Database" as db
+
+ctl --> svc : register / list / command
+svc --> model : mutate state
+svc --> repo : load / save
+repo --> db : JPA
+svc ..> cap : validate against\nneutral vocabulary
+svc --> port : route command
+svc --> [telemetry] : reading recorded
+svc ..> [realtime] : device changed / removed
+@enduml
+----
+
+[cols="1,3",options="header"]
+|===
+| Part | Responsibility
+| `DeviceController` | The REST surface: register, list, toggle, and command devices, and read their sensors.
+| `DeviceService` | The core logic: resolves capabilities, routes commands through the adapter port, records readings, and emits change and reading events.
+| `DeviceRepository` | Spring Data JPA persistence of the device aggregate.
+| `Device` (model) | The device aggregate: its type, capabilities, state, and sensors.
+|===
+
+[#wb-integration]
+=== The `integration` package
+
+[plantuml,bb-integration,svg]
+----
+@startuml
+skinparam componentStyle rectangle
+
+[device core] as device
+package "integration" {
+  interface "DeviceAdapter\n(port)" as port
+  [registry]
+  [Hue adapter] as hue
+  [Shelly adapter] as shelly
+  [MQTT listener] as mqtt
+  [Solakon poller] as solakon
+}
+node "Command device\n(Shelly / Hue)" as plug
+node "MQTT broker" as broker
+node "Solar inverter" as inverter
+
+device --> registry : route command
+registry --> port
+hue ..|> port
+shelly ..|> port
+hue --> plug
+shelly --> plug
+broker --> mqtt : subscribe
+inverter --> solakon : poll (Modbus)
+mqtt --> device : record readings
+solakon --> device : record readings
+@enduml
+----
+
+[cols="1,3",options="header"]
+|===
+| Part | Responsibility
+| `DeviceAdapter` (port) | The neutral outbound port a command device is reached through.
+| `DeviceAdapterRegistry` | Resolves the adapter for a device by its adapter type.
+| Command adapters (`hue`, `shelly`) | Implement the port, translating a neutral command into the vendor's API.
+| Telemetry listeners (`mqtt`, `solakon`) | Implement no command adapter; they feed readings straight into the core: MQTT by subscribing to a broker, Solakon by polling a solar inverter over Modbus.
+|===
+
+[#wb-telemetry]
+=== The `telemetry` side
+
+[plantuml,bb-telemetry,svg]
+----
+@startuml
+skinparam componentStyle rectangle
+
+[device core] as device
+package "telemetry" {
+  [Kafka publisher] as pub
+  [History service] as hist
+  [History API] as histapi
+}
+[frontend] #line.dashed
+[assistant]
+node "Streaming pipeline" as pipeline
+database "Search index" as idx
+
+device --> pub : reading recorded
+pub --> pipeline : publish
+pipeline --> idx : sink
+histapi --> hist : query
+hist --> idx : read history
+[frontend] --> histapi : history (/api)
+[assistant] ..> hist : tool-use
+@enduml
+----
+
+[cols="1,3",options="header"]
+|===
+| Part | Responsibility
+| `TelemetryKafkaPublisher` | Listens for reading events and publishes them onto the streaming pipeline.
+| `TelemetryHistoryService` | Reads sensor history back from the search index.
+| `TelemetryHistoryController` | Serves that history over the REST API.
 |===
