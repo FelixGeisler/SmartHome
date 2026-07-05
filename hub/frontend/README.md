@@ -1,8 +1,8 @@
 # SmartHome frontend
 
 The device dashboard: a Vite + React + TypeScript single-page app that registers,
-controls, and charts devices through the REST API, kept live by the hub's
-server-sent event stream.
+controls, and charts devices, and arranges them on a room floor plan, through the
+REST API, kept live by the hub's server-sent event stream.
 
 ## Development
 
@@ -40,3 +40,15 @@ npm run build  # type-check + production bundle in dist/
 
 The Maven build runs all three and bundles `dist/` into the Spring Boot jar, so
 `.\mvnw.cmd clean verify` from `hub/` covers the frontend too.
+
+## Rooms floor plan
+
+The Rooms view arranges devices as icons inside room boxes. The arrangement (each room box's grid
+position and size, and each device's spot within its room) is saved as a single JSON blob in the hub
+settings, the same way the dashboard layout is. It is UI geometry with no device-domain meaning, so
+it never touches the device or room entities; room membership stays the domain fact on the device.
+Device positions are stored as fractions (0..1) of the room content rect, so an icon keeps its
+relative spot when a room box is resized, and each device gets one explicit stored position so
+removing one device never shifts where another sits. The blob is capped at the settings column width
+(4096 characters): positions are rounded to three decimals to keep it compact, and an over-large
+layout is rejected with a 422 rather than truncated.

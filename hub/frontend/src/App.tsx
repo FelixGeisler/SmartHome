@@ -18,6 +18,7 @@ import {
 } from './dashboardLayout'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
+import { RoomsFloorPlan } from './pages/RoomsFloorPlan'
 
 /**
  * Application shell: loads the devices and keeps them live over the event stream, owns the shared
@@ -161,6 +162,12 @@ function App() {
     setDevices((current) => upsert(current, device))
   }
 
+  function handleDeviceUpdated(device: Device) {
+    // A room assignment returns the updated device; fold it in the way command responses are, so
+    // the change shows immediately without waiting for the stream to echo it.
+    setDevices((current) => patch(current, device))
+  }
+
   // The cards on the dashboard: the curated draft while editing, else the committed layout (with a
   // tidy every-device default before the dashboard has ever been arranged). Live stream events (a
   // device added or removed elsewhere) flow through, so the grid stays consistent.
@@ -218,6 +225,9 @@ function App() {
           <NavLink to="/dashboard" className={navClass}>
             Dashboard
           </NavLink>
+          <NavLink to="/rooms" className={navClass}>
+            Rooms
+          </NavLink>
           <NavLink to="/configuration" className={navClass}>
             Configuration
           </NavLink>
@@ -249,6 +259,18 @@ function App() {
                 onCancel={cancelEdit}
                 onLayoutChange={handleLayoutChange}
                 onAddCard={handleAddCard}
+              />
+            }
+          />
+          <Route
+            path="/rooms"
+            element={
+              <RoomsFloorPlan
+                devices={devices}
+                busyIds={busyIds}
+                onToggle={(device) => void handleToggle(device)}
+                onCommand={(device, command) => void handleCommand(device, command)}
+                onDeviceUpdated={handleDeviceUpdated}
               />
             }
           />

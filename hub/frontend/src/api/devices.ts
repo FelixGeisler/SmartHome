@@ -11,6 +11,10 @@ export interface Device {
   state: Record<string, string>
   /** Declared sensors and their latest readings; empty for non-sensing devices. */
   sensors: Sensor[]
+  /** The id of the room the device belongs to, or null when unassigned. */
+  roomId?: number | null
+  /** The name of the room the device belongs to, or null when unassigned. */
+  roomName?: string | null
 }
 
 /** One measurement channel on a device. */
@@ -74,6 +78,11 @@ export function colorXyOf(device: Device): { x: number; y: number } | null {
 export function colorTemperatureKOf(device: Device): number | null {
   const raw = device.state.colorTemperatureK
   return raw === undefined ? null : Number(raw)
+}
+
+/** Renders a reading as value plus unit, or "n/a" before the first reading arrives. */
+export function formatReading(sensor: Sensor): string {
+  return sensor.value === null ? 'n/a' : `${sensor.value} ${sensor.unit}`
 }
 
 /** A sensor a device declares at registration. */
