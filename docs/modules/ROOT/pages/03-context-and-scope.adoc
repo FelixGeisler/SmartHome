@@ -10,11 +10,13 @@ actor "API client" as client
 rectangle "SmartHome Hub" as hub
 node "Smart device" as device
 node "MQTT broker" as broker
+node "Solar inverter" as inverter
 node "Streaming pipeline" as pipeline
 cloud "Claude API" as claude
 client --> hub : REST / JSON
 hub --> device : commands + state
-broker --> hub : sensor readings
+hub --> broker : subscribes\n(sensor readings)
+hub --> inverter : reads telemetry\n(Modbus)
 hub <--> pipeline : readings out,\nhistory back
 hub --> claude : assistant chat
 @enduml
@@ -26,6 +28,7 @@ hub --> claude : assistant chat
 | API client | Registrations, commands, prompts | Device views, state, assistant replies, problem responses
 | Smart device | State | Commands
 | MQTT broker | Sensor readings (published by sensor nodes) | Nothing
+| Solar inverter | Sensor readings (polled over Modbus) | Nothing
 | Streaming pipeline | Reading history | Every recorded reading
 | Claude API | Assistant replies, tool calls | Prompts, tool results
 |===
