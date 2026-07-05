@@ -7,8 +7,13 @@ import org.felixgeisler.smarthome.device.DeviceNotFoundException;
 import org.felixgeisler.smarthome.device.InvalidCommandException;
 import org.felixgeisler.smarthome.device.UnsupportedAdapterTypeException;
 import org.felixgeisler.smarthome.device.UnsupportedCapabilityException;
+import org.felixgeisler.smarthome.floor.FloorAlreadyExistsException;
+import org.felixgeisler.smarthome.floor.FloorNotFoundException;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
 import org.felixgeisler.smarthome.integration.hue.HueBridgeException;
+import org.felixgeisler.smarthome.room.RoomAlreadyExistsException;
+import org.felixgeisler.smarthome.room.RoomLayoutException;
+import org.felixgeisler.smarthome.room.RoomNotFoundException;
 import org.felixgeisler.smarthome.telemetry.TelemetryHistoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +36,32 @@ public class ApiExceptionHandler {
   @ExceptionHandler(DeviceAlreadyExistsException.class)
   ProblemDetail handleDeviceAlreadyExists(DeviceAlreadyExistsException ex) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(RoomNotFoundException.class)
+  ProblemDetail handleRoomNotFound(RoomNotFoundException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(RoomAlreadyExistsException.class)
+  ProblemDetail handleRoomAlreadyExists(RoomAlreadyExistsException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(FloorNotFoundException.class)
+  ProblemDetail handleFloorNotFound(FloorNotFoundException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(FloorAlreadyExistsException.class)
+  ProblemDetail handleFloorAlreadyExists(FloorAlreadyExistsException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(RoomLayoutException.class)
+  ProblemDetail handleRoomLayout(RoomLayoutException ex) {
+    // Client-actionable: the submitted room layout is too large to store.
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(UnsupportedAdapterTypeException.class)

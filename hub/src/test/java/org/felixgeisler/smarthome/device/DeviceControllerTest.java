@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
+import org.felixgeisler.smarthome.room.Room;
+import org.felixgeisler.smarthome.room.RoomNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -267,5 +270,50 @@ class DeviceControllerTest {
     doThrow(new DeviceNotFoundException(99L)).when(service).delete(99L);
 
     mvc.perform(delete("/api/devices/99")).andExpect(status().isNotFound());
+  }
+
+  @DisplayName("PUT /api/devices/{id}/room assigns the device to a room")
+  @Test
+  void assignRoom_returnsUpdatedDevice() throws Exception {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.assignRoom(new Room("Kitchen"));
+    when(service.assignRoom(1L, 9L)).thenReturn(device);
+
+    mvc.perform(
+            put("/api/devices/1/room")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomId\":9}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.roomName").value("Kitchen"));
+  }
+
+  @DisplayName("PUT /api/devices/{id}/room returns 400 when the room id is missing")
+  @Test
+  void assignRoom_returns400WhenRoomIdMissing() throws Exception {
+    mvc.perform(put("/api/devices/1/room").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @DisplayName("PUT /api/devices/{id}/room returns 404 when the room is missing")
+  @Test
+  void assignRoom_returns404WhenRoomMissing() throws Exception {
+    when(service.assignRoom(1L, 9L)).thenThrow(new RoomNotFoundException(9L));
+
+    mvc.perform(
+            put("/api/devices/1/room")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomId\":9}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @DisplayName("DELETE /api/devices/{id}/room unassigns the device")
+  @Test
+  void clearRoom_returnsUnassignedDevice() throws Exception {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(service.clearRoom(1L)).thenReturn(device);
+
+    mvc.perform(delete("/api/devices/1/room"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("Plug"));
   }
 }

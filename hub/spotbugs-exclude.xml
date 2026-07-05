@@ -10,6 +10,7 @@
         <Or>
             <Class name="org.felixgeisler.smarthome.dashboard.DashboardLayoutService"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
+            <Class name="org.felixgeisler.smarthome.floor.FloorController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>
@@ -18,8 +19,33 @@
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
+            <Class name="org.felixgeisler.smarthome.room.RoomController"/>
+            <Class name="org.felixgeisler.smarthome.room.RoomLayoutService"/>
             <Class name="org.felixgeisler.smarthome.telemetry.TelemetryKafkaPublisher"/>
             <Class name="org.felixgeisler.smarthome.realtime.DeviceEventStreamController"/>
+        </Or>
+    </Match>
+
+    <!-- A JPA @ManyToOne association is a shared entity reference, not owned data. Returning or
+         storing the associated entity is the association working as intended; a defensive copy would
+         break its entity identity. So EI_EXPOSE_REP/REP2 on these association accessors is a false
+         positive. (Once the referenced entity holds a mutable field of its own, SpotBugs starts
+         treating it as mutable and flags the accessor, which is why this appears for the room and
+         floor links but not, say, an int-and-string-only entity.) -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Class name="org.felixgeisler.smarthome.device.Device"/>
+        <Or>
+            <Method name="getRoom"/>
+            <Method name="assignRoom"/>
+        </Or>
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Class name="org.felixgeisler.smarthome.room.Room"/>
+        <Or>
+            <Method name="getFloor"/>
+            <Method name="assignFloor"/>
         </Or>
     </Match>
 

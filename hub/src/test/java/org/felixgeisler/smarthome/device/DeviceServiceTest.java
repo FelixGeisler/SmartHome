@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +24,10 @@ import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.capability.XyColor;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
+import org.felixgeisler.smarthome.room.Room;
+import org.felixgeisler.smarthome.room.RoomNotFoundException;
+import org.felixgeisler.smarthome.room.RoomRemoved;
+import org.felixgeisler.smarthome.room.RoomRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,13 +48,14 @@ class DeviceServiceTest {
   @Mock private DeviceAdapterRegistry adapters;
   @Mock private DeviceAdapter adapter;
   @Mock private ApplicationEventPublisher events;
+  @Mock private RoomRepository rooms;
   @Captor private ArgumentCaptor<Map<String, Object>> commandCaptor;
 
   private DeviceService service;
 
   @BeforeEach
   void setUp() {
-    service = new DeviceService(devices, adapters, events, Clock.fixed(NOW, ZoneOffset.UTC));
+    service = new DeviceService(devices, adapters, events, Clock.fixed(NOW, ZoneOffset.UTC), rooms);
   }
 
   @DisplayName("toggle() switches an off device on")
@@ -381,6 +387,76 @@ class DeviceServiceTest {
     service.delete(1L);
 
     verify(events).publishEvent(new DeviceRemoved(1L));
+  }
+
+  @DisplayName("assignRoom() sets the device's room and pushes it to live clients")
+  @Test
+  void assignRoom_setsRoomAndPublishes() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    Room room = new Room("Kitchen");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(rooms.findById(9L)).thenReturn(Optional.of(room));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.assignRoom(1L, 9L);
+
+    assertSame(room, result.getRoom());
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertEquals("Kitchen", event.device().roomName());
+  }
+
+  @DisplayName("assignRoom() rejects an unknown room")
+  @Test
+  void assignRoom_rejectsUnknownRoom() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(rooms.findById(9L)).thenReturn(Optional.empty());
+
+    assertThrows(RoomNotFoundException.class, () -> service.assignRoom(1L, 9L));
+    verify(devices, never()).save(any());
+  }
+
+  @DisplayName("assignRoom() rejects an unknown device")
+  @Test
+  void assignRoom_rejectsUnknownDevice() {
+    when(devices.findById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(DeviceNotFoundException.class, () -> service.assignRoom(1L, 9L));
+  }
+
+  @DisplayName("clearRoom() unassigns the device and pushes it to live clients")
+  @Test
+  void clearRoom_unassignsAndPublishes() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.assignRoom(new Room("Kitchen"));
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.clearRoom(1L);
+
+    assertNull(result.getRoom());
+    DeviceChanged event = publishedEventOfType(DeviceChanged.class);
+    assertNull(event.device().roomId());
+  }
+
+  @DisplayName("a removed room unassigns each of its devices and pushes them to live clients")
+  @Test
+  void onRoomRemoved_unassignsEachDevice() {
+    Device a = new Device("ext-a", "A", DeviceType.SHELLY_PLUG, "shelly");
+    Device b = new Device("ext-b", "B", DeviceType.SHELLY_PLUG, "shelly");
+    Room room = new Room("Kitchen");
+    a.assignRoom(room);
+    b.assignRoom(room);
+    when(devices.findByRoomId(9L)).thenReturn(List.of(a, b));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.onRoomRemoved(new RoomRemoved(9L));
+
+    assertNull(a.getRoom());
+    assertNull(b.getRoom());
+    verify(devices).save(a);
+    verify(devices).save(b);
+    verify(events, times(2)).publishEvent(any(DeviceChanged.class));
   }
 
   private <T> T publishedEventOfType(Class<T> type) {
