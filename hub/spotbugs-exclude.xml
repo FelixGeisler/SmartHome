@@ -8,6 +8,10 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Or>
+            <Class name="org.felixgeisler.smarthome.automation.AutomationController"/>
+            <Class name="org.felixgeisler.smarthome.automation.DeviceCommandActionHandler"/>
+            <Class name="org.felixgeisler.smarthome.automation.DeviceStateConditionHandler"/>
+            <Class name="org.felixgeisler.smarthome.automation.DeviceToggleActionHandler"/>
             <Class name="org.felixgeisler.smarthome.dashboard.DashboardLayoutService"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
             <Class name="org.felixgeisler.smarthome.floor.FloorController"/>

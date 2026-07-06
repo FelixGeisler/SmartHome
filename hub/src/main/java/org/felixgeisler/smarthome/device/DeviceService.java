@@ -80,6 +80,16 @@ public class DeviceService {
   }
 
   /**
+   * Finds a device by its external id.
+   *
+   * @param externalId the device's address within its integration
+   * @return the device, or empty if none has that external id
+   */
+  public Optional<Device> findByExternalId(String externalId) {
+    return devices.findByExternalId(externalId);
+  }
+
+  /**
    * Registers a new device with the capabilities detected for it (ADR 2). A command device (one
    * with any {@link Capability#isCommand() command} capability) needs an adapter that this hub
    * supports; a sensing device has no command adapter and declares its sensors instead.

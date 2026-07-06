@@ -20,6 +20,7 @@ rectangle "SmartHome Hub" {
   [integration]
   [telemetry]
   [realtime]
+  [automation]
   [settings]
 }
 
@@ -36,7 +37,9 @@ assistant --> claude : chat
 integration --> world : device I/O
 telemetry --> pipeline : publish
 telemetry --> idx : query history
+automation --> device : run actions
 device --> db : JPA
+automation --> db : JPA
 settings --> db : JPA
 @enduml
 ----
@@ -54,6 +57,7 @@ settings --> db : JPA
 | `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, inverter, or assistant key survives a restart.
 | `telemetry` | The sensor-history read side (served over the API from a search index) and the publisher that puts each recorded reading onto the streaming topic. Its parts are its <<wb-telemetry,whitebox>>.
 | `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
+| `automation` | A rules engine that acts on the hub's behalf: when a trigger fires and its conditions hold, it runs device actions through the same neutral command path the UI uses (ADR 12). It reacts to the same device and reading events the rest of the system already publishes.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
 |===
 

@@ -16,6 +16,7 @@ import {
   removeCard,
   toGridLayout,
 } from './dashboardLayout'
+import { AutomationsPage } from './pages/AutomationsPage'
 import { ConfigurationPage } from './pages/ConfigurationPage'
 import { DashboardPage, type LoadState } from './pages/DashboardPage'
 import { RoomsFloorPlan } from './pages/RoomsFloorPlan'
@@ -228,6 +229,9 @@ function App() {
           <NavLink to="/rooms" className={navClass}>
             Rooms
           </NavLink>
+          <NavLink to="/automations" className={navClass}>
+            Automations
+          </NavLink>
           <NavLink to="/configuration" className={navClass}>
             Configuration
           </NavLink>
@@ -262,6 +266,7 @@ function App() {
               />
             }
           />
+          <Route path="/automations" element={<AutomationsPage devices={devices} />} />
           <Route
             path="/rooms"
             element={

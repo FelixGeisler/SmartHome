@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.web;
 
 import org.felixgeisler.smarthome.assistant.AssistantException;
+import org.felixgeisler.smarthome.automation.AutomationNotFoundException;
 import org.felixgeisler.smarthome.dashboard.DashboardLayoutException;
 import org.felixgeisler.smarthome.device.DeviceAlreadyExistsException;
 import org.felixgeisler.smarthome.device.DeviceNotFoundException;
@@ -62,6 +63,11 @@ public class ApiExceptionHandler {
   ProblemDetail handleRoomLayout(RoomLayoutException ex) {
     // Client-actionable: the submitted room layout is too large to store.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
+  }
+
+  @ExceptionHandler(AutomationNotFoundException.class)
+  ProblemDetail handleAutomationNotFound(AutomationNotFoundException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
   }
 
   @ExceptionHandler(UnsupportedAdapterTypeException.class)
