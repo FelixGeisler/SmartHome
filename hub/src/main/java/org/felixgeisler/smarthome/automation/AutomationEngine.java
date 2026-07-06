@@ -1,5 +1,9 @@
 package org.felixgeisler.smarthome.automation;
 
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,13 +20,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Runs automations when their triggers fire. It listens for the sensor-reading domain event, so it
- * stays decoupled from the device service the same way telemetry streaming and the live dashboard
- * do, and reuses {@link DeviceService} for actions, inheriting its capability validation, adapter
- * routing, and live push.
+ * Runs automations when their triggers fire. A threshold trigger reacts to the sensor-reading
+ * domain event, so the engine stays decoupled from the device service the same way telemetry
+ * streaming and the live dashboard do; a schedule trigger is evaluated on a once-a-minute tick.
+ * Either way it reuses {@link DeviceService} for actions, inheriting its capability validation,
+ * adapter routing, and live push.
  *
  * <p>Two properties keep it well behaved. It <em>edge-triggers</em>: a threshold trigger fires on
  * the reading that crosses the threshold, not on every later reading that stays past it, tracked by
@@ -42,6 +48,7 @@ public class AutomationEngine {
   private final ConditionHandlerRegistry conditions;
   private final ActionHandlerRegistry actions;
   private final Executor actionRunner;
+  private final Clock clock;
 
   // Whether each trigger was satisfied by the previous reading, keyed by trigger id, so a trigger
   // fires on the rising edge rather than on every reading that stays past the threshold.
@@ -55,14 +62,16 @@ public class AutomationEngine {
    * @param devices the device service used to resolve readings and run actions
    * @param conditions the registry that evaluates conditions
    * @param actions the registry that carries out actions
+   * @param clock the clock used to evaluate schedule triggers in the hub's zone
    */
   @Autowired
   public AutomationEngine(
       AutomationRepository automations,
       DeviceService devices,
       ConditionHandlerRegistry conditions,
-      ActionHandlerRegistry actions) {
-    this(automations, devices, conditions, actions, newActionExecutor());
+      ActionHandlerRegistry actions,
+      Clock clock) {
+    this(automations, devices, conditions, actions, newActionExecutor(), clock);
   }
 
   AutomationEngine(
@@ -70,12 +79,14 @@ public class AutomationEngine {
       DeviceService devices,
       ConditionHandlerRegistry conditions,
       ActionHandlerRegistry actions,
-      Executor actionRunner) {
+      Executor actionRunner,
+      Clock clock) {
     this.automations = automations;
     this.devices = devices;
     this.conditions = conditions;
     this.actions = actions;
     this.actionRunner = actionRunner;
+    this.clock = clock;
   }
 
   private static Executor newActionExecutor() {
@@ -160,6 +171,42 @@ public class AutomationEngine {
     if (satisfied && !wasSatisfied && conditions.allHold(automation.getConditions())) {
       actionRunner.execute(() -> runLogged(automation));
     }
+  }
+
+  /**
+   * Fires each enabled schedule automation whose time and day match the hub clock, subject to its
+   * conditions. Runs once a minute; a minute missed while the hub was down is not caught up.
+   */
+  // The broad catch is deliberate: a scheduled tick must contain any failure so it keeps ticking
+  // and one malformed automation cannot stop the others.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @Scheduled(cron = "0 * * * * *")
+  public void onTick() {
+    try {
+      LocalTime now = LocalTime.now(clock);
+      DayOfWeek today = LocalDate.now(clock).getDayOfWeek();
+      for (Automation automation : automations.findByEnabledTrue()) {
+        if (anyScheduleDue(automation, now, today)
+            && conditions.allHold(automation.getConditions())) {
+          actionRunner.execute(() -> runLogged(automation));
+        }
+      }
+    } catch (RuntimeException ex) {
+      log.error("Failed to evaluate scheduled automations", ex);
+    }
+  }
+
+  private static boolean anyScheduleDue(Automation automation, LocalTime now, DayOfWeek today) {
+    return automation.getTriggers().stream().anyMatch(trigger -> isDue(trigger, now, today));
+  }
+
+  private static boolean isDue(AutomationTrigger trigger, LocalTime now, DayOfWeek today) {
+    LocalTime at = trigger.getAtTime();
+    return trigger.getKind() == TriggerKind.SCHEDULE
+        && at != null
+        && at.getHour() == now.getHour()
+        && at.getMinute() == now.getMinute()
+        && (trigger.getOnDays().isEmpty() || trigger.getOnDays().contains(today));
   }
 
   /**

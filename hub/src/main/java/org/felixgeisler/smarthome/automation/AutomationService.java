@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.automation;
 
 import java.util.List;
+import java.util.Set;
 import org.felixgeisler.smarthome.automation.AutomationRequest.ActionRequest;
 import org.felixgeisler.smarthome.automation.AutomationRequest.ConditionRequest;
 import org.felixgeisler.smarthome.automation.AutomationRequest.TriggerRequest;
@@ -125,6 +126,9 @@ public class AutomationService {
   }
 
   private static AutomationTrigger toTrigger(TriggerRequest request) {
+    if (request.kind() == TriggerKind.SCHEDULE) {
+      return new AutomationTrigger(request.atTime(), Set.copyOf(request.onDays()));
+    }
     return new AutomationTrigger(
         request.kind(),
         request.deviceId(),

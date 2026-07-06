@@ -36,7 +36,8 @@ class AutomationServiceTest {
   private static AutomationRequest request(boolean enabled) {
     TriggerRequest trigger =
         new TriggerRequest(
-            TriggerKind.SENSOR_THRESHOLD, 7L, "temperature", Comparison.GREATER_THAN, 25.0);
+            TriggerKind.SENSOR_THRESHOLD, 7L, "temperature", Comparison.GREATER_THAN, 25.0, null,
+            null);
     ActionRequest action = new ActionRequest(ActionKind.DEVICE_TOGGLE, 9L, null, null, null);
     return new AutomationRequest("Cool it", enabled, List.of(trigger), List.of(), List.of(action));
   }

@@ -12,6 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.EnumSet;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +49,50 @@ class AutomationControllerTest {
     automation.replaceActions(
         List.of(new AutomationAction(ActionKind.DEVICE_TOGGLE, 9L, null, null, null)));
     return automation;
+  }
+
+  private static Automation scheduleSample() {
+    Automation automation = new Automation("Morning", true);
+    ReflectionTestUtils.setField(automation, "id", 2L);
+    automation.replaceTriggers(
+        List.of(
+            new AutomationTrigger(
+                LocalTime.of(7, 30), EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))));
+    automation.replaceActions(
+        List.of(new AutomationAction(ActionKind.DEVICE_TOGGLE, 9L, null, null, null)));
+    return automation;
+  }
+
+  @DisplayName("POST /api/automations accepts a schedule trigger")
+  @Test
+  void create_acceptsScheduleTrigger() throws Exception {
+    when(service.create(any())).thenReturn(scheduleSample());
+    String body =
+        """
+        {"name":"Morning","enabled":true,
+         "triggers":[{"kind":"SCHEDULE","atTime":"07:30","onDays":["MONDAY","FRIDAY"]}],
+         "actions":[{"kind":"DEVICE_TOGGLE","deviceId":9}]}
+        """;
+
+    mvc.perform(post("/api/automations").contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.triggers[0].kind").value("SCHEDULE"))
+        .andExpect(jsonPath("$.triggers[0].atTime").value("07:30:00"))
+        .andExpect(jsonPath("$.triggers[0].onDays[0]").value("MONDAY"));
+  }
+
+  @DisplayName("POST /api/automations returns 400 when a schedule has no time")
+  @Test
+  void create_returns400WhenScheduleHasNoTime() throws Exception {
+    String body =
+        """
+        {"name":"Morning","enabled":true,
+         "triggers":[{"kind":"SCHEDULE","onDays":["MONDAY"]}],
+         "actions":[{"kind":"DEVICE_TOGGLE","deviceId":9}]}
+        """;
+
+    mvc.perform(post("/api/automations").contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isBadRequest());
   }
 
   @DisplayName("GET /api/automations returns the automations as JSON")

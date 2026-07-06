@@ -10,9 +10,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.felixgeisler.smarthome.device.Device;
 import org.felixgeisler.smarthome.device.DeviceService;
 import org.felixgeisler.smarthome.device.SensorReadingRecorded;
@@ -30,6 +37,9 @@ class AutomationEngineTest {
 
   private static final Instant NOW = Instant.parse("2026-06-15T12:00:00Z");
   private static final long SENSOR_DEVICE_ID = 7L;
+  private static final Clock CLOCK =
+      Clock.fixed(Instant.parse("2026-06-15T07:00:00Z"), ZoneOffset.UTC);
+  private static final DayOfWeek CLOCK_DAY = LocalDate.of(2026, 6, 15).getDayOfWeek();
 
   @Mock private AutomationRepository automations;
   @Mock private DeviceService devices;
@@ -41,7 +51,7 @@ class AutomationEngineTest {
   @BeforeEach
   void setUp() {
     // A same-thread executor makes the fan-out deterministic to assert against.
-    engine = new AutomationEngine(automations, devices, conditions, actions, Runnable::run);
+    engine = new AutomationEngine(automations, devices, conditions, actions, Runnable::run, CLOCK);
   }
 
   private Automation thresholdAutomation(Comparison comparison, double threshold) {
@@ -66,6 +76,64 @@ class AutomationEngineTest {
     Device device = mock(Device.class);
     when(device.getId()).thenReturn(SENSOR_DEVICE_ID);
     when(devices.findByExternalId("sensor-1")).thenReturn(Optional.of(device));
+  }
+
+  private Automation scheduleAutomation(LocalTime at, Set<DayOfWeek> days) {
+    AutomationTrigger trigger = new AutomationTrigger(at, days);
+    ReflectionTestUtils.setField(trigger, "id", 5L);
+    Automation automation = new Automation("Morning routine", true);
+    ReflectionTestUtils.setField(automation, "id", 300L);
+    automation.replaceTriggers(List.of(trigger));
+    automation.replaceActions(
+        List.of(new AutomationAction(ActionKind.DEVICE_TOGGLE, 9L, null, null, null)));
+    return automation;
+  }
+
+  @DisplayName("fires a schedule automation whose time matches the tick")
+  @Test
+  void firesScheduleDueNow() {
+    Automation automation = scheduleAutomation(LocalTime.of(7, 0), Set.of());
+    when(automations.findByEnabledTrue()).thenReturn(List.of(automation));
+    when(conditions.allHold(anyList())).thenReturn(true);
+
+    engine.onTick();
+
+    verify(actions).execute(automation.getActions().get(0));
+  }
+
+  @DisplayName("does not fire a schedule automation set for another time")
+  @Test
+  void doesNotFireScheduleAtAnotherTime() {
+    Automation automation = scheduleAutomation(LocalTime.of(8, 0), Set.of());
+    when(automations.findByEnabledTrue()).thenReturn(List.of(automation));
+
+    engine.onTick();
+
+    verify(actions, never()).execute(any());
+  }
+
+  @DisplayName("fires a schedule on a chosen day of the week")
+  @Test
+  void firesScheduleOnChosenDay() {
+    Automation automation = scheduleAutomation(LocalTime.of(7, 0), Set.of(CLOCK_DAY));
+    when(automations.findByEnabledTrue()).thenReturn(List.of(automation));
+    when(conditions.allHold(anyList())).thenReturn(true);
+
+    engine.onTick();
+
+    verify(actions).execute(automation.getActions().get(0));
+  }
+
+  @DisplayName("does not fire a schedule on a day that is not chosen")
+  @Test
+  void doesNotFireScheduleOnUnchosenDay() {
+    Automation automation =
+        scheduleAutomation(LocalTime.of(7, 0), EnumSet.complementOf(EnumSet.of(CLOCK_DAY)));
+    when(automations.findByEnabledTrue()).thenReturn(List.of(automation));
+
+    engine.onTick();
+
+    verify(actions, never()).execute(any());
   }
 
   @DisplayName("runs the actions when a reading crosses the threshold")

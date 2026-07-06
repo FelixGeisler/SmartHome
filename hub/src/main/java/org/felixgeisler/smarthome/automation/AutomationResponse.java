@@ -1,5 +1,7 @@
 package org.felixgeisler.smarthome.automation;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -36,9 +38,22 @@ public record AutomationResponse(
    * @param sensorKey the key of the sensor the reading is for
    * @param comparison how the reading is weighed against the threshold
    * @param threshold the threshold the reading is compared to
+   * @param atTime the time of day a schedule fires
+   * @param onDays the days a schedule fires on; empty means every day
    */
   public record TriggerResponse(
-      TriggerKind kind, Long deviceId, String sensorKey, Comparison comparison, Double threshold) {
+      TriggerKind kind,
+      Long deviceId,
+      String sensorKey,
+      Comparison comparison,
+      Double threshold,
+      LocalTime atTime,
+      List<DayOfWeek> onDays) {
+
+    /** Defensively copies the days list. */
+    public TriggerResponse {
+      onDays = onDays == null ? List.of() : List.copyOf(onDays);
+    }
 
     static TriggerResponse from(AutomationTrigger trigger) {
       return new TriggerResponse(
@@ -46,7 +61,9 @@ public record AutomationResponse(
           trigger.getDeviceId(),
           trigger.getSensorKey(),
           trigger.getComparison(),
-          trigger.getThreshold());
+          trigger.getThreshold(),
+          trigger.getAtTime(),
+          trigger.getOnDays().stream().sorted().toList());
     }
   }
 

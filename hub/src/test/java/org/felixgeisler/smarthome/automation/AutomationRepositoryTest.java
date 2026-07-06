@@ -3,6 +3,9 @@ package org.felixgeisler.smarthome.automation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.persistence.EntityManager;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.EnumSet;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -77,6 +80,27 @@ class AutomationRepositoryTest {
         entityManager.createQuery("select count(a) from AutomationAction a", Long.class)
             .getSingleResult();
     assertEquals(2L, totalActionRows);
+  }
+
+  @DisplayName("a schedule trigger round-trips with its time and chosen days")
+  @Test
+  void scheduleTriggerRoundTrips() {
+    Automation automation = new Automation("Morning routine", true);
+    automation.replaceTriggers(
+        List.of(
+            new AutomationTrigger(
+                LocalTime.of(7, 30), EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))));
+    automation.replaceActions(
+        List.of(new AutomationAction(ActionKind.DEVICE_TOGGLE, 9L, null, null, null)));
+
+    Long id = repository.save(automation).getId();
+    entityManager.flush();
+    entityManager.clear();
+    AutomationTrigger trigger = repository.findById(id).orElseThrow().getTriggers().get(0);
+
+    assertEquals(TriggerKind.SCHEDULE, trigger.getKind());
+    assertEquals(LocalTime.of(7, 30), trigger.getAtTime());
+    assertEquals(EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), trigger.getOnDays());
   }
 
   @DisplayName("findByEnabledTrue returns only the enabled automations")

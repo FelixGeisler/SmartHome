@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.automation;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -8,14 +9,20 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
- * A check on inbound telemetry that starts an automation. Milestone 1 models a sensor threshold: a
- * reading from a {@link #getDeviceId() device}'s {@link #getSensorKey() sensor} weighed against a
- * {@link #getThreshold() threshold} by a {@link #getComparison() comparison}.
+ * A check that starts an automation. A {@link TriggerKind#SENSOR_THRESHOLD} weighs a reading from a
+ * {@link #getDeviceId() device}'s {@link #getSensorKey() sensor} against a {@link #getThreshold()
+ * threshold} by a {@link #getComparison() comparison}; a {@link TriggerKind#SCHEDULE} fires at a
+ * {@link #getAtTime() time of day} on the chosen {@link #getOnDays() days of the week}.
  *
  * <p>The device is referenced by id, not a mapped association, because an automation outlives the
- * devices it names; a removed device must not cascade into it.
+ * devices it names; a removed device must not cascade into it. A schedule references no device.
  */
 @Entity
 @Table(name = "automation_triggers")
@@ -29,7 +36,7 @@ public class AutomationTrigger {
   @Column(nullable = false)
   private TriggerKind kind;
 
-  @Column(name = "device_id", nullable = false)
+  @Column(name = "device_id")
   private Long deviceId;
 
   @Column(name = "sensor_key")
@@ -42,13 +49,20 @@ public class AutomationTrigger {
   @Column
   private Double threshold;
 
+  @Column(name = "at_time")
+  private LocalTime atTime;
+
+  @Convert(converter = DayOfWeekSetConverter.class)
+  @Column(name = "on_days")
+  private Set<DayOfWeek> onDays = EnumSet.noneOf(DayOfWeek.class);
+
   /** Required by JPA. */
   protected AutomationTrigger() {
     // Intentionally empty.
   }
 
   /**
-   * Creates a trigger.
+   * Creates a sensor-threshold trigger.
    *
    * @param kind what kind of trigger this is
    * @param deviceId the id of the device whose telemetry is watched
@@ -63,6 +77,21 @@ public class AutomationTrigger {
     this.sensorKey = sensorKey;
     this.comparison = comparison;
     this.threshold = threshold;
+  }
+
+  /**
+   * Creates a schedule trigger.
+   *
+   * @param atTime the time of day the trigger fires
+   * @param onDays the days of the week it fires on; empty means every day
+   */
+  public AutomationTrigger(LocalTime atTime, Set<DayOfWeek> onDays) {
+    this.kind = TriggerKind.SCHEDULE;
+    this.atTime = atTime;
+    this.onDays =
+        onDays == null || onDays.isEmpty()
+            ? EnumSet.noneOf(DayOfWeek.class)
+            : EnumSet.copyOf(onDays);
   }
 
   public Long getId() {
@@ -87,5 +116,18 @@ public class AutomationTrigger {
 
   public Double getThreshold() {
     return threshold;
+  }
+
+  public LocalTime getAtTime() {
+    return atTime;
+  }
+
+  /**
+   * Returns the days of the week this schedule fires on; an empty set means every day.
+   *
+   * @return the days (read-only view)
+   */
+  public Set<DayOfWeek> getOnDays() {
+    return Collections.unmodifiableSet(onDays);
   }
 }

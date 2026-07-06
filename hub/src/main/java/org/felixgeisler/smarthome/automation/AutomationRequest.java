@@ -5,6 +5,8 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -41,35 +43,63 @@ public record AutomationRequest(
     return enabled == null || enabled;
   }
 
+  // Shared so the reflectively-invoked validation methods below name one literal, not several.
+  private static final String UNUSED = "unused";
+
   /**
    * One trigger in a request.
    *
    * @param kind what kind of trigger this is
-   * @param deviceId the id of the device whose telemetry is watched
+   * @param deviceId the id of the device whose telemetry is watched (sensor threshold only)
    * @param sensorKey the key of the sensor the reading is for
    * @param comparison how the reading is weighed against the threshold
    * @param threshold the threshold the reading is compared to
+   * @param atTime the time of day a schedule fires
+   * @param onDays the days a schedule fires on; empty or omitted means every day
    */
   public record TriggerRequest(
       @NotNull TriggerKind kind,
-      @NotNull Long deviceId,
+      Long deviceId,
       String sensorKey,
       Comparison comparison,
-      Double threshold) {
+      Double threshold,
+      LocalTime atTime,
+      List<DayOfWeek> onDays) {
+
+    /** Defensively copies the days list; {@code copyOf} also rejects null entries. */
+    public TriggerRequest {
+      onDays = onDays == null ? List.of() : List.copyOf(onDays);
+    }
 
     /**
-     * Requires a sensor, comparison, and threshold for a sensor-threshold trigger.
+     * Requires a device, sensor, comparison, and threshold for a sensor-threshold trigger.
      *
      * @return true if the fields are consistent with the kind
      */
     // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
-    @SuppressWarnings("unused")
-    @AssertTrue(message = "a sensor threshold needs a sensorKey, comparison, and threshold")
+    @SuppressWarnings(UNUSED)
+    @AssertTrue(message = "a sensor threshold needs a device, sensor, comparison, and threshold")
     boolean isSensorThresholdComplete() {
       if (kind != TriggerKind.SENSOR_THRESHOLD) {
         return true;
       }
-      return sensorKey != null && !sensorKey.isBlank() && comparison != null && threshold != null;
+      return deviceId != null
+          && sensorKey != null
+          && !sensorKey.isBlank()
+          && comparison != null
+          && threshold != null;
+    }
+
+    /**
+     * Requires a time of day for a schedule trigger.
+     *
+     * @return true if the fields are consistent with the kind
+     */
+    // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
+    @SuppressWarnings(UNUSED)
+    @AssertTrue(message = "a schedule needs a time of day")
+    boolean isScheduleComplete() {
+      return kind != TriggerKind.SCHEDULE || atTime != null;
     }
   }
 
@@ -93,7 +123,7 @@ public record AutomationRequest(
      * @return true if the fields are consistent with the kind
      */
     // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
-    @SuppressWarnings("unused")
+    @SuppressWarnings(UNUSED)
     @AssertTrue(message = "stateKey and expected are required for a device state condition")
     boolean isDeviceStateComplete() {
       if (kind != ConditionKind.DEVICE_STATE) {
@@ -125,7 +155,7 @@ public record AutomationRequest(
      * @return true if the fields are consistent with the kind
      */
     // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
-    @SuppressWarnings("unused")
+    @SuppressWarnings(UNUSED)
     @AssertTrue(message = "a command action needs power, brightness, or color temperature")
     boolean isCommandComplete() {
       if (kind != ActionKind.DEVICE_COMMAND) {
