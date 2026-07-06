@@ -319,9 +319,15 @@ export function RoomsFloorPlan({
 
   function handleClearDevice(device: Device) {
     setError(null)
-    setDraftPlacements((current) => current.filter((placement) => placement.deviceId !== device.id))
     clearDeviceRoom(device.id)
-      .then(onDeviceUpdated)
+      .then((updated) => {
+        onDeviceUpdated(updated)
+        // Drop the placement only after the clear succeeds; a failed request must not strip the
+        // placement while the device is still in the room (its icon would jump to the default slot).
+        setDraftPlacements((current) =>
+          current.filter((placement) => placement.deviceId !== device.id),
+        )
+      })
       .catch((cause: unknown) => setError(messageOf(cause)))
   }
 

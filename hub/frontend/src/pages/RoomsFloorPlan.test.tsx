@@ -6,6 +6,7 @@ import type { Device } from '../api/devices'
 import { assignRoomToFloor, createFloor, listFloors } from '../api/floors'
 import {
   assignDeviceToRoom,
+  clearDeviceRoom,
   createRoom,
   getRoomsLayout,
   listRooms,
@@ -168,6 +169,37 @@ describe('RoomsFloorPlan', () => {
 
     expect(assignDeviceToRoom).toHaveBeenCalledWith(3, 10)
     await waitFor(() => expect(props.onDeviceUpdated).toHaveBeenCalled())
+  })
+
+  it('keeps a placed device in place when clearing it fails', async () => {
+    vi.mocked(getRoomsLayout).mockResolvedValue({
+      rooms: [{ roomId: 10, x: 0, y: 0, w: 6, h: 6 }],
+      devices: [{ deviceId: 1, fx: 0.8, fy: 0.8 }],
+    })
+    vi.mocked(clearDeviceRoom).mockRejectedValue(new Error('offline'))
+    const user = userEvent.setup()
+    const props = renderPlan()
+    await screen.findByRole('heading', { name: 'Kitchen' })
+    await user.click(screen.getByRole('button', { name: 'Edit layout' }))
+
+    const styleBefore = (
+      screen
+        .getByRole('button', { name: 'Remove Desk Lamp from Kitchen' })
+        .closest('.room-icon') as HTMLElement
+    ).style.cssText
+    await user.click(screen.getByRole('button', { name: 'Remove Desk Lamp from Kitchen' }))
+
+    // The clear was attempted and failed, so the device stays put: no device update, and its
+    // placement (and thus its icon position) is unchanged rather than snapping to a default slot.
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(clearDeviceRoom).toHaveBeenCalledWith(1)
+    expect(props.onDeviceUpdated).not.toHaveBeenCalled()
+    const styleAfter = (
+      screen
+        .getByRole('button', { name: 'Remove Desk Lamp from Kitchen' })
+        .closest('.room-icon') as HTMLElement
+    ).style.cssText
+    expect(styleAfter).toBe(styleBefore)
   })
 
   it('assigns a device dropped onto a room in edit mode', async () => {
