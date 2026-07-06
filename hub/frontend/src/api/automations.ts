@@ -1,7 +1,7 @@
 import { request } from './devices'
 
 /** What starts an automation. */
-export type TriggerKind = 'SENSOR_THRESHOLD'
+export type TriggerKind = 'SENSOR_THRESHOLD' | 'SCHEDULE'
 
 /** An extra check that must hold for a triggered automation to run. */
 export type ConditionKind = 'DEVICE_STATE'
@@ -16,13 +16,18 @@ export type Comparison =
   | 'LESS_THAN'
   | 'LESS_THAN_OR_EQUAL'
 
-/** A check on telemetry that starts an automation. */
+/** A check that starts an automation: a sensor threshold or a schedule. */
 export interface AutomationTrigger {
   kind: TriggerKind
-  deviceId: number
+  /** The watched device (sensor threshold only); null for a schedule. */
+  deviceId: number | null
   sensorKey: string | null
   comparison: Comparison | null
   threshold: number | null
+  /** The time of day a schedule fires (HH:MM:SS); null for a sensor threshold. */
+  atTime: string | null
+  /** The days a schedule fires on (day names); empty means every day. */
+  onDays: string[]
 }
 
 /** A device-state check that must hold for the automation to run. */

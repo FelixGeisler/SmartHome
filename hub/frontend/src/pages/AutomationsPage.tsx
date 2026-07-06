@@ -12,6 +12,7 @@ import type { Device } from '../api/devices'
 import type { ActionDraft, AutomationDraft, ConditionDraft, TriggerDraft } from '../automationForm'
 import {
   COMPARISON_OPTIONS,
+  DAY_OPTIONS,
   commandDevices,
   draftError,
   draftFromAutomation,
@@ -329,52 +330,95 @@ function AutomationBuilder({
         <legend>When</legend>
         <div className="builder__row">
           <select
-            aria-label="Trigger device"
-            value={draft.trigger.deviceId}
-            onChange={(event) => onPatchTrigger({ deviceId: event.target.value, sensorKey: '' })}
-          >
-            <option value="">Choose a sensor device</option>
-            {sensing.map((device) => (
-              <option key={device.id} value={device.id}>
-                {device.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Trigger sensor"
-            value={draft.trigger.sensorKey}
-            onChange={(event) => onPatchTrigger({ sensorKey: event.target.value })}
-            disabled={!triggerDevice}
-          >
-            <option value="">Choose a reading</option>
-            {triggerDevice?.sensors.map((sensor) => (
-              <option key={sensor.key} value={sensor.key}>
-                {sensor.key}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Comparison"
-            value={draft.trigger.comparison}
+            aria-label="Trigger type"
+            value={draft.trigger.kind}
             onChange={(event) =>
-              onPatchTrigger({ comparison: event.target.value as TriggerDraft['comparison'] })
+              onPatchTrigger({ kind: event.target.value as TriggerDraft['kind'] })
             }
           >
-            {COMPARISON_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            <option value="SENSOR_THRESHOLD">A sensor crosses a threshold</option>
+            <option value="SCHEDULE">At a time of day</option>
           </select>
-          <input
-            aria-label="Threshold"
-            type="number"
-            value={draft.trigger.threshold}
-            onChange={(event) => onPatchTrigger({ threshold: event.target.value })}
-            placeholder="Threshold"
-          />
-          {triggerSensor && <span className="builder__unit">{triggerSensor.unit}</span>}
         </div>
+
+        {draft.trigger.kind === 'SENSOR_THRESHOLD' ? (
+          <div className="builder__row">
+            <select
+              aria-label="Trigger device"
+              value={draft.trigger.deviceId}
+              onChange={(event) => onPatchTrigger({ deviceId: event.target.value, sensorKey: '' })}
+            >
+              <option value="">Choose a sensor device</option>
+              {sensing.map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Trigger sensor"
+              value={draft.trigger.sensorKey}
+              onChange={(event) => onPatchTrigger({ sensorKey: event.target.value })}
+              disabled={!triggerDevice}
+            >
+              <option value="">Choose a reading</option>
+              {triggerDevice?.sensors.map((sensor) => (
+                <option key={sensor.key} value={sensor.key}>
+                  {sensor.key}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Comparison"
+              value={draft.trigger.comparison}
+              onChange={(event) =>
+                onPatchTrigger({ comparison: event.target.value as TriggerDraft['comparison'] })
+              }
+            >
+              {COMPARISON_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <input
+              aria-label="Threshold"
+              type="number"
+              value={draft.trigger.threshold}
+              onChange={(event) => onPatchTrigger({ threshold: event.target.value })}
+              placeholder="Threshold"
+            />
+            {triggerSensor && <span className="builder__unit">{triggerSensor.unit}</span>}
+          </div>
+        ) : (
+          <div className="builder__row builder__schedule">
+            <input
+              aria-label="Schedule time"
+              type="time"
+              value={draft.trigger.atTime}
+              onChange={(event) => onPatchTrigger({ atTime: event.target.value })}
+            />
+            <span className="builder__days">
+              {DAY_OPTIONS.map((day) => (
+                <label key={day.value} className="builder__day">
+                  <input
+                    type="checkbox"
+                    aria-label={day.value}
+                    checked={draft.trigger.onDays.includes(day.value)}
+                    onChange={(event) =>
+                      onPatchTrigger({
+                        onDays: event.target.checked
+                          ? [...draft.trigger.onDays, day.value]
+                          : draft.trigger.onDays.filter((value) => value !== day.value),
+                      })
+                    }
+                  />
+                  {day.label}
+                </label>
+              ))}
+            </span>
+          </div>
+        )}
       </fieldset>
 
       <fieldset className="builder__section">

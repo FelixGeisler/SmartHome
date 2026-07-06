@@ -1,12 +1,22 @@
 import type { Device } from './api/devices'
-import type { ActionKind, Automation, AutomationInput, Comparison } from './api/automations'
+import type {
+  ActionKind,
+  Automation,
+  AutomationInput,
+  AutomationTrigger,
+  Comparison,
+  TriggerKind,
+} from './api/automations'
 
-/** The trigger being edited in the builder; a single sensor threshold in milestone 1. */
+/** The trigger being edited: a sensor threshold, or a schedule (time of day + days of week). */
 export interface TriggerDraft {
+  kind: TriggerKind
   deviceId: string
   sensorKey: string
   comparison: Comparison
   threshold: string
+  atTime: string
+  onDays: string[]
 }
 
 /** A device-state condition being edited: the device must be on or off. */
@@ -66,13 +76,36 @@ export function comparisonSymbol(comparison: Comparison): string {
   return COMPARISON_SYMBOLS[comparison]
 }
 
+/** The days of the week offered as checkboxes in the schedule builder, Monday first. */
+export const DAY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'MONDAY', label: 'Mon' },
+  { value: 'TUESDAY', label: 'Tue' },
+  { value: 'WEDNESDAY', label: 'Wed' },
+  { value: 'THURSDAY', label: 'Thu' },
+  { value: 'FRIDAY', label: 'Fri' },
+  { value: 'SATURDAY', label: 'Sat' },
+  { value: 'SUNDAY', label: 'Sun' },
+]
+
+const DAY_LABELS: Record<string, string> = Object.fromEntries(
+  DAY_OPTIONS.map((day) => [day.value, day.label]),
+)
+
 /** A blank automation to start the builder from. */
 export function emptyDraft(): AutomationDraft {
   return {
     id: null,
     name: '',
     enabled: true,
-    trigger: { deviceId: '', sensorKey: '', comparison: 'GREATER_THAN', threshold: '' },
+    trigger: {
+      kind: 'SENSOR_THRESHOLD',
+      deviceId: '',
+      sensorKey: '',
+      comparison: 'GREATER_THAN',
+      threshold: '',
+      atTime: '',
+      onDays: [],
+    },
     conditions: [],
     actions: [],
   }
@@ -103,10 +136,13 @@ export function draftFromAutomation(automation: Automation): AutomationDraft {
     name: automation.name,
     enabled: automation.enabled,
     trigger: {
-      deviceId: trigger ? String(trigger.deviceId) : '',
+      kind: trigger?.kind ?? 'SENSOR_THRESHOLD',
+      deviceId: trigger?.deviceId != null ? String(trigger.deviceId) : '',
       sensorKey: trigger?.sensorKey ?? '',
       comparison: trigger?.comparison ?? 'GREATER_THAN',
       threshold: trigger?.threshold != null ? String(trigger.threshold) : '',
+      atTime: trigger?.atTime != null ? trigger.atTime.slice(0, 5) : '',
+      onDays: trigger?.onDays ?? [],
     },
     conditions: automation.conditions.map((condition) => ({
       key: nextRowKey(),
@@ -124,20 +160,35 @@ export function draftFromAutomation(automation: Automation): AutomationDraft {
   }
 }
 
+function triggerToInput(trigger: TriggerDraft): AutomationTrigger {
+  if (trigger.kind === 'SCHEDULE') {
+    return {
+      kind: 'SCHEDULE',
+      deviceId: null,
+      sensorKey: null,
+      comparison: null,
+      threshold: null,
+      atTime: trigger.atTime,
+      onDays: trigger.onDays,
+    }
+  }
+  return {
+    kind: 'SENSOR_THRESHOLD',
+    deviceId: Number(trigger.deviceId),
+    sensorKey: trigger.sensorKey,
+    comparison: trigger.comparison,
+    threshold: Number(trigger.threshold),
+    atTime: null,
+    onDays: [],
+  }
+}
+
 /** Converts a draft into the request body the API expects. */
 export function draftToInput(draft: AutomationDraft): AutomationInput {
   return {
     name: draft.name.trim(),
     enabled: draft.enabled,
-    triggers: [
-      {
-        kind: 'SENSOR_THRESHOLD',
-        deviceId: Number(draft.trigger.deviceId),
-        sensorKey: draft.trigger.sensorKey,
-        comparison: draft.trigger.comparison,
-        threshold: Number(draft.trigger.threshold),
-      },
-    ],
+    triggers: [triggerToInput(draft.trigger)],
     conditions: draft.conditions.map((condition) => ({
       kind: 'DEVICE_STATE',
       deviceId: Number(condition.deviceId),
@@ -171,11 +222,17 @@ export function draftError(draft: AutomationDraft): string | null {
     return 'Give the automation a name.'
   }
   const trigger = draft.trigger
-  if (trigger.deviceId === '' || trigger.sensorKey === '') {
-    return 'Choose a sensor for the trigger.'
-  }
-  if (trigger.threshold === '' || Number.isNaN(Number(trigger.threshold))) {
-    return 'Enter a numeric threshold.'
+  if (trigger.kind === 'SCHEDULE') {
+    if (trigger.atTime === '') {
+      return 'Choose a time for the schedule.'
+    }
+  } else {
+    if (trigger.deviceId === '' || trigger.sensorKey === '') {
+      return 'Choose a sensor for the trigger.'
+    }
+    if (trigger.threshold === '' || Number.isNaN(Number(trigger.threshold))) {
+      return 'Enter a numeric threshold.'
+    }
   }
   for (const condition of draft.conditions) {
     if (condition.deviceId === '') {
@@ -218,13 +275,18 @@ export function switchableDevices(devices: Device[]): Device[] {
 
 /** A short, readable one-line summary of an automation for the list. */
 export function summarize(automation: Automation, devices: Device[]): string {
-  const nameOf = (id: number): string =>
-    devices.find((device) => device.id === id)?.name ?? `device ${id}`
+  const nameOf = (id: number | null): string =>
+    id == null ? 'a device' : (devices.find((device) => device.id === id)?.name ?? `device ${id}`)
   const trigger = automation.triggers[0]
-  const when = trigger
-    ? `When ${nameOf(trigger.deviceId)} ${trigger.sensorKey ?? ''} `
-      + `${trigger.comparison ? comparisonSymbol(trigger.comparison) : ''} ${trigger.threshold ?? ''}`
-    : 'When triggered'
+  let when: string
+  if (!trigger) {
+    when = 'When triggered'
+  } else if (trigger.kind === 'SCHEDULE') {
+    when = `At ${trigger.atTime?.slice(0, 5) ?? ''}${describeDays(trigger.onDays)}`
+  } else {
+    const symbol = trigger.comparison ? comparisonSymbol(trigger.comparison) : ''
+    when = `When ${nameOf(trigger.deviceId)} ${trigger.sensorKey ?? ''} ${symbol} ${trigger.threshold ?? ''}`
+  }
   const ifs = automation.conditions
     .map((condition) => `${nameOf(condition.deviceId)} is ${condition.expected === 'true' ? 'on' : 'off'}`)
     .join(' and ')
@@ -236,4 +298,11 @@ export function summarize(automation: Automation, devices: Device[]): string {
     )
     .join(', ')
   return `${when}${ifs ? ` and ${ifs}` : ''}, then ${thens || 'do nothing'}`
+}
+
+function describeDays(days: string[]): string {
+  if (days.length === 0) {
+    return ' every day'
+  }
+  return ` on ${days.map((day) => DAY_LABELS[day] ?? day).join(', ')}`
 }

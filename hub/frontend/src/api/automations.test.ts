@@ -35,6 +35,8 @@ const input: AutomationInput = {
       sensorKey: 'temperature',
       comparison: 'GREATER_THAN',
       threshold: 25,
+      atTime: null,
+      onDays: [],
     },
   ],
   conditions: [],

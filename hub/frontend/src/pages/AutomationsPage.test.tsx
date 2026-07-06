@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Automation } from '../api/automations'
@@ -54,6 +54,8 @@ const sample: Automation = {
       sensorKey: 'temperature',
       comparison: 'GREATER_THAN',
       threshold: 25,
+      atTime: null,
+      onDays: [],
     },
   ],
   conditions: [],
@@ -113,6 +115,46 @@ describe('AutomationsPage', () => {
             sensorKey: 'temperature',
             comparison: 'GREATER_THAN',
             threshold: 25,
+            atTime: null,
+            onDays: [],
+          },
+        ],
+        conditions: [],
+        actions: [
+          { kind: 'DEVICE_TOGGLE', deviceId: 20, on: null, brightness: null, colorTemperatureK: null },
+        ],
+      }),
+    )
+  })
+
+  it('builds and saves a schedule automation', async () => {
+    vi.mocked(createAutomation).mockResolvedValue(sample)
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText(/No automations yet/)
+
+    await user.click(screen.getByRole('button', { name: 'New automation' }))
+    await user.type(screen.getByLabelText('Name'), 'Morning')
+    await user.selectOptions(screen.getByLabelText('Trigger type'), 'SCHEDULE')
+    fireEvent.change(screen.getByLabelText('Schedule time'), { target: { value: '07:30' } })
+    await user.click(screen.getByLabelText('MONDAY'))
+    await user.click(screen.getByRole('button', { name: 'Add action' }))
+    await user.selectOptions(screen.getByLabelText('Action 1 device'), '20')
+    await user.click(screen.getByRole('button', { name: 'Save automation' }))
+
+    await waitFor(() =>
+      expect(createAutomation).toHaveBeenCalledWith({
+        name: 'Morning',
+        enabled: true,
+        triggers: [
+          {
+            kind: 'SCHEDULE',
+            deviceId: null,
+            sensorKey: null,
+            comparison: null,
+            threshold: null,
+            atTime: '07:30',
+            onDays: ['MONDAY'],
           },
         ],
         conditions: [],

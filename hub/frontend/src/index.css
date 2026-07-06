@@ -1923,6 +1923,24 @@ button.room-icon__button:disabled {
   font-size: 14px;
 }
 
+.builder__schedule {
+  align-items: center;
+}
+
+.builder__days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.builder__day {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .builder__action {
   border: 1px solid var(--border);
   border-radius: 8px;
