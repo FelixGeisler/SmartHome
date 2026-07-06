@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.Capability;
+import org.felixgeisler.smarthome.room.Room;
+import org.felixgeisler.smarthome.room.RoomRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 class DeviceRepositoryTest {
 
   @Autowired private DeviceRepository repository;
+  @Autowired private RoomRepository roomRepository;
   @Autowired private EntityManager entityManager;
 
   @DisplayName("findByExternalId returns the device saved under that external id")
@@ -102,5 +105,39 @@ class DeviceRepositoryTest {
     assertEquals("°C", sensor.getUnit());
     assertEquals("21.5", sensor.getValue());
     assertEquals(readingTime, sensor.getUpdatedAt());
+  }
+
+  @DisplayName("findByRoomId returns only the devices assigned to that room")
+  @Test
+  void findByRoomId_returnsDevicesInRoom() {
+    Room kitchen = roomRepository.save(new Room("Kitchen"));
+    Room hall = roomRepository.save(new Room("Hall"));
+    Device inKitchen = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    inKitchen.assignRoom(kitchen);
+    repository.save(inKitchen);
+    Device inHall = new Device("ext-2", "Lamp", DeviceType.SHELLY_PLUG, "shelly");
+    inHall.assignRoom(hall);
+    repository.save(inHall);
+
+    List<Device> found = repository.findByRoomId(kitchen.getId());
+
+    assertEquals(1, found.size());
+    assertEquals("ext-1", found.getFirst().getExternalId());
+  }
+
+  @DisplayName("a device's room assignment round-trips through the database")
+  @Test
+  void save_roundTripsRoomAssignment() {
+    Room kitchen = roomRepository.save(new Room("Kitchen"));
+    Device device = new Device("ext-3", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.assignRoom(kitchen);
+    repository.save(device);
+    entityManager.flush();
+    entityManager.clear();
+
+    Optional<Device> found = repository.findByExternalId("ext-3");
+
+    assertTrue(found.isPresent());
+    assertEquals("Kitchen", found.get().getRoom().getName());
   }
 }

@@ -934,6 +934,105 @@ body {
   cursor: default;
 }
 
+.rooms-page {
+  max-width: 720px;
+}
+
+.rooms-page__hint {
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.rooms-page__error {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+
+.rooms-page__create {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.rooms-page__create button,
+.rooms-page__room-head button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+
+.rooms-page__create button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rooms-page__room,
+.rooms-page__unassigned {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rooms-page__room-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rooms-page__room-head h3,
+.rooms-page__unassigned h3 {
+  font-size: 16px;
+  margin: 0;
+  flex: 1;
+}
+
+.rooms-page__devices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rooms-page__devices li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rooms-page__devices li button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.rooms-page__empty {
+  color: var(--text-muted);
+}
+
+.rooms-page__assign {
+  margin-left: auto;
+}
+
 .device-card__delete {
   flex-shrink: 0;
   display: inline-flex;
@@ -1097,4 +1196,549 @@ body {
 
 .card-picker__item:hover {
   border-color: var(--accent);
+}
+
+/* Rooms floor plan: a grid of room boxes, a tray of unassigned devices, and in-box device icons. */
+.floor-plan__hint {
+  color: var(--text-muted);
+}
+
+.floor-plan__error {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.floor-plan__retry {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.floor-plan__retry:hover {
+  border-color: var(--accent);
+}
+
+.floor-plan__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.floor-plan__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.floor-plan__tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.floor-plan__tray-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.floor-plan__chip {
+  padding: 6px 12px;
+  font-size: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: grab;
+}
+
+.floor-plan__chip:active {
+  cursor: grabbing;
+}
+
+/* The bar's heading: the "Rooms" title plus the current floor's name, rename field, and delete. */
+.floor-plan__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.floor-plan__floor-name {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.floor-plan__floor-name::before {
+  content: '\00B7';
+  margin-right: 10px;
+  color: var(--border);
+}
+
+.floor-plan__floor-rename {
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.floor-plan__floor-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.floor-plan__floor-delete:hover {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+/* The plan and the floor dot rail sit side by side; the rail switches which floor is shown. */
+.floor-plan__stage {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.floor-plan__canvas {
+  flex: 1;
+  min-width: 0;
+}
+
+.floor-plan__floors {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+.floor-plan__dot {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.floor-plan__dot:hover {
+  background: var(--text-muted);
+}
+
+.floor-plan__dot--active {
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.floor-plan__dot--unassigned {
+  background: transparent;
+  border: 2px dashed var(--off);
+}
+
+.floor-plan__dot--unassigned.floor-plan__dot--active {
+  border-style: solid;
+  border-color: var(--accent);
+  background: transparent;
+}
+
+.floor-plan__floor-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.floor-plan__floor-add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.room-box__floor-select {
+  max-width: 112px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.room-grid {
+  /* react-grid-layout positions the boxes; the container just clears default list styling. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.room-box {
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Device icons and their popovers may sit near the edges, so let them show rather than clip. */
+  overflow: visible;
+}
+
+.room-box--drag-over {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.room-grid--editing .room-box {
+  cursor: move;
+}
+
+.room-box__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-box__name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.room-box__rename {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.room-box__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.room-box__add,
+.room-box__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.room-box__add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.room-box__delete:hover {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.room-box__floor {
+  position: relative;
+  flex: 1;
+  min-height: 100px;
+  border-radius: 8px;
+  /* A faint grid backdrop reads as a floor plan. */
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--border) 0,
+      var(--border) 1px,
+      transparent 1px,
+      transparent 24px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--border) 0,
+      var(--border) 1px,
+      transparent 1px,
+      transparent 24px
+    );
+}
+
+.room-box__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: 90%;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* A device as a symbol placed at its fraction of the floor, anchored by its center. */
+.room-icon {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.room-icon--on {
+  color: var(--on);
+}
+
+.room-icon--off {
+  color: var(--off);
+}
+
+.room-icon--solar {
+  color: #f5a623;
+}
+
+.room-grid--editing .room-icon {
+  cursor: grab;
+  /* Let the pointer-drag own the gesture on touch instead of scrolling. */
+  touch-action: none;
+}
+
+.room-grid--editing .room-icon:active {
+  cursor: grabbing;
+}
+
+.room-icon__button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  color: inherit;
+  /* A translucent, blurred surface reads as glass over the floor grid, adding depth. */
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  cursor: default;
+}
+
+button.room-icon__button:not(:disabled) {
+  cursor: pointer;
+}
+
+button.room-icon__button:disabled {
+  opacity: 0.55;
+}
+
+.room-grid--editing .room-icon__button {
+  cursor: inherit;
+}
+
+/* A lit lamp or a producing inverter glows in its own color; off/idle devices stay flat. */
+.room-icon--glow .room-icon__button {
+  border-color: currentColor;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
+    0 0 18px -2px currentColor;
+}
+
+.room-icon__glyph {
+  display: block;
+  pointer-events: none;
+}
+
+.room-icon__glyph svg {
+  width: 30px;
+  height: 30px;
+}
+
+.room-icon--glow .room-icon__glyph svg {
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.room-icon__name {
+  max-width: 92px;
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.room-icon__value {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.room-icon__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 160px;
+  pointer-events: none;
+}
+
+.room-icon__stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10px;
+}
+
+.room-icon__stat-label {
+  color: var(--text-muted);
+}
+
+.room-icon__stat-value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.room-icon__battery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.room-icon__ring-caption {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* A battery state-of-charge ring: a conic gauge filled to --soc percent. */
+.room-icon__ring {
+  --soc: 0;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: conic-gradient(var(--on) calc(var(--soc) * 1%), var(--border) 0);
+}
+
+.room-icon__ring::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.room-icon__ring-label {
+  position: relative;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-icon__more,
+.room-icon__remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.room-icon__more:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.room-icon__remove:hover {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.room-icon__popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 210px;
+  max-width: 60vw;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
 }

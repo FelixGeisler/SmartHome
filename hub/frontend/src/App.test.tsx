@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from './api/devices'
 import { listDevices, registerDevice, sendCommand, toggleDevice } from './api/devices'
 import { type DeviceStreamHandlers, openDeviceStream } from './api/events'
+import { listFloors } from './api/floors'
+import { getRoomsLayout, listRooms } from './api/rooms'
 import App from './App'
 
 // Mock only the HTTP functions; the pure helpers (isSwitchable, isOn) stay real.
@@ -21,6 +23,26 @@ vi.mock('./api/devices', async (importOriginal) => ({
 // to push events overrides the implementation to capture the handlers.
 vi.mock('./api/events', () => ({
   openDeviceStream: vi.fn(() => () => {}),
+}))
+
+vi.mock('./api/rooms', () => ({
+  listRooms: vi.fn(),
+  createRoom: vi.fn(),
+  renameRoom: vi.fn(),
+  deleteRoom: vi.fn(),
+  assignDeviceToRoom: vi.fn(),
+  clearDeviceRoom: vi.fn(),
+  getRoomsLayout: vi.fn(),
+  saveRoomsLayout: vi.fn(),
+}))
+
+vi.mock('./api/floors', () => ({
+  listFloors: vi.fn(),
+  createFloor: vi.fn(),
+  renameFloor: vi.fn(),
+  deleteFloor: vi.fn(),
+  assignRoomToFloor: vi.fn(),
+  clearRoomFloor: vi.fn(),
 }))
 
 // Render react-grid-layout as a plain container so the dashboard's cards render under jsdom without
@@ -103,6 +125,20 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Add device' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Pair a Hue bridge' })).toBeInTheDocument()
+  })
+
+  it('navigates to the rooms view', async () => {
+    vi.mocked(listDevices).mockResolvedValue([])
+    vi.mocked(listRooms).mockResolvedValue([])
+    vi.mocked(getRoomsLayout).mockResolvedValue(null)
+    vi.mocked(listFloors).mockResolvedValue([])
+    const user = userEvent.setup()
+    renderApp()
+    await screen.findByText('No devices yet. Register one in Configuration.')
+
+    await user.click(screen.getByRole('link', { name: 'Rooms' }))
+
+    expect(await screen.findByRole('heading', { name: 'Rooms' })).toBeInTheDocument()
   })
 
   it('adds a device in Configuration and shows it back on the Dashboard', async () => {

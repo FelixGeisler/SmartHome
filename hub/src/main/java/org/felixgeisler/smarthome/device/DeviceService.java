@@ -11,9 +11,14 @@ import org.felixgeisler.smarthome.capability.AttributeKey;
 import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.capability.ColorMode;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
+import org.felixgeisler.smarthome.room.Room;
+import org.felixgeisler.smarthome.room.RoomNotFoundException;
+import org.felixgeisler.smarthome.room.RoomRemoved;
+import org.felixgeisler.smarthome.room.RoomRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +35,7 @@ public class DeviceService {
   private final DeviceAdapterRegistry adapters;
   private final ApplicationEventPublisher events;
   private final Clock clock;
+  private final RoomRepository rooms;
 
   /**
    * Creates the service.
@@ -38,16 +44,19 @@ public class DeviceService {
    * @param adapters the adapter registry used to reach command devices
    * @param events publisher for domain events such as recorded readings
    * @param clock the clock used to timestamp sensor readings
+   * @param rooms the room repository, used when assigning a device to a room
    */
   public DeviceService(
       DeviceRepository devices,
       DeviceAdapterRegistry adapters,
       ApplicationEventPublisher events,
-      Clock clock) {
+      Clock clock,
+      RoomRepository rooms) {
     this.devices = devices;
     this.adapters = adapters;
     this.events = events;
     this.clock = clock;
+    this.rooms = rooms;
   }
 
   /**
@@ -237,6 +246,49 @@ public class DeviceService {
     dispatch(device, requested);
     persist(device, requested);
     return saveAndPublish(device);
+  }
+
+  /**
+   * Assigns a device to a room, pushing the change to live clients.
+   *
+   * @param deviceId the device id
+   * @param roomId the room id
+   * @return the updated device
+   * @throws DeviceNotFoundException if no device has the given id
+   * @throws RoomNotFoundException if no room has the given id
+   */
+  public Device assignRoom(Long deviceId, Long roomId) {
+    Device device = getById(deviceId);
+    Room room = rooms.findById(roomId).orElseThrow(() -> new RoomNotFoundException(roomId));
+    device.assignRoom(room);
+    return saveAndPublish(device);
+  }
+
+  /**
+   * Removes a device from its room, leaving it unassigned, and pushes the change to live clients.
+   *
+   * @param deviceId the device id
+   * @return the updated device
+   * @throws DeviceNotFoundException if no device has the given id
+   */
+  public Device clearRoom(Long deviceId) {
+    Device device = getById(deviceId);
+    device.clearRoom();
+    return saveAndPublish(device);
+  }
+
+  /**
+   * Unassigns every device in a room when that room is being removed, so the delete does not fail
+   * on the foreign key and each freed device is pushed to live clients.
+   *
+   * @param event the room-removed event
+   */
+  @EventListener
+  public void onRoomRemoved(RoomRemoved event) {
+    for (Device device : devices.findByRoomId(event.roomId())) {
+      device.clearRoom();
+      saveAndPublish(device);
+    }
   }
 
   /**

@@ -1,14 +1,14 @@
 = 1. Introduction and Goals
 
-SmartHome is a hub for running your whole home from one place. Built to grow from switching a
-single plug today into a full, automated home.
+SmartHome is a hub for running your whole home from one place. It scales from a single plug to a
+fully automated home.
 
 == Requirements
 
 The hub is built to provide:
 
 * a configurable dashboard for your devices and rooms
-* new device types are added through pluggable integrations, whatever the brand or protocol
+* pluggable integrations for new device brands and protocols
 * automated routines that act on your devices for you
 * control through an AI assistant
 

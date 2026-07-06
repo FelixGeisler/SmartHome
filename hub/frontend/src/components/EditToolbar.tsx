@@ -3,6 +3,8 @@ interface EditToolbarProps {
   editing: boolean
   /** True while a layout save is in flight; disables Save and Cancel. */
   saving?: boolean
+  /** Accessible label and tooltip for the add button; defaults to the dashboard's "Add card". */
+  addLabel?: string
   onEnterEdit: () => void
   onSave: () => void
   onCancel: () => void
@@ -13,6 +15,7 @@ interface EditToolbarProps {
 export function EditToolbar({
   editing,
   saving = false,
+  addLabel = 'Add card',
   onEnterEdit,
   onSave,
   onCancel,
@@ -38,8 +41,8 @@ export function EditToolbar({
       <button
         type="button"
         className="edit-toolbar__icon"
-        aria-label="Add card"
-        title="Add card"
+        aria-label={addLabel}
+        title={addLabel}
         onClick={onAddCard}
       >
         <PlusIcon />

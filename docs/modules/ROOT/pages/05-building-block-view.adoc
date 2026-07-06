@@ -1,10 +1,8 @@
 = 5. Building Block View
 
-The hub is a single Spring Boot backend built from feature packages, where the model, repository,
-service, and controller for a feature live together, with a bundled React SPA as its browser client.
-Level 1 shows the backend's blocks and how it connects to the outside world; the collaboration
-between the blocks is left to the Level 2 whiteboxes, which zoom into the three that carry real
-internal structure: the `device` core, the `integration` package, and the `telemetry` side.
+The hub is a single Spring Boot backend built from feature packages, with a bundled React SPA as its browser client.
+The Level 1 diagram shows the outward-facing blocks; the table below lists every block, including internal ones like `capability`, `room`, `floor`, and `web`.
+Level 2 zooms into the three with real internal structure: `device`, `integration`, and `telemetry`.
 
 == Level 1
 
@@ -17,10 +15,8 @@ actor "API client" as client
 [frontend] as fe #line.dashed
 
 rectangle "SmartHome Hub" {
-  [web]
   [assistant]
   [device]
-  [capability]
   [integration]
   [telemetry]
   [realtime]
@@ -48,20 +44,20 @@ settings --> db : JPA
 [cols="1,3",options="header"]
 |===
 | Block | Responsibility
-| `frontend` | The dashboard: a React SPA (own toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, and hosts the AI chat, all over the REST API. It only sees the REST contract, never the domain model.
+| `frontend` | The dashboard: a React SPA (toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, groups them on a room floor plan, and hosts the AI chat. It sees only the REST contract, never the domain model.
 | `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
 | `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side. Its parts are its <<wb-device,whitebox>>.
-| `capability` | The neutral state and command vocabulary (on/off, brightness, color as CIE xy / Kelvin / %) that every adapter speaks, so the core never learns a vendor's model.
+| `capability` | The neutral state and command vocabulary (on/off, brightness as %, color as CIE xy, color temperature in Kelvin) that every adapter speaks, so the core never learns a vendor's model.
+| `room` | Groups devices into rooms (a Home Assistant "area"): a device belongs to zero or one room. Room CRUD lives here; the device core owns the assignment, so a room change rides the same live-update path.
+| `floor` | Groups rooms into building floors (a Home Assistant "floor"): a room belongs to zero or one floor. Floor CRUD lives here; the room side owns the assignment.
 | `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Its parts are its <<wb-integration,whitebox>>.
 | `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, inverter, or assistant key survives a restart.
-| `telemetry` | The sensor-history read side (served over the API from a search index) and the outbound publisher that streams reading events onto the pipeline. Its parts are its <<wb-telemetry,whitebox>>.
+| `telemetry` | The sensor-history read side (served over the API from a search index) and the publisher that puts each recorded reading onto the streaming topic. Its parts are its <<wb-telemetry,whitebox>>.
 | `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
 |===
 
 == Level 2
-
-Three blocks carry structure worth their own whitebox; the rest are leaves at Level 1.
 
 [#wb-device]
 === The `device` core

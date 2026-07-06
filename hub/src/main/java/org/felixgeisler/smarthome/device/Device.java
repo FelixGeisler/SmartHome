@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.Capability;
+import org.felixgeisler.smarthome.room.Room;
 
 /**
  * A smart-home device known to the hub.
@@ -75,6 +77,12 @@ public class Device {
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
   @JoinColumn(name = "device_id", nullable = false)
   private List<Sensor> sensors = new ArrayList<>();
+
+  // The room this device belongs to, or null when unassigned. Eagerly fetched like the other
+  // associations because the response view is built after the session closes.
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "room_id")
+  private Room room;
 
   /** Required by JPA. */
   protected Device() {
@@ -202,5 +210,30 @@ public class Device {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns the room this device belongs to, or null when it is unassigned.
+   *
+   * @return the room, or null
+   */
+  public Room getRoom() {
+    return room;
+  }
+
+  /**
+   * Assigns this device to a room.
+   *
+   * @param room the room to assign
+   */
+  public void assignRoom(Room room) {
+    this.room = room;
+  }
+
+  /** Removes this device from its room, leaving it unassigned. */
+  @SuppressWarnings("PMD.NullAssignment")
+  public void clearRoom() {
+    // Null is the "unassigned" state for the optional room association.
+    this.room = null;
   }
 }

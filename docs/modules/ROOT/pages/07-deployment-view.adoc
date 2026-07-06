@@ -1,12 +1,9 @@
 = 7. Deployment View
 
-The hub is a single Spring Boot JAR that serves the dashboard SPA and the REST API from one
-origin (xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It controls command
-devices directly over the LAN, ingests sensor telemetry both by subscribing to an MQTT broker that
-sensor nodes publish to (xref:adr/0004-device-integration-model.adoc[ADR 4]) and by polling a solar
-inverter directly over Modbus TCP, streams each recorded
-reading onto a local streaming stack (Kafka → Kafka Connect → Elasticsearch → Kibana) for history
-and analysis, and reaches out to the Anthropic Claude API for the AI assistant.
+The hub is a single Spring Boot JAR that serves the dashboard SPA and the REST API
+(xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It commands devices over the LAN,
+ingests telemetry from an MQTT broker and a Modbus inverter, publishes each reading to a local Kafka
+broker for history, and calls the Claude API for the assistant.
 
 [plantuml,deployment,svg]
 ----
@@ -45,7 +42,7 @@ app --> claude : HTTPS (tool-use)
 | Command device | Reached directly over the LAN, addressed by host (e.g. a Shelly plug over HTTP)
 | MQTT broker | Carries sensor telemetry; the hub subscribes to `home/+/+`
 | Sensor node | Publishes readings to `home/<device>/<sensor>`; setup is in the xref:guide::mqtt-sensors.adoc[MQTT sensors guide]
-| Solar inverter | Reached directly over the LAN via Modbus TCP; the hub polls it for its power and battery readings
+| Solar inverter | Reached over the LAN via Modbus TCP; the hub polls it for its telemetry
 | Streaming stack (Podman) | Kafka (Redpanda), Kafka Connect, Elasticsearch, and Kibana; the hub publishes readings to Kafka, Connect sinks them into Elasticsearch, and the dashboard and Kibana read history back
 | Anthropic Claude API | External service the AI assistant reaches over HTTPS for tool-use turns
 |===

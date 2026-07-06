@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.Capability;
+import org.felixgeisler.smarthome.room.Room;
 
 /**
  * Client-facing view of a {@link Device}, decoupling the REST contract from the persistence model.
@@ -17,6 +18,8 @@ import org.felixgeisler.smarthome.capability.Capability;
  * @param adapterType identifier of the command adapter, or null for a sensing device
  * @param state the last known runtime state as key/value entries (e.g. {@code on="true"})
  * @param sensors the device's sensors and their latest readings; empty for non-sensing devices
+ * @param roomId the id of the room the device belongs to, or null when unassigned
+ * @param roomName the name of the room the device belongs to, or null when unassigned
  */
 public record DeviceResponse(
     Long id,
@@ -26,7 +29,9 @@ public record DeviceResponse(
     Set<Capability> capabilities,
     String adapterType,
     Map<String, String> state,
-    List<SensorResponse> sensors) {
+    List<SensorResponse> sensors,
+    Long roomId,
+    String roomName) {
 
   /** Canonical constructor that defensively copies the mutable collections. */
   public DeviceResponse {
@@ -64,6 +69,7 @@ public record DeviceResponse(
    * @return the response view
    */
   public static DeviceResponse from(Device device) {
+    Room room = device.getRoom();
     return new DeviceResponse(
         device.getId(),
         device.getExternalId(),
@@ -72,6 +78,8 @@ public record DeviceResponse(
         device.getCapabilities(),
         device.getAdapterType(),
         device.getState(),
-        device.getSensors().stream().map(SensorResponse::from).toList());
+        device.getSensors().stream().map(SensorResponse::from).toList(),
+        room == null ? null : room.getId(),
+        room == null ? null : room.getName());
   }
 }
