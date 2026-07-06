@@ -143,7 +143,13 @@ public class AutomationEngine {
   }
 
   private static boolean matches(AutomationTrigger trigger, Long deviceId, String sensorKey) {
+    // A threshold trigger with a null comparison, threshold, or id is incomplete (the columns are
+    // nullable and the API validates them, so this only guards a malformed row); skip it rather
+    // than let it throw and abort evaluating every other automation for this reading.
     return trigger.getKind() == TriggerKind.SENSOR_THRESHOLD
+        && trigger.getId() != null
+        && trigger.getComparison() != null
+        && trigger.getThreshold() != null
         && deviceId.equals(trigger.getDeviceId())
         && sensorKey.equals(trigger.getSensorKey());
   }

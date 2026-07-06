@@ -143,6 +143,31 @@ class AutomationEngineTest {
     verify(actions, never()).execute(any());
   }
 
+  @DisplayName("skips an incomplete trigger instead of poisoning the other automations")
+  @Test
+  void skipsIncompleteTrigger() {
+    // A malformed threshold trigger (null comparison/threshold) that the API would reject but a
+    // hand-inserted row could hold; it must be skipped, not abort evaluating the valid automation.
+    AutomationTrigger broken =
+        new AutomationTrigger(
+            TriggerKind.SENSOR_THRESHOLD, SENSOR_DEVICE_ID, "temperature", null, null);
+    ReflectionTestUtils.setField(broken, "id", 2L);
+    Automation brokenAutomation = new Automation("Broken", true);
+    ReflectionTestUtils.setField(brokenAutomation, "id", 200L);
+    brokenAutomation.replaceTriggers(List.of(broken));
+    brokenAutomation.replaceActions(
+        List.of(new AutomationAction(ActionKind.DEVICE_TOGGLE, 9L, null, null, null)));
+    Automation valid = thresholdAutomation(Comparison.GREATER_THAN, 25);
+    sensorDeviceResolves();
+    when(automations.findByEnabledTrue()).thenReturn(List.of(brokenAutomation, valid));
+    when(conditions.allHold(anyList())).thenReturn(true);
+
+    engine.onReading(reading("26"));
+
+    verify(actions).execute(valid.getActions().get(0));
+    verify(actions, never()).execute(brokenAutomation.getActions().get(0));
+  }
+
   @DisplayName("forgetting a trigger lets it fire again on the next crossing")
   @Test
   void forget_resetsTheEdge() {
