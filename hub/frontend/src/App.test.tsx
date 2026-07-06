@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from './api/devices'
 import { listDevices, registerDevice, sendCommand, toggleDevice } from './api/devices'
+import { listAutomations } from './api/automations'
 import { type DeviceStreamHandlers, openDeviceStream } from './api/events'
 import { listFloors } from './api/floors'
 import { getRoomsLayout, listRooms } from './api/rooms'
@@ -43,6 +44,16 @@ vi.mock('./api/floors', () => ({
   deleteFloor: vi.fn(),
   assignRoomToFloor: vi.fn(),
   clearRoomFloor: vi.fn(),
+}))
+
+// The Automations view fetches its own list when mounted; mock the client so the route renders.
+vi.mock('./api/automations', () => ({
+  listAutomations: vi.fn(() => Promise.resolve([])),
+  createAutomation: vi.fn(),
+  updateAutomation: vi.fn(),
+  setAutomationEnabled: vi.fn(),
+  runAutomation: vi.fn(),
+  deleteAutomation: vi.fn(),
 }))
 
 // Render react-grid-layout as a plain container so the dashboard's cards render under jsdom without
@@ -139,6 +150,18 @@ describe('App', () => {
     await user.click(screen.getByRole('link', { name: 'Rooms' }))
 
     expect(await screen.findByRole('heading', { name: 'Rooms' })).toBeInTheDocument()
+  })
+
+  it('navigates to the automations view', async () => {
+    vi.mocked(listDevices).mockResolvedValue([])
+    vi.mocked(listAutomations).mockResolvedValue([])
+    const user = userEvent.setup()
+    renderApp()
+    await screen.findByText('No devices yet. Register one in Configuration.')
+
+    await user.click(screen.getByRole('link', { name: 'Automations' }))
+
+    expect(screen.getByRole('heading', { name: 'Automations' })).toBeInTheDocument()
   })
 
   it('adds a device in Configuration and shows it back on the Dashboard', async () => {
