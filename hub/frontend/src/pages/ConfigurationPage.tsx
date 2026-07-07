@@ -2,6 +2,7 @@ import type { Device } from '../api/devices'
 import { AddDeviceForm } from '../components/AddDeviceForm'
 import { AssistantPanel } from '../components/AssistantPanel'
 import { DeviceManagementPanel } from '../components/DeviceManagementPanel'
+import { HomematicPanel } from '../components/HomematicPanel'
 import { HuePanel } from '../components/HuePanel'
 import { MqttPanel } from '../components/MqttPanel'
 import { SolakonPanel } from '../components/SolakonPanel'
@@ -29,6 +30,7 @@ export function ConfigurationPage({
       <MqttPanel />
       <SolakonPanel />
       <HuePanel onRegistered={onRegistered} />
+      <HomematicPanel onRegistered={onRegistered} />
       <AssistantPanel />
       <DeviceManagementPanel
         devices={devices}
