@@ -2,8 +2,8 @@ package org.felixgeisler.smarthome.integration.shelly;
 
 import java.math.BigDecimal;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.felixgeisler.smarthome.device.Device;
@@ -58,7 +58,7 @@ public class ShellyMeterPoller {
         1,
         0L,
         TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(1),
+        new SynchronousQueue<>(),
         runnable -> {
           Thread thread = new Thread(runnable, "shelly-meter");
           thread.setDaemon(true);
