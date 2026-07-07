@@ -95,7 +95,7 @@ public class Device {
   @Column(nullable = false)
   private boolean reachable = true;
 
-  // When the hub last heard from the device (a reading or a successful command), or null.
+  // When the hub last heard from the device through a reading, or null.
   @Column(name = "last_seen_at")
   private Instant lastSeenAt;
 
@@ -279,8 +279,9 @@ public class Device {
   }
 
   /**
-   * Records that the hub just heard from the device (a reading or a successful command), which also
-   * marks it reachable.
+   * Records that the hub just heard from the device through a fresh reading, which also marks it
+   * reachable. A command is not a reading: a bridge accepts a command for an unreachable device, so
+   * a command device's reachability is left to its adapter probe, not asserted on send.
    *
    * @param at when the hub heard from the device
    */
