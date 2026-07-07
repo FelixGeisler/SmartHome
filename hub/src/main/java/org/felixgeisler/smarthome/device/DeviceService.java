@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Registers devices, dispatches commands to command adapters, and records sensor readings. */
 @Service
@@ -141,10 +142,17 @@ public class DeviceService {
    * not-yet-seen sensor key adds that sensor with its default unit. A reading whose key is not a
    * known measurement is logged and dropped, so an unrecognized topic cannot create junk sensors.
    *
+   * <p>Runs in a transaction so the device is a managed entity: combined with
+   * {@code @DynamicUpdate} on {@link Device}, the write touches only the reading's own columns (the
+   * sensor and the freshness fields), never the on/off state, name, or room a concurrent toggle or
+   * edit may have just changed. This matters because the Shelly meter poll records readings against
+   * switchable plugs.
+   *
    * @param externalId the reporting device's external id
    * @param sensorKey the key of the sensor the reading is for
    * @param value the reading value
    */
+  @Transactional
   public void recordReading(String externalId, String sensorKey, String value) {
     Optional<SensorType> type = SensorType.forKey(sensorKey);
     if (type.isEmpty()) {
@@ -158,6 +166,7 @@ public class DeviceService {
       device.addSensor(sensorKey, type.get(), type.get().getDefaultUnit());
       device.recordReading(sensorKey, value, at);
     }
+    device.markSeen(at);
     // Saving also pushes the device's new latest values to any live dashboard (surfacing a freshly
     // auto-provisioned node without a reload).
     Device saved = saveAndPublish(device);
@@ -208,6 +217,7 @@ public class DeviceService {
     Map<String, Object> command = Map.of(ON_STATE, desired);
     adapters.get(device.getAdapterType()).sendCommand(device.getExternalId(), command);
     device.putState(ON_STATE, String.valueOf(desired));
+    device.markSeen(clock.instant());
     return saveAndPublish(device);
   }
 
@@ -255,7 +265,42 @@ public class DeviceService {
     }
     dispatch(device, requested);
     persist(device, requested);
+    device.markSeen(clock.instant());
     return saveAndPublish(device);
+  }
+
+  /**
+   * Folds a command device's actually-reported state (read from the device by the state poller)
+   * back into the hub, so a change made outside the hub (another app, a physical switch, or while
+   * the hub was down) shows on the dashboard. Runs in a transaction and rewrites only the keys that
+   * differ, so with {@code @DynamicUpdate} it neither clobbers a concurrent command nor pushes when
+   * nothing changed.
+   *
+   * @param id the device id
+   * @param reported the device's current state as neutral, wire-keyed values from its adapter
+   */
+  @Transactional
+  public void syncState(Long id, Map<String, Object> reported) {
+    Optional<Device> found = devices.findById(id);
+    if (found.isEmpty()) {
+      return;
+    }
+    Device device = found.get();
+    boolean changed = false;
+    for (Map.Entry<String, Object> entry : reported.entrySet()) {
+      Optional<AttributeKey> key = AttributeKey.forWireKey(entry.getKey());
+      if (key.isEmpty()) {
+        continue;
+      }
+      String value = key.get().format(entry.getValue());
+      if (!value.equals(device.getState().get(entry.getKey()))) {
+        device.putState(entry.getKey(), value);
+        changed = true;
+      }
+    }
+    if (changed) {
+      saveAndPublish(device);
+    }
   }
 
   /**
@@ -285,6 +330,47 @@ public class DeviceService {
     Device device = getById(deviceId);
     device.clearRoom();
     return saveAndPublish(device);
+  }
+
+  /**
+   * Applies a freshly probed reachability result to a command device, pushing to live clients only
+   * when the flag flips so a steady device causes no writes or events. The device is re-read by id
+   * inside this call, so a result computed during a slow probe cannot overwrite state, a name, or a
+   * room another thread persisted in the meantime, and a device deleted during the sweep is not
+   * resurrected.
+   *
+   * @param id the device id
+   * @param reachable whether the probe found the device reachable
+   */
+  public void applyReachability(Long id, boolean reachable) {
+    devices.findById(id).ifPresent(device -> updateReachable(device, reachable));
+  }
+
+  /**
+   * Re-evaluates a reporting device's reachability from its latest reading, pushing to live clients
+   * only when the flag flips. The device is re-read by id, so the decision uses the freshest
+   * {@code lastSeenAt} rather than a snapshot captured before slower devices were probed, no write
+   * clobbers a reading that arrived meanwhile, and a device deleted during the sweep is not
+   * resurrected.
+   *
+   * @param id the device id
+   * @param freshSince the earliest reading time still counted as reachable
+   */
+  public void refreshReportingReachability(Long id, Instant freshSince) {
+    devices
+        .findById(id)
+        .ifPresent(
+            device -> {
+              Instant lastSeen = device.getLastSeenAt();
+              updateReachable(device, lastSeen != null && lastSeen.isAfter(freshSince));
+            });
+  }
+
+  private void updateReachable(Device device, boolean reachable) {
+    if (device.isReachable() != reachable) {
+      device.setReachable(reachable);
+      saveAndPublish(device);
+    }
   }
 
   /**

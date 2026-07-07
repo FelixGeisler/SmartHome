@@ -105,6 +105,22 @@ public enum AttributeKey {
     return key;
   }
 
+  /**
+   * Resolves the attribute a wire key denotes, for turning an adapter's reported state map back
+   * into stored state.
+   *
+   * @param wireKey the wire key (e.g. {@code "brightness"})
+   * @return the matching attribute, or empty if the key is not a known attribute
+   */
+  public static Optional<AttributeKey> forWireKey(String wireKey) {
+    for (AttributeKey attribute : values()) {
+      if (attribute.key.equals(wireKey)) {
+        return Optional.of(attribute);
+      }
+    }
+    return Optional.empty();
+  }
+
   /** Returns the unit of the value or empty when it has none. */
   public Optional<String> unit() {
     return Optional.ofNullable(unitSymbol);

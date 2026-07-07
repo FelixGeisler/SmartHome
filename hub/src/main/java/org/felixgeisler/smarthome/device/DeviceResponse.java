@@ -20,6 +20,8 @@ import org.felixgeisler.smarthome.room.Room;
  * @param sensors the device's sensors and their latest readings; empty for non-sensing devices
  * @param roomId the id of the room the device belongs to, or null when unassigned
  * @param roomName the name of the room the device belongs to, or null when unassigned
+ * @param reachable whether the hub currently finds the device reachable
+ * @param lastSeenAt when the hub last heard from the device, or null before it ever has
  */
 public record DeviceResponse(
     Long id,
@@ -31,7 +33,9 @@ public record DeviceResponse(
     Map<String, String> state,
     List<SensorResponse> sensors,
     Long roomId,
-    String roomName) {
+    String roomName,
+    boolean reachable,
+    Instant lastSeenAt) {
 
   /** Canonical constructor that defensively copies the mutable collections. */
   public DeviceResponse {
@@ -80,6 +84,8 @@ public record DeviceResponse(
         device.getState(),
         device.getSensors().stream().map(SensorResponse::from).toList(),
         room == null ? null : room.getId(),
-        room == null ? null : room.getName());
+        room == null ? null : room.getName(),
+        device.isReachable(),
+        device.getLastSeenAt());
   }
 }

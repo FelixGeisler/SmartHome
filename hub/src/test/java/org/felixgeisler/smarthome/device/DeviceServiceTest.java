@@ -1,6 +1,7 @@
 package org.felixgeisler.smarthome.device;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -72,6 +74,130 @@ class DeviceServiceTest {
     assertEquals(true, commandCaptor.getValue().get("on"));
     assertEquals("true", result.getState().get("on"));
     verify(devices).save(device);
+  }
+
+  @DisplayName("applyReachability() re-reads the device and persists a flipped flag")
+  @Test
+  void applyReachability_persistsOnChange() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.applyReachability(1L, false);
+
+    assertFalse(device.isReachable());
+    verify(devices).save(device);
+  }
+
+  @DisplayName("applyReachability() does nothing when the flag is unchanged")
+  @Test
+  void applyReachability_noOpWhenUnchanged() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    service.applyReachability(1L, true);
+
+    verify(devices, never()).save(any(Device.class));
+  }
+
+  @DisplayName("applyReachability() ignores a device deleted during the sweep")
+  @Test
+  void applyReachability_ignoresMissingDevice() {
+    when(devices.findById(99L)).thenReturn(Optional.empty());
+
+    service.applyReachability(99L, false);
+
+    verify(devices, never()).save(any(Device.class));
+  }
+
+  @DisplayName("refreshReportingReachability() marks a device silent past the cutoff offline")
+  @Test
+  void refreshReportingReachability_marksStaleDeviceOffline() {
+    Device device = new Device("node-1", "Node", DeviceType.SENSOR_NODE, null);
+    device.markSeen(NOW.minus(Duration.ofMinutes(20)));
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.refreshReportingReachability(1L, NOW.minus(Duration.ofMinutes(10)));
+
+    assertFalse(device.isReachable());
+    verify(devices).save(device);
+  }
+
+  @DisplayName("refreshReportingReachability() brings a device heard from within the cutoff online")
+  @Test
+  void refreshReportingReachability_bringsFreshDeviceOnline() {
+    Device device = new Device("node-1", "Node", DeviceType.SENSOR_NODE, null);
+    device.markSeen(NOW.minus(Duration.ofMinutes(2)));
+    device.setReachable(false);
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.refreshReportingReachability(1L, NOW.minus(Duration.ofMinutes(10)));
+
+    assertTrue(device.isReachable());
+    verify(devices).save(device);
+  }
+
+  @DisplayName("refreshReportingReachability() ignores a device deleted during the sweep")
+  @Test
+  void refreshReportingReachability_ignoresMissingDevice() {
+    when(devices.findById(99L)).thenReturn(Optional.empty());
+
+    service.refreshReportingReachability(99L, NOW);
+
+    verify(devices, never()).save(any(Device.class));
+  }
+
+  @DisplayName("syncState() folds a device's reported state in and pushes when it changed")
+  @Test
+  void syncState_updatesChangedStateAndPushes() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.putState("on", "false");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.syncState(1L, Map.of("on", true));
+
+    assertEquals("true", device.getState().get("on"));
+    verify(devices).save(device);
+  }
+
+  @DisplayName("syncState() does nothing when the reported state matches the stored state")
+  @Test
+  void syncState_noOpWhenUnchanged() {
+    Device device = new Device("ext-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    device.putState("on", "true");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+
+    service.syncState(1L, Map.of("on", true));
+
+    verify(devices, never()).save(any(Device.class));
+  }
+
+  @DisplayName("syncState() ignores a device deleted during the poll")
+  @Test
+  void syncState_ignoresMissingDevice() {
+    when(devices.findById(99L)).thenReturn(Optional.empty());
+
+    service.syncState(99L, Map.of("on", true));
+
+    verify(devices, never()).save(any(Device.class));
+  }
+
+  @DisplayName("recordReading() marks a device seen and brings it back online")
+  @Test
+  void recordReading_marksTheDeviceSeen() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    device.addSensor("temperature", SensorType.TEMPERATURE, "°C");
+    device.setReachable(false);
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("node-1", "temperature", "21");
+
+    assertTrue(device.isReachable());
+    assertEquals(NOW, device.getLastSeenAt());
   }
 
   @DisplayName("toggle() switches an on device off")

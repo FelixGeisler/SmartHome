@@ -14,6 +14,8 @@
             <Class name="org.felixgeisler.smarthome.automation.DeviceToggleActionHandler"/>
             <Class name="org.felixgeisler.smarthome.dashboard.DashboardLayoutService"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
+            <Class name="org.felixgeisler.smarthome.device.DeviceReachabilityMonitor"/>
+            <Class name="org.felixgeisler.smarthome.device.DeviceStatePoller"/>
             <Class name="org.felixgeisler.smarthome.floor.FloorController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
