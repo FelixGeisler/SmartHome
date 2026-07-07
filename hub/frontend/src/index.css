@@ -920,6 +920,7 @@ body {
 
 .mqtt-panel,
 .solakon-panel,
+.homematic-panel,
 .device-admin {
   margin-top: 32px;
   background: var(--surface);
@@ -931,6 +932,7 @@ body {
 
 .mqtt-panel h2,
 .solakon-panel h2,
+.homematic-panel h2,
 .device-admin h2 {
   font-size: 16px;
   margin: 0 0 12px;
@@ -938,6 +940,7 @@ body {
 
 .mqtt-panel__hint,
 .solakon-panel__hint,
+.homematic-panel__hint,
 .device-admin__hint {
   color: var(--text-muted);
   margin: 0 0 12px;
@@ -945,6 +948,7 @@ body {
 
 .mqtt-panel__error,
 .solakon-panel__error,
+.homematic-panel__error,
 .device-admin__error {
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
@@ -955,7 +959,8 @@ body {
 }
 
 .mqtt-panel__status,
-.solakon-panel__status {
+.solakon-panel__status,
+.homematic-panel__status {
   color: var(--text-muted);
   margin: 0 0 12px;
 }
@@ -967,7 +972,8 @@ body {
 }
 
 .mqtt-panel__connect,
-.solakon-panel__connect {
+.solakon-panel__connect,
+.homematic-panel__connect {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -975,7 +981,8 @@ body {
 }
 
 .mqtt-panel__connect button,
-.solakon-panel__connect button {
+.solakon-panel__connect button,
+.homematic-panel__connect button {
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -987,12 +994,49 @@ body {
 }
 
 .mqtt-panel__connect button:hover:enabled,
-.solakon-panel__connect button:hover:enabled {
+.solakon-panel__connect button:hover:enabled,
+.homematic-panel__connect button:hover:enabled {
   background: var(--accent-hover);
 }
 
 .mqtt-panel__connect button:disabled,
-.solakon-panel__connect button:disabled {
+.solakon-panel__connect button:disabled,
+.homematic-panel__connect button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.homematic-panel__devices {
+  margin-top: 12px;
+}
+
+.homematic-panel__devices ul {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.homematic-panel__devices label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.homematic-panel__devices button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+
+.homematic-panel__devices button:disabled {
   opacity: 0.55;
   cursor: default;
 }

@@ -17,6 +17,10 @@
             <Class name="org.felixgeisler.smarthome.device.DeviceReachabilityMonitor"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceStatePoller"/>
             <Class name="org.felixgeisler.smarthome.floor.FloorController"/>
+            <Class name="org.felixgeisler.smarthome.integration.homematic.HomematicCcuService"/>
+            <Class name="org.felixgeisler.smarthome.integration.homematic.HomematicController"/>
+            <Class name="org.felixgeisler.smarthome.integration.homematic.HomematicDeviceAdapter"/>
+            <Class name="org.felixgeisler.smarthome.integration.homematic.HomematicSensorPoller"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueDeviceAdapter"/>

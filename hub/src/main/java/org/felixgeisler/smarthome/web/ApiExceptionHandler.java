@@ -11,6 +11,7 @@ import org.felixgeisler.smarthome.device.UnsupportedCapabilityException;
 import org.felixgeisler.smarthome.floor.FloorAlreadyExistsException;
 import org.felixgeisler.smarthome.floor.FloorNotFoundException;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
+import org.felixgeisler.smarthome.integration.homematic.HomematicCcuException;
 import org.felixgeisler.smarthome.integration.hue.HueBridgeException;
 import org.felixgeisler.smarthome.room.RoomAlreadyExistsException;
 import org.felixgeisler.smarthome.room.RoomLayoutException;
@@ -108,6 +109,13 @@ public class ApiExceptionHandler {
   @ExceptionHandler(HueBridgeException.class)
   ProblemDetail handleHueBridge(HueBridgeException ex) {
     // Client-actionable: the hub could not reach or use the Hue bridge (unreachable, not paired).
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+  }
+
+  @ExceptionHandler(HomematicCcuException.class)
+  ProblemDetail handleHomematicCcu(HomematicCcuException ex) {
+    // Client-actionable: the hub could not reach or use the Homematic CCU (unreachable, not
+    // connected, or a failed login).
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
   }
 
