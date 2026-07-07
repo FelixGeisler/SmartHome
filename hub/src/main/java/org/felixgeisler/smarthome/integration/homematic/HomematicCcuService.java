@@ -121,18 +121,21 @@ public class HomematicCcuService {
    */
   public boolean connect(String hostInput, String user, String pass) {
     String authority = authority(hostInput);
-    host.set(authority);
-    username.set(user);
-    password.set(pass);
-    session.set(null);
-    JsonRpcEnvelope env = rpc("Session.login", Map.of("username", user, "password", pass));
+    JsonRpcEnvelope env =
+        rpc(endpointFor(authority), "Session.login", Map.of("username", user, "password", pass));
     if (env.error() != null) {
       if (env.error().code() == INVALID_CREDENTIALS) {
         return false;
       }
       throw new HomematicCcuException("Homematic CCU login failed: " + env.error().message());
     }
-    session.set(sessionId(env));
+    String sid = sessionId(env);
+    // Commit the new connection only after the login succeeds, so a rejected attempt cannot break
+    // an existing working connection.
+    session.set(sid);
+    host.set(authority);
+    username.set(user);
+    password.set(pass);
     settings.save(HOST_SETTING, authority);
     settings.save(USERNAME_SETTING, user);
     settings.save(PASSWORD_SETTING, pass);
@@ -322,11 +325,12 @@ public class HomematicCcuService {
   private JsonNode authed(String method, Map<String, Object> params) {
     Map<String, Object> withSession = new LinkedHashMap<>(params);
     withSession.put("_session_id_", currentSession());
-    JsonRpcEnvelope env = rpc(method, withSession);
+    URI target = endpoint();
+    JsonRpcEnvelope env = rpc(target, method, withSession);
     if (env.error() != null && env.error().code() == SESSION_EXPIRED) {
       session.set(null);
       withSession.put("_session_id_", currentSession());
-      env = rpc(method, withSession);
+      env = rpc(target, method, withSession);
     }
     if (env.error() != null) {
       throw new HomematicCcuException("Homematic CCU error: " + env.error().message());
@@ -345,7 +349,8 @@ public class HomematicCcuService {
     if (host.get() == null || user == null || pass == null) {
       throw new HomematicCcuException("No Homematic CCU is connected; connect one first");
     }
-    JsonRpcEnvelope env = rpc("Session.login", Map.of("username", user, "password", pass));
+    JsonRpcEnvelope env =
+        rpc(endpoint(), "Session.login", Map.of("username", user, "password", pass));
     if (env.error() != null) {
       throw new HomematicCcuException("Homematic CCU login failed: " + env.error().message());
     }
@@ -362,7 +367,7 @@ public class HomematicCcuService {
     return sid;
   }
 
-  private JsonRpcEnvelope rpc(String method, Object params) {
+  private JsonRpcEnvelope rpc(URI endpoint, String method, Object params) {
     Map<String, Object> request = new LinkedHashMap<>();
     request.put("method", method);
     request.put("params", params);
@@ -372,13 +377,14 @@ public class HomematicCcuService {
       env =
           restClient
               .post()
-              .uri(endpoint())
+              .uri(endpoint)
               .contentType(MediaType.APPLICATION_JSON)
               .body(request)
               .retrieve()
               .body(JsonRpcEnvelope.class);
     } catch (RestClientException ex) {
-      throw new HomematicCcuException("Could not reach the Homematic CCU at " + host.get(), ex);
+      throw new HomematicCcuException(
+          "Could not reach the Homematic CCU at " + endpoint.getHost(), ex);
     }
     if (env == null) {
       throw new HomematicCcuException("Empty response from the Homematic CCU");
@@ -395,6 +401,10 @@ public class HomematicCcuService {
     if (authority == null) {
       throw new HomematicCcuException("No Homematic CCU is connected; connect one first");
     }
+    return endpointFor(authority);
+  }
+
+  private static URI endpointFor(String authority) {
     return base(authority).replacePath("/api/homematic.cgi").build().toUri();
   }
 

@@ -102,6 +102,30 @@ class HomematicCcuServiceTest {
     assertFalse(unconnected().connect(host, "Admin", "wrong"));
   }
 
+  @DisplayName("a rejected connect leaves an existing working connection intact")
+  @Test
+  void connect_rejectedKeepsExistingConnection() {
+    server.stubFor(
+        post(urlPathEqualTo(RPC))
+            .withRequestBody(matchingJsonPath("$.method", equalTo("Session.login")))
+            .withRequestBody(matchingJsonPath("$.params.password", equalTo("admin")))
+            .willReturn(okJson("{\"result\":\"sid-1\",\"error\":null}")));
+    server.stubFor(
+        post(urlPathEqualTo(RPC))
+            .withRequestBody(matchingJsonPath("$.method", equalTo("Session.login")))
+            .withRequestBody(matchingJsonPath("$.params.password", equalTo("wrong")))
+            .willReturn(
+                okJson("{\"result\":null,\"error\":{\"code\":501,\"message\":\"invalid\"}}")));
+    stub("Interface.getValue", "\"1\"");
+
+    HomematicCcuService service = unconnected();
+    assertTrue(service.connect(host, "Admin", "admin"));
+    assertFalse(service.connect(host, "Admin", "wrong"));
+
+    // The original connection still works: the rejected attempt did not overwrite its credentials.
+    assertEquals("1", service.readValue("HmIP-RF/0001DD89A4662F:3", "STATE"));
+  }
+
   @DisplayName("readValue() returns a channel datapoint as the CCU reports it")
   @Test
   void readValue_readsDatapoint() {
