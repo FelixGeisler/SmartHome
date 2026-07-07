@@ -26,13 +26,23 @@ cd hub
 java -jar target/smarthome-*.jar
 ```
 
-Dashboard and API run on <http://localhost:8080>.
+Dashboard and API run on <http://localhost:8080>. On first visit, create the administrator
+account; the login then guards the dashboard and the API.
 
 Devices, MQTT sensors, and the assistant are all set up in the UI, as described
 in the [user guide](https://felixgeisler.github.io/SmartHome/guide/). Connections are
 persisted, so the hub restores them after a restart. Sensor history charts
 require the streaming stack in
 [infrastructure/streaming](infrastructure/streaming/README.md).
+
+## Security
+
+The hub requires a login. On first start, open the dashboard and create the single administrator
+account, after which every request to the dashboard and the API needs that session.
+
+It is built for a trusted home LAN and speaks plain HTTP with no transport encryption, so do not
+expose it to the internet. To reach it from outside, put it behind a reverse proxy that terminates
+TLS and adds its own authentication. There are no per-user accounts yet.
 
 ## Documentation
 
