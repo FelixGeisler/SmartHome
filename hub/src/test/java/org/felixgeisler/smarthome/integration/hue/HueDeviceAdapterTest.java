@@ -1,6 +1,8 @@
 package org.felixgeisler.smarthome.integration.hue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -71,7 +73,7 @@ class HueDeviceAdapterTest {
   @Test
   void getState_translatesNativeStateBackToNeutral() {
     HueLightResource.State state =
-        new HueLightResource.State(true, 254, List.of(0.4, 0.4), 250, "xy");
+        new HueLightResource.State(true, 254, List.of(0.4, 0.4), 250, "xy", true);
     when(bridge.getLight("1")).thenReturn(new HueLightResource("Lamp", state));
 
     Map<String, Object> neutral = adapter.getState("1");
@@ -80,5 +82,33 @@ class HueDeviceAdapterTest {
     assertEquals(100, neutral.get("brightness"));
     assertEquals(new XyColor(0.4, 0.4), neutral.get("colorXy"));
     assertEquals(4000, neutral.get("colorTemperatureK"));
+  }
+
+  @DisplayName("isReachable() is true when the bridge reports the light as reachable")
+  @Test
+  void isReachable_trueWhenBridgeReportsReachable() {
+    HueLightResource.State state =
+        new HueLightResource.State(true, 254, null, null, null, true);
+    when(bridge.getLight("1")).thenReturn(new HueLightResource("Lamp", state));
+
+    assertTrue(adapter.isReachable("1"));
+  }
+
+  @DisplayName("isReachable() is false when the bridge reports a powered-off light as unreachable")
+  @Test
+  void isReachable_falseWhenBridgeReportsUnreachable() {
+    HueLightResource.State state =
+        new HueLightResource.State(false, 254, null, null, null, false);
+    when(bridge.getLight("1")).thenReturn(new HueLightResource("Lamp", state));
+
+    assertFalse(adapter.isReachable("1"));
+  }
+
+  @DisplayName("isReachable() is false when the bridge itself cannot be reached")
+  @Test
+  void isReachable_falseWhenBridgeUnreachable() {
+    when(bridge.getLight("1")).thenThrow(new HueBridgeException("bridge down"));
+
+    assertFalse(adapter.isReachable("1"));
   }
 }

@@ -52,3 +52,19 @@ relative spot when a room box is resized, and each device gets one explicit stor
 removing one device never shifts where another sits. The blob is capped at the settings column width
 (4096 characters): positions are rounded to three decimals to keep it compact, and an over-large
 layout is rejected with a 422 rather than truncated.
+
+## Device health and management
+
+The hub tracks whether each device is reachable. Once a minute it probes every command device
+through its adapter and marks a reporting sensor node offline when no reading has arrived within the
+last ten minutes. The reachable state rides the same event stream as everything else and is pushed
+only when it flips, so a steadily online or offline device is silent. An offline device wears an
+"Offline" badge on its dashboard card and in the manage-devices list.
+
+Each sensor reading on a card also shows how long ago it arrived, and a reading past the same
+ten-minute window is dimmed so a value that may no longer be current stands out. The age label
+advances on a timer, so a device that falls silent visibly ages even while nothing is being pushed.
+
+The Configuration view lists every registered device and lets you rename one or remove it. A delete
+asks for a second, confirming click first; a sensor node that is still publishing reappears on its
+next reading.

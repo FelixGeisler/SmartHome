@@ -485,6 +485,65 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.device-card--offline {
+  opacity: 0.72;
+}
+
+.device-card__badge {
+  flex: none;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+}
+
+.sensor__age {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sensor--stale .sensor__value {
+  color: var(--text-muted);
+}
+
+.sensor--stale .sensor__age {
+  color: var(--danger-text);
+}
+
+.device-card__charts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.device-card__charts-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.chart-chip {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.chart-chip--off {
+  color: var(--text-muted);
+  border-color: var(--border);
+  text-decoration: line-through;
+}
+
 .sensor-chart-wrap {
   width: 100%;
 }
@@ -860,7 +919,8 @@ body {
 }
 
 .mqtt-panel,
-.solakon-panel {
+.solakon-panel,
+.device-admin {
   margin-top: 32px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -870,19 +930,22 @@ body {
 }
 
 .mqtt-panel h2,
-.solakon-panel h2 {
+.solakon-panel h2,
+.device-admin h2 {
   font-size: 16px;
   margin: 0 0 12px;
 }
 
 .mqtt-panel__hint,
-.solakon-panel__hint {
+.solakon-panel__hint,
+.device-admin__hint {
   color: var(--text-muted);
   margin: 0 0 12px;
 }
 
 .mqtt-panel__error,
-.solakon-panel__error {
+.solakon-panel__error,
+.device-admin__error {
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
   color: var(--danger-text);
@@ -1031,6 +1094,107 @@ body {
 
 .rooms-page__assign {
   margin-left: auto;
+}
+
+.device-admin__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.device-admin__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.device-admin__row:first-child {
+  border-top: none;
+}
+
+.device-admin__info {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.device-admin__name {
+  font-weight: 600;
+}
+
+.device-admin__meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.device-admin__badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+}
+
+.device-admin__prompt {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.device-admin__rename,
+.device-admin__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-admin__rename input {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.device-admin__actions button,
+.device-admin__rename button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.device-admin__actions button:hover:enabled,
+.device-admin__rename button:hover:enabled {
+  border-color: var(--accent);
+}
+
+.device-admin__delete {
+  color: var(--danger-text);
+}
+
+.device-admin__delete:hover:enabled {
+  border-color: var(--danger-border);
+}
+
+.device-admin__actions button:disabled,
+.device-admin__rename button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .device-card__delete {

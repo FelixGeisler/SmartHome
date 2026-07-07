@@ -14,6 +14,8 @@
             <Class name="org.felixgeisler.smarthome.automation.DeviceToggleActionHandler"/>
             <Class name="org.felixgeisler.smarthome.dashboard.DashboardLayoutService"/>
             <Class name="org.felixgeisler.smarthome.device.DeviceController"/>
+            <Class name="org.felixgeisler.smarthome.device.DeviceReachabilityMonitor"/>
+            <Class name="org.felixgeisler.smarthome.device.DeviceStatePoller"/>
             <Class name="org.felixgeisler.smarthome.floor.FloorController"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueBridgeService"/>
             <Class name="org.felixgeisler.smarthome.integration.hue.HueController"/>
@@ -21,6 +23,7 @@
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttController"/>
             <Class name="org.felixgeisler.smarthome.integration.mqtt.MqttSensorListener"/>
+            <Class name="org.felixgeisler.smarthome.integration.shelly.ShellyMeterPoller"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomController"/>

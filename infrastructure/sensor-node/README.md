@@ -1,8 +1,8 @@
 # Raspberry Pi sensor node (reference)
 
 A working reference for an MQTT sensor node: a Raspberry Pi running Mosquitto and a Python
-publisher that reads a BME690 (temperature, humidity, pressure) and an SCD41 (CO₂) over I²C and
-publishes to the broker.
+publisher that reads a BME690 (temperature, humidity, pressure, and a gas-based air-quality score)
+and an SCD41 (CO₂) over I²C and publishes to the broker.
 
 For the general integration steps (running a broker, pointing the hub at it, registering the
 device), see the **MQTT sensors** guide

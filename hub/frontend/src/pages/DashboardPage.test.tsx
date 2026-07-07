@@ -37,6 +37,7 @@ function renderDashboard(overrides: Partial<ComponentProps<typeof DashboardPage>
   const props: ComponentProps<typeof DashboardPage> = {
     devices,
     layout: layoutFor(devices),
+    cardLayouts: devices.map((device) => ({ deviceId: device.id, x: 0, y: 0, w: 4, h: 7 })),
     loadState: 'ready',
     error: null,
     busyIds: new Set<number>(),
@@ -45,6 +46,7 @@ function renderDashboard(overrides: Partial<ComponentProps<typeof DashboardPage>
     onToggle: vi.fn(),
     onCommand: vi.fn(),
     onRemoveCard: vi.fn(),
+    onToggleSensor: vi.fn(),
     onRetry: vi.fn(),
     onEnterEdit: vi.fn(),
     onSave: vi.fn(),
@@ -131,6 +133,47 @@ describe('DashboardPage', () => {
     await user.click(screen.getByRole('button', { name: 'Remove Desk Lamp' }))
 
     expect(props.onRemoveCard).toHaveBeenCalledWith(lamp)
+  })
+
+  it('hides a deselected sensor chart and toggles it from the chart chips in edit mode', async () => {
+    const user = userEvent.setup()
+    const sensorNode: Device = {
+      ...lamp,
+      id: 3,
+      name: 'Sensor',
+      type: 'SENSOR_NODE',
+      capabilities: ['SENSING'],
+      adapterType: null,
+      sensors: [
+        {
+          key: 'temperature',
+          type: 'TEMPERATURE',
+          unit: '°C',
+          value: '21',
+          updatedAt: '2026-06-15T12:00:00Z',
+        },
+        {
+          key: 'humidity',
+          type: 'HUMIDITY',
+          unit: '%',
+          value: '40',
+          updatedAt: '2026-06-15T12:00:00Z',
+        },
+      ],
+    }
+    const props = renderDashboard({
+      devices: [sensorNode],
+      editing: true,
+      cardLayouts: [{ deviceId: 3, x: 0, y: 0, w: 4, h: 7, hiddenSensors: ['humidity'] }],
+    })
+
+    // The deselected humidity reading is not rendered; temperature still is.
+    expect(screen.getByText('21 °C')).toBeInTheDocument()
+    expect(screen.queryByText('40 %')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show humidity chart' }))
+
+    expect(props.onToggleSensor).toHaveBeenCalledWith(3, 'humidity')
   })
 
   it('disables the toggle for a busy device', () => {

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.room.Room;
+import org.hibernate.annotations.DynamicUpdate;
 
 /**
  * A smart-home device known to the hub.
@@ -34,9 +35,15 @@ import org.felixgeisler.smarthome.room.Room;
  * {@link #getAdapterType()}, using {@link #getExternalId()} as its address within that integration.
  * A sensing device has no command adapter; it owns {@link #getSensors() sensors} whose readings
  * arrive as inbound telemetry.
+ *
+ * <p>{@code @DynamicUpdate} so an update writes only the columns that actually changed. A device is
+ * written from several paths at once (a user toggle, the reachability sweep, and the Shelly meter
+ * poll recording readings), so a full-row update would let one path overwrite a field, such as the
+ * on/off state or the name, that another path had just changed.
  */
 @Entity
 @Table(name = "devices")
+@DynamicUpdate
 public class Device {
 
   @Id
@@ -83,6 +90,14 @@ public class Device {
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "room_id")
   private Room room;
+
+  // Whether the hub last found the device reachable; false surfaces it as offline in the UI.
+  @Column(nullable = false)
+  private boolean reachable = true;
+
+  // When the hub last heard from the device (a reading or a successful command), or null.
+  @Column(name = "last_seen_at")
+  private Instant lastSeenAt;
 
   /** Required by JPA. */
   protected Device() {
@@ -136,6 +151,15 @@ public class Device {
 
   public String getName() {
     return name;
+  }
+
+  /**
+   * Renames the device.
+   *
+   * @param name the new human-readable name
+   */
+  public void rename(String name) {
+    this.name = name;
   }
 
   public DeviceType getType() {
@@ -235,5 +259,33 @@ public class Device {
   public void clearRoom() {
     // Null is the "unassigned" state for the optional room association.
     this.room = null;
+  }
+
+  public boolean isReachable() {
+    return reachable;
+  }
+
+  /**
+   * Sets whether the hub currently finds the device reachable.
+   *
+   * @param reachable true if the device answered or reported recently
+   */
+  public void setReachable(boolean reachable) {
+    this.reachable = reachable;
+  }
+
+  public Instant getLastSeenAt() {
+    return lastSeenAt;
+  }
+
+  /**
+   * Records that the hub just heard from the device (a reading or a successful command), which also
+   * marks it reachable.
+   *
+   * @param at when the hub heard from the device
+   */
+  public void markSeen(Instant at) {
+    this.lastSeenAt = at;
+    this.reachable = true;
   }
 }

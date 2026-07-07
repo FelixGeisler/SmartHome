@@ -19,8 +19,26 @@ public enum SensorType {
   /** Barometric pressure, in hectopascals. */
   PRESSURE("pressure", "hPa"),
 
+  /** Air-quality score from a VOC gas sensor, 0-100 where a higher score is cleaner air. */
+  AIR_QUALITY("airQuality", "%"),
+
   /** Carbon dioxide concentration, in parts per million. */
   CO2("co2", "ppm"),
+
+  /** Active electrical power, in watts. */
+  POWER("power", "W"),
+
+  /** Mains voltage, in volts. */
+  VOLTAGE("voltage", "V"),
+
+  /** Electrical current, in amperes. */
+  CURRENT("current", "A"),
+
+  /** Mains frequency, in hertz. */
+  FREQUENCY("frequency", "Hz"),
+
+  /** A device's own internal temperature, in degrees Celsius. */
+  DEVICE_TEMPERATURE("deviceTemp", "°C"),
 
   /** Photovoltaic (solar) power, in watts. */
   PV_POWER("pvPower", "W"),
@@ -34,7 +52,7 @@ public enum SensorType {
   /** Inverter AC output power, in watts. */
   OUTPUT_POWER("outputPower", "W"),
 
-  /** Energy generated over the system's lifetime, in kilowatt-hours. */
+  /** Cumulative energy, in kilowatt-hours. */
   ENERGY_TOTAL("energyTotal", "kWh"),
 
   /** Battery temperature, in degrees Celsius. */

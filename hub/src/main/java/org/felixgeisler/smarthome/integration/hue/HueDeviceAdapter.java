@@ -66,6 +66,19 @@ public class HueDeviceAdapter implements DeviceAdapter {
     return toNeutral(bridge.getLight(externalId));
   }
 
+  // The default probe (a state read that does not throw) is not enough for Hue: the bridge answers
+  // for a bulb that lost power and only flags it reachable=false, so consult that flag. A broad
+  // catch is deliberate: any failure to reach the bridge means the light is unreachable too.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @Override
+  public boolean isReachable(String externalId) {
+    try {
+      return bridge.getLight(externalId).isReachable();
+    } catch (RuntimeException ex) {
+      return false;
+    }
+  }
+
   // Translate a neutral payload (wire keys to neutral values) into a Hue state body.
   private static Map<String, Object> toNative(Map<String, Object> neutral) {
     Map<String, Object> state = new LinkedHashMap<>();

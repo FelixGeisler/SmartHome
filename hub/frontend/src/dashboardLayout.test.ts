@@ -10,6 +10,7 @@ import {
   placeAll,
   removeCard,
   toGridLayout,
+  toggleHiddenSensor,
 } from './dashboardLayout'
 
 function device(id: number): Device {
@@ -113,9 +114,19 @@ describe('grid layout mapping', () => {
     expect(layout[0].minW).toBeDefined()
   })
 
-  it('round-trips placements through the grid layout unchanged', () => {
+  it('round-trips placements through the grid layout, carrying hidden charts over', () => {
+    const cards: CardLayout[] = [{ deviceId: 3, x: 0, y: 0, w: 6, h: 4, hiddenSensors: ['voltage'] }]
+
+    expect(fromGridLayout(toGridLayout(cards), cards)).toEqual(cards)
+  })
+
+  it('toggles a sensor chart hidden then shown for its card', () => {
     const cards: CardLayout[] = [{ deviceId: 3, x: 0, y: 0, w: 6, h: 4 }]
 
-    expect(fromGridLayout(toGridLayout(cards))).toEqual(cards)
+    const hidden = toggleHiddenSensor(cards, 3, 'voltage')
+    expect(hidden[0].hiddenSensors).toEqual(['voltage'])
+
+    const shown = toggleHiddenSensor(hidden, 3, 'voltage')
+    expect(shown[0].hiddenSensors).toEqual([])
   })
 })

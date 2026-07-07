@@ -15,6 +15,10 @@ export interface Device {
   roomId?: number | null
   /** The name of the room the device belongs to, or null when unassigned. */
   roomName?: string | null
+  /** Whether the hub currently finds the device reachable; absent is treated as reachable. */
+  reachable?: boolean
+  /** When the hub last heard from the device (ISO-8601), or null before it ever has. */
+  lastSeenAt?: string | null
 }
 
 /** One measurement channel on a device. */
@@ -159,6 +163,21 @@ export function sendCommand(id: number, command: DeviceCommand): Promise<Device>
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(command),
+  })
+}
+
+/**
+ * Renames a device.
+ *
+ * @param id the device id
+ * @param name the new name
+ * @returns the renamed device
+ */
+export function renameDevice(id: number, name: string): Promise<Device> {
+  return request<Device>(`/api/devices/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
   })
 }
 

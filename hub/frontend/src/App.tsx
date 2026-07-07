@@ -15,6 +15,7 @@ import {
   fromGridLayout,
   removeCard,
   toGridLayout,
+  toggleHiddenSensor,
 } from './dashboardLayout'
 import { AutomationsPage } from './pages/AutomationsPage'
 import { ConfigurationPage } from './pages/ConfigurationPage'
@@ -164,18 +165,25 @@ function App() {
   }
 
   function handleDeviceUpdated(device: Device) {
-    // A room assignment returns the updated device; fold it in the way command responses are, so
-    // the change shows immediately without waiting for the stream to echo it.
+    // A room assignment or a rename returns the updated device; fold it in the way command
+    // responses are, so the change shows immediately without waiting for the stream to echo it.
     setDevices((current) => patch(current, device))
+  }
+
+  function handleDeviceDeleted(id: number) {
+    // The stream also pushes a device-removed event; drop it now so the change is immediate, and
+    // the pushed event then finds nothing left to remove.
+    setDevices((current) => remove(current, id))
   }
 
   // The cards on the dashboard: the curated draft while editing, else the committed layout (with a
   // tidy every-device default before the dashboard has ever been arranged). Live stream events (a
   // device added or removed elsewhere) flow through, so the grid stays consistent.
-  const gridLayout = useMemo(
-    () => toGridLayout(editing ? curate(devices, draft) : displayCards(devices, layout)),
+  const cards = useMemo(
+    () => (editing ? curate(devices, draft) : displayCards(devices, layout)),
     [devices, editing, draft, layout],
   )
+  const gridLayout = useMemo(() => toGridLayout(cards), [cards])
   // The devices the add-card picker can offer: those not already on the (draft) dashboard.
   const addableDevices = useMemo(() => available(devices, draft), [devices, draft])
 
@@ -203,9 +211,10 @@ function App() {
     }
   }
 
-  // Each drag or resize hands back the whole new grid layout; keep the draft in step with it.
+  // Each drag or resize hands back the whole new grid layout; keep the draft in step with it,
+  // carrying over each card's hidden-chart selection (the grid layout holds only geometry).
   function handleLayoutChange(next: Layout) {
-    setDraft(fromGridLayout(next))
+    setDraft((current) => fromGridLayout(next, current))
   }
 
   function handleAddCard(device: Device) {
@@ -214,6 +223,10 @@ function App() {
 
   function handleRemoveCard(device: Device) {
     setDraft((current) => removeCard(current, device.id))
+  }
+
+  function handleToggleSensor(deviceId: number, sensorKey: string) {
+    setDraft((current) => toggleHiddenSensor(current, deviceId, sensorKey))
   }
 
   return (
@@ -247,6 +260,7 @@ function App() {
               <DashboardPage
                 devices={devices}
                 layout={gridLayout}
+                cardLayouts={cards}
                 loadState={loadState}
                 error={error}
                 busyIds={busyIds}
@@ -257,6 +271,7 @@ function App() {
                 onToggle={(device) => void handleToggle(device)}
                 onCommand={(device, command) => void handleCommand(device, command)}
                 onRemoveCard={handleRemoveCard}
+                onToggleSensor={handleToggleSensor}
                 onRetry={retry}
                 onEnterEdit={enterEdit}
                 onSave={() => void commitEdit()}
@@ -281,7 +296,14 @@ function App() {
           />
           <Route
             path="/configuration"
-            element={<ConfigurationPage onRegistered={handleRegistered} />}
+            element={
+              <ConfigurationPage
+                devices={devices}
+                onRegistered={handleRegistered}
+                onDeviceUpdated={handleDeviceUpdated}
+                onDeviceDeleted={handleDeviceDeleted}
+              />
+            }
           />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

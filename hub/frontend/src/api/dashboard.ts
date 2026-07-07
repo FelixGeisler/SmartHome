@@ -1,12 +1,14 @@
 import { request } from './devices'
 
-/** One saved card: which device it shows and its position and size in grid units. */
+/** One saved card: which device it shows, its position and size, and which charts are hidden. */
 export interface CardLayout {
   deviceId: number
   x: number
   y: number
   w: number
   h: number
+  /** Keys of the device's sensors whose charts are hidden on this card; absent means all shown. */
+  hiddenSensors?: string[]
 }
 
 /** A saved dashboard arrangement: each card's device and its grid placement. */
