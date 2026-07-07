@@ -167,6 +167,21 @@ export function sendCommand(id: number, command: DeviceCommand): Promise<Device>
 }
 
 /**
+ * Renames a device.
+ *
+ * @param id the device id
+ * @param name the new name
+ * @returns the renamed device
+ */
+export function renameDevice(id: number, name: string): Promise<Device> {
+  return request<Device>(`/api/devices/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+}
+
+/**
  * Deletes a device. A still-publishing sensor node reappears on its next reading.
  *
  * @param id the device id

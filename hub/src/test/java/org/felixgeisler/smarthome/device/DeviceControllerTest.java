@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -256,6 +257,42 @@ class DeviceControllerTest {
                     "{\"externalId\":\"node-1\",\"name\":\"Climate\","
                         + "\"type\":\"SENSOR_NODE\",\"sensors\":[null]}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @DisplayName("PATCH /api/devices/{id} renames the device")
+  @Test
+  void rename_returnsRenamedDevice() throws Exception {
+    Device device = new Device("ext-1", "New name", DeviceType.SHELLY_PLUG, "shelly");
+    when(service.rename(1L, "New name")).thenReturn(device);
+
+    mvc.perform(
+            patch("/api/devices/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New name\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("New name"));
+  }
+
+  @DisplayName("PATCH /api/devices/{id} returns 400 when the name is blank")
+  @Test
+  void rename_returns400WhenNameBlank() throws Exception {
+    mvc.perform(
+            patch("/api/devices/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @DisplayName("PATCH /api/devices/{id} returns 404 when the device is missing")
+  @Test
+  void rename_returns404WhenDeviceMissing() throws Exception {
+    when(service.rename(eq(99L), any())).thenThrow(new DeviceNotFoundException(99L));
+
+    mvc.perform(
+            patch("/api/devices/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New name\"}"))
+        .andExpect(status().isNotFound());
   }
 
   @DisplayName("DELETE /api/devices/{id} returns 204")

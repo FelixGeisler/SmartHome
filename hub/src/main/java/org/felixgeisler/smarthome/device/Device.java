@@ -153,6 +153,15 @@ public class Device {
     return name;
   }
 
+  /**
+   * Renames the device.
+   *
+   * @param name the new human-readable name
+   */
+  public void rename(String name) {
+    this.name = name;
+  }
+
   public DeviceType getType() {
     return type;
   }

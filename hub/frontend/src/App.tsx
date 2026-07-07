@@ -165,9 +165,15 @@ function App() {
   }
 
   function handleDeviceUpdated(device: Device) {
-    // A room assignment returns the updated device; fold it in the way command responses are, so
-    // the change shows immediately without waiting for the stream to echo it.
+    // A room assignment or a rename returns the updated device; fold it in the way command
+    // responses are, so the change shows immediately without waiting for the stream to echo it.
     setDevices((current) => patch(current, device))
+  }
+
+  function handleDeviceDeleted(id: number) {
+    // The stream also pushes a device-removed event; drop it now so the change is immediate, and
+    // the pushed event then finds nothing left to remove.
+    setDevices((current) => remove(current, id))
   }
 
   // The cards on the dashboard: the curated draft while editing, else the committed layout (with a
@@ -290,7 +296,14 @@ function App() {
           />
           <Route
             path="/configuration"
-            element={<ConfigurationPage onRegistered={handleRegistered} />}
+            element={
+              <ConfigurationPage
+                devices={devices}
+                onRegistered={handleRegistered}
+                onDeviceUpdated={handleDeviceUpdated}
+                onDeviceDeleted={handleDeviceDeleted}
+              />
+            }
           />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

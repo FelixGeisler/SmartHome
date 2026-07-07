@@ -333,6 +333,20 @@ public class DeviceService {
   }
 
   /**
+   * Renames a device, pushing the change to live clients.
+   *
+   * @param id the device id
+   * @param name the new name
+   * @return the updated device
+   * @throws DeviceNotFoundException if no device has the given id
+   */
+  public Device rename(Long id, String name) {
+    Device device = getById(id);
+    device.rename(name);
+    return saveAndPublish(device);
+  }
+
+  /**
    * Applies a freshly probed reachability result to a command device, pushing to live clients only
    * when the flag flips so a steady device causes no writes or events. The device is re-read by id
    * inside this call, so a result computed during a slow probe cannot overwrite state, a name, or a

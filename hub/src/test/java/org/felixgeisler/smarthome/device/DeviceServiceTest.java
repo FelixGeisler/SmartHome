@@ -76,6 +76,19 @@ class DeviceServiceTest {
     verify(devices).save(device);
   }
 
+  @DisplayName("rename() updates the name and persists the device")
+  @Test
+  void rename_updatesTheName() {
+    Device device = new Device("ext-1", "Old name", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Device result = service.rename(1L, "New name");
+
+    assertEquals("New name", result.getName());
+    verify(devices).save(device);
+  }
+
   @DisplayName("applyReachability() re-reads the device and persists a flipped flag")
   @Test
   void applyReachability_persistsOnChange() {

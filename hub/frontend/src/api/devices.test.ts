@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { listDevices, registerDevice, sendCommand, toggleDevice } from './devices'
+import {
+  deleteDevice,
+  listDevices,
+  registerDevice,
+  renameDevice,
+  sendCommand,
+  toggleDevice,
+} from './devices'
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -65,6 +72,28 @@ describe('devices api client', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(command),
     })
+  })
+
+  it('renames a device via PATCH /api/devices/{id}', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 5, name: 'Reading Lamp' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(renameDevice(5, 'Reading Lamp')).resolves.toMatchObject({ name: 'Reading Lamp' })
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices/5', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Reading Lamp' }),
+    })
+  })
+
+  it('deletes a device via DELETE /api/devices/{id}', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(deleteDevice(5)).resolves.toBeUndefined()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/devices/5', { method: 'DELETE' })
   })
 
   it('reports the detail of an RFC 9457 problem response', async () => {
