@@ -4,6 +4,32 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { DeviceCard } from './DeviceCard'
 
+// The card's health cues are the concern here, not the chart; stubbing it keeps the sensor tests
+// from reaching for a history fetch.
+vi.mock('./SensorChart', () => ({ SensorChart: () => null }))
+
+/** A sensor-node device carrying one reading recorded `agoMs` before now. */
+function climateReadAt(agoMs: number): Device {
+  return {
+    id: 3,
+    externalId: 'node-1',
+    name: 'Climate',
+    type: 'SENSOR_NODE',
+    capabilities: ['SENSING'],
+    adapterType: null,
+    state: {},
+    sensors: [
+      {
+        key: 'temperature',
+        type: 'TEMPERATURE',
+        unit: '°C',
+        value: '21',
+        updatedAt: new Date(Date.now() - agoMs).toISOString(),
+      },
+    ],
+  }
+}
+
 const bulb: Device = {
   id: 1,
   externalId: 'light-1',
@@ -104,5 +130,52 @@ describe('DeviceCard', () => {
     await user.click(screen.getByRole('button', { name: 'Remove Desk Lamp' }))
 
     expect(onRemove).toHaveBeenCalledWith(plug)
+  })
+
+  it('shows an offline badge when the device is unreachable', () => {
+    renderCard({ ...plug, reachable: false })
+
+    expect(screen.getByText('Offline')).toBeInTheDocument()
+  })
+
+  it('shows no offline badge for a reachable device', () => {
+    renderCard({ ...plug, reachable: true })
+
+    expect(screen.queryByText('Offline')).not.toBeInTheDocument()
+  })
+
+  it('labels a fresh reading as just updated and does not mute it', () => {
+    renderCard(climateReadAt(30_000))
+
+    expect(screen.getByText('updated just now')).toBeInTheDocument()
+    expect(document.querySelector('.sensor--stale')).toBeNull()
+  })
+
+  it('mutes a stale reading and shows how long ago it arrived', () => {
+    renderCard(climateReadAt(20 * 60_000))
+
+    expect(screen.getByText('updated 20 min ago')).toBeInTheDocument()
+    expect(document.querySelector('.sensor--stale')).not.toBeNull()
+  })
+
+  it('shows sensor tiles on a switchable device that also reports readings', () => {
+    const meteredPlug: Device = {
+      ...plug,
+      sensors: [
+        {
+          key: 'power',
+          type: 'POWER',
+          unit: 'W',
+          value: '12.3',
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    }
+    renderCard(meteredPlug)
+
+    expect(screen.getByText('power')).toBeInTheDocument()
+    expect(screen.getByText('12.3 W')).toBeInTheDocument()
+    // The toggle is still there: a metered plug is both switchable and sensing.
+    expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeInTheDocument()
   })
 })

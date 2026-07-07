@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import ReactGridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
+import type { CardLayout } from '../api/dashboard'
 import type { Device, DeviceCommand } from '../api/devices'
 import { CardPicker } from '../components/CardPicker'
 import { DeviceCard } from '../components/DeviceCard'
@@ -14,6 +15,8 @@ interface DashboardPageProps {
   devices: Device[]
   /** The grid placement of the shown cards (react-grid-layout layout, keyed by device id). */
   layout: Layout
+  /** The saved card records for the shown cards, carrying each card's hidden-chart selection. */
+  cardLayouts: CardLayout[]
   loadState: LoadState
   error: string | null
   busyIds: ReadonlySet<number>
@@ -28,6 +31,8 @@ interface DashboardPageProps {
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onRemoveCard: (device: Device) => void
+  /** Hides or shows one of a device's sensor charts on its card (edit mode only). */
+  onToggleSensor: (deviceId: number, sensorKey: string) => void
   onRetry: () => void
   onEnterEdit: () => void
   onSave: () => void
@@ -52,6 +57,7 @@ const DRAG_CANCEL = 'button, input, select, a'
 export function DashboardPage({
   devices,
   layout,
+  cardLayouts,
   loadState,
   error,
   busyIds,
@@ -62,6 +68,7 @@ export function DashboardPage({
   onToggle,
   onCommand,
   onRemoveCard,
+  onToggleSensor,
   onRetry,
   onEnterEdit,
   onSave,
@@ -89,6 +96,9 @@ export function DashboardPage({
 
   const shown = new Set(layout.map((item) => item.i))
   const cards = devices.filter((device) => shown.has(String(device.id)))
+  const hiddenByDevice = new Map(
+    cardLayouts.map((card) => [card.deviceId, card.hiddenSensors ?? []]),
+  )
 
   return (
     <section className="dashboard">
@@ -143,9 +153,11 @@ export function DashboardPage({
                         editing={editing}
                         busy={busyIds.has(device.id)}
                         syncToken={syncToken}
+                        hiddenSensors={hiddenByDevice.get(device.id) ?? []}
                         onToggle={onToggle}
                         onCommand={onCommand}
                         onRemove={onRemoveCard}
+                        onToggleSensor={onToggleSensor}
                       />
                     </div>
                   ))}

@@ -70,8 +70,23 @@ class DashboardLayoutServiceTest {
 
     ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
     verify(settings).save(eq(LAYOUT_KEY), value.capture());
-    String expected = "{\"cards\":[{\"deviceId\":7,\"x\":1,\"y\":2,\"w\":4,\"h\":7}]}";
+    String expected =
+        "{\"cards\":[{\"deviceId\":7,\"x\":1,\"y\":2,\"w\":4,\"h\":7,\"hiddenSensors\":[]}]}";
     assertEquals(expected, value.getValue());
+  }
+
+  @DisplayName("findLayout() parses a card's hidden sensor charts")
+  @Test
+  void findLayout_parsesHiddenSensors() {
+    when(settings.get(LAYOUT_KEY))
+        .thenReturn(
+            Optional.of(
+                "{\"cards\":[{\"deviceId\":12,\"x\":0,\"y\":0,\"w\":4,\"h\":7,"
+                    + "\"hiddenSensors\":[\"voltage\",\"frequency\"]}]}"));
+
+    DashboardLayout layout = service.findLayout().orElseThrow();
+
+    assertEquals(List.of("voltage", "frequency"), layout.cards().getFirst().hiddenSensors());
   }
 
   @DisplayName("saveLayout() rejects a layout too large for the settings column")

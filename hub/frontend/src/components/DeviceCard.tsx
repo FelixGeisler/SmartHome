@@ -5,9 +5,10 @@ import {
   hasColorTemperature,
   isDimmable,
   isOn,
-  isSensing,
   isSwitchable,
 } from '../api/devices'
+import { formatReadingAge, isOffline, isStaleReading } from '../deviceHealth'
+import { useNow } from '../useNow'
 import { BrightnessControl, ColorControl, ColorTemperatureControl } from './deviceControls'
 import { SensorChart } from './SensorChart'
 
@@ -23,6 +24,10 @@ interface DeviceCardProps {
   onCommand: (device: Device, command: DeviceCommand) => void
   /** Removes this card from the dashboard (edit mode only); the device stays registered. */
   onRemove: (device: Device) => void
+  /** Sensor keys whose charts are hidden on this card; those readings are not rendered. */
+  hiddenSensors?: string[]
+  /** Toggles a sensor's chart on this card (edit mode); omitted outside the dashboard. */
+  onToggleSensor?: (deviceId: number, sensorKey: string) => void
 }
 
 /** One dashboard tile: device name, metadata, controls per capability, and sensor charts. */
@@ -34,9 +39,19 @@ export function DeviceCard({
   onToggle,
   onCommand,
   onRemove,
+  hiddenSensors = [],
+  onToggleSensor,
 }: DeviceCardProps) {
+  const now = useNow()
+  const shownSensors = device.sensors.filter((sensor) => !hiddenSensors.includes(sensor.key))
   const on = isSwitchable(device) && isOn(device)
-  const className = ['device-card', on ? 'device-card--on' : '', editing ? 'device-card--editing' : '']
+  const offline = isOffline(device)
+  const className = [
+    'device-card',
+    on ? 'device-card--on' : '',
+    offline ? 'device-card--offline' : '',
+    editing ? 'device-card--editing' : '',
+  ]
     .filter(Boolean)
     .join(' ')
   return (
@@ -48,6 +63,11 @@ export function DeviceCard({
             {formatType(device.type)} &middot; {device.externalId}
           </span>
         </div>
+        {offline && (
+          <span className="device-card__badge" role="status">
+            Offline
+          </span>
+        )}
         {editing && (
           <button
             type="button"
@@ -86,21 +106,50 @@ export function DeviceCard({
           )}
         </div>
       )}
-      {isSensing(device) && (
+      {editing && device.sensors.length > 0 && (
+        <div className="device-card__charts">
+          <span className="device-card__charts-label">Charts</span>
+          {device.sensors.map((sensor) => {
+            const hidden = hiddenSensors.includes(sensor.key)
+            return (
+              <button
+                key={sensor.key}
+                type="button"
+                className={hidden ? 'chart-chip chart-chip--off' : 'chart-chip'}
+                aria-pressed={!hidden}
+                aria-label={`${hidden ? 'Show' : 'Hide'} ${sensor.key} chart`}
+                onClick={() => onToggleSensor?.(device.id, sensor.key)}
+              >
+                {sensor.key}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      {shownSensors.length > 0 && (
         <div className="device-card__sensors">
-          {device.sensors.map((sensor) => (
-            <div className="sensor" key={sensor.key}>
-              <div className="sensor__head">
-                <span className="sensor__key">{sensor.key}</span>
-                <span className="sensor__value">{formatReading(sensor)}</span>
+          {shownSensors.map((sensor) => {
+            const stale = isStaleReading(sensor, now)
+            const age = formatReadingAge(sensor, now)
+            return (
+              <div className={stale ? 'sensor sensor--stale' : 'sensor'} key={sensor.key}>
+                <div className="sensor__head">
+                  <span className="sensor__key">{sensor.key}</span>
+                  <span className="sensor__value">{formatReading(sensor)}</span>
+                </div>
+                {age !== null && (
+                  <span className="sensor__age" title={sensor.updatedAt ?? undefined}>
+                    updated {age}
+                  </span>
+                )}
+                <SensorChart
+                  deviceExternalId={device.externalId}
+                  sensor={sensor}
+                  syncToken={syncToken}
+                />
               </div>
-              <SensorChart
-                deviceExternalId={device.externalId}
-                sensor={sensor}
-                syncToken={syncToken}
-              />
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
