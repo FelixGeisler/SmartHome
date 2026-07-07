@@ -190,8 +190,47 @@ export function deleteDevice(id: number): Promise<void> {
   return request<void>(`/api/devices/${id}`, { method: 'DELETE' })
 }
 
+/** Notified when a request is refused for want of a session, so the app can show the login gate. */
+let unauthorizedHandler: (() => void) | null = null
+
+/**
+ * Registers a callback invoked when an API request returns 401 (no session, or it expired). The
+ * auth endpoints themselves are excluded, since a failed login is expected there.
+ *
+ * @param handler the callback, or null to clear it
+ */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler
+}
+
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
+// Spring issues a CSRF token in the XSRF-TOKEN cookie; it must be echoed in a header on any
+// state-changing request. Read it here so no caller has to.
+function csrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
+  return match !== null ? decodeURIComponent(match[1]) : null
+}
+
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init)
+  const method = (init?.method ?? 'GET').toUpperCase()
+  let finalInit = init
+  if (MUTATING_METHODS.has(method)) {
+    const token = csrfToken()
+    if (token !== null) {
+      finalInit = {
+        ...init,
+        headers: {
+          ...(init?.headers as Record<string, string> | undefined),
+          'X-XSRF-TOKEN': token,
+        },
+      }
+    }
+  }
+  const response = await fetch(url, finalInit)
+  if (response.status === 401 && !url.startsWith('/api/auth/')) {
+    unauthorizedHandler?.()
+  }
   if (!response.ok) {
     throw new Error(await errorMessage(response))
   }

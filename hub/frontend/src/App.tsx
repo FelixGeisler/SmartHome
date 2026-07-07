@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { Layout } from 'react-grid-layout'
+import { logout } from './api/auth'
 import type { CardLayout } from './api/dashboard'
 import { getLayout, saveLayout } from './api/dashboard'
 import type { Device, DeviceCommand } from './api/devices'
@@ -249,6 +250,13 @@ function App() {
             Configuration
           </NavLink>
         </nav>
+        <button
+          type="button"
+          className="app__logout"
+          onClick={() => void logout().then(() => window.location.reload())}
+        >
+          Log out
+        </button>
       </header>
 
       <main className="app__main">

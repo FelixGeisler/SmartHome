@@ -98,6 +98,108 @@ body {
   box-shadow: var(--shadow);
 }
 
+.app__logout {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.app__logout:hover {
+  color: var(--text);
+}
+
+.auth {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth__card {
+  width: min(360px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.auth__brand {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  margin: 0 0 16px;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.auth__field input {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.auth__form button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.auth__form button:hover:enabled {
+  background: var(--accent-hover);
+}
+
+.auth__form button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.auth__hint,
+.auth__note,
+.auth__status {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.auth__note {
+  font-size: 13px;
+}
+
+.auth__error {
+  margin: 0;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
 .assistant-widget {
   position: fixed;
   right: 20px;
