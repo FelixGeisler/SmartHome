@@ -15,6 +15,18 @@ record HueLightResource(String name, State state) {
   }
 
   /**
+   * Tells whether the bridge can currently reach the light. A Hue bulb cut from power (e.g. its
+   * wall switch is off) stays in the bridge's list and is still returned over HTTP, but the bridge
+   * flags it {@code reachable: false}; this is the only signal that it is offline, since the read
+   * itself succeeds. Treated as reachable unless the bridge explicitly says otherwise.
+   *
+   * @return true unless the bridge reports the light as unreachable
+   */
+  boolean isReachable() {
+    return state == null || state.reachable() == null || state.reachable();
+  }
+
+  /**
    * Derives the device-neutral capabilities from the fields the bridge reports (ADR 2): a light is
    * always switchable, and it is dimmable, color-capable, or color-temperature-capable when it
    * reports brightness, xy, or color-temperature state respectively.
@@ -46,9 +58,11 @@ record HueLightResource(String name, State state) {
    * @param xy CIE xy as a two-element list, or null if the light has no color
    * @param ct color temperature in mireds, or null if the light has no tunable white
    * @param colormode the bridge's active color mode ({@code "xy"}, {@code "ct"}, {@code "hs"})
+   * @param reachable whether the bridge can currently reach the light, or null if not reported
    */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record State(boolean on, Integer bri, List<Double> xy, Integer ct, String colormode) {
+  record State(
+      boolean on, Integer bri, List<Double> xy, Integer ct, String colormode, Boolean reachable) {
     State {
       if (xy != null) {
         xy = List.copyOf(xy);
