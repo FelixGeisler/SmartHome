@@ -15,6 +15,12 @@ public enum DeviceType {
   /** A Philips Hue light switched on and off through the bridge. */
   HUE_LIGHT(Set.of(Capability.SWITCHABLE)),
 
+  /**
+   * A Homematic channel reached through the CCU: a switch, or a channel that reports sensors. Its
+   * capabilities are detected per channel at discovery, so the type declares none of its own.
+   */
+  HOMEMATIC_DEVICE(Set.of()),
+
   /** A solar inverter with battery storage reporting power/energy readings (e.g. Solakon ONE). */
   SOLAR_INVERTER(Set.of(Capability.SENSING));
 
