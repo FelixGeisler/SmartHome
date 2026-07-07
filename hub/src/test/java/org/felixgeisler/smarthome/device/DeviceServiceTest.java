@@ -419,6 +419,43 @@ class DeviceServiceTest {
     verify(devices).save(device);
   }
 
+  @DisplayName("recordReading() records an air-quality reading from the BME690 gas sensor")
+  @Test
+  void recordReading_recordsAirQualityReading() {
+    Device device = new Device("node-1", "Climate", DeviceType.SENSOR_NODE, null);
+    when(devices.findByExternalId("node-1")).thenReturn(Optional.of(device));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("node-1", "airQuality", "87");
+
+    Optional<Sensor> airQuality =
+        device.getSensors().stream()
+            .filter(sensor -> sensor.getKey().equals("airQuality"))
+            .findFirst();
+    assertTrue(airQuality.isPresent());
+    assertEquals(SensorType.AIR_QUALITY, airQuality.get().getType());
+    assertEquals("%", airQuality.get().getUnit());
+    assertEquals("87", airQuality.get().getValue());
+    verify(devices).save(device);
+  }
+
+  @DisplayName("recordReading() records a power reading onto an existing switchable plug")
+  @Test
+  void recordReading_recordsPowerReadingOnSwitchablePlug() {
+    Device plug = new Device("plug-1", "Plug", DeviceType.SHELLY_PLUG, "shelly");
+    when(devices.findByExternalId("plug-1")).thenReturn(Optional.of(plug));
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.recordReading("plug-1", "power", "12.3");
+
+    Optional<Sensor> power =
+        plug.getSensors().stream().filter(sensor -> sensor.getKey().equals("power")).findFirst();
+    assertTrue(power.isPresent());
+    assertEquals(SensorType.POWER, power.get().getType());
+    assertEquals("W", power.get().getUnit());
+    assertEquals("12.3", power.get().getValue());
+  }
+
   @DisplayName("recordReading() drops a reading whose sensor key is not a known measurement")
   @Test
   void recordReading_dropsReadingForUnrecognizedSensorKey() {
