@@ -66,7 +66,9 @@ export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
           externalId: device.externalId,
           name: device.name,
           type: 'HOMEMATIC_DEVICE',
-          adapterType: 'homematic',
+          // Only a controllable channel gets the command adapter; a sensing channel is read by the
+          // hub's sensor poll, never commanded.
+          adapterType: device.capabilities.includes('SWITCHABLE') ? 'homematic' : undefined,
           capabilities: device.capabilities,
           sensors: device.sensors,
         })

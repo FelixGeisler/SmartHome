@@ -67,6 +67,30 @@ describe('HomematicPanel', () => {
     expect(onRegistered).toHaveBeenCalledWith(plug)
   })
 
+  it('registers a sensing channel without a command adapter', async () => {
+    vi.mocked(connectCcu).mockResolvedValue({ connected: true, message: 'ok' })
+    vi.mocked(discoverDevices).mockResolvedValue([
+      {
+        externalId: 'HmIP-RF/0001DD89A4662F:6',
+        name: 'Steckdose PC Power',
+        capabilities: ['SENSING'],
+        sensors: [{ key: 'power', type: 'POWER', unit: 'W' }],
+      },
+    ])
+    vi.mocked(registerDevice).mockResolvedValue(plug)
+    const user = userEvent.setup()
+    render(<HomematicPanel onRegistered={vi.fn()} />)
+
+    await fillCredentials(user)
+    await user.click(screen.getByRole('button', { name: 'Connect' }))
+    await user.click(await screen.findByLabelText('Steckdose PC Power'))
+    await user.click(screen.getByRole('button', { name: 'Add selected devices' }))
+
+    const registration = vi.mocked(registerDevice).mock.calls[0][0]
+    expect(registration.externalId).toBe('HmIP-RF/0001DD89A4662F:6')
+    expect(registration.adapterType).toBeUndefined()
+  })
+
   it('shows the CCU message when the credentials are rejected', async () => {
     vi.mocked(connectCcu).mockResolvedValue({
       connected: false,
