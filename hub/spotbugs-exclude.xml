@@ -32,6 +32,7 @@
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomLayoutService"/>
+            <Class name="org.felixgeisler.smarthome.security.AdminAccount"/>
             <Class name="org.felixgeisler.smarthome.telemetry.TelemetryKafkaPublisher"/>
             <Class name="org.felixgeisler.smarthome.realtime.DeviceEventStreamController"/>
         </Or>
