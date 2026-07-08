@@ -64,7 +64,7 @@ P -> DB : append reading
 ----
 
 The reading and its history row are written in the same transaction, so the history is exactly the
-readings the hub recorded (xref:adr/0013-embed-sensor-history-in-the-hub-database.adoc[ADR 13]).
+readings the hub recorded (xref:adr/0014-embed-sensor-history-in-the-hub-database.adoc[ADR 14]).
 The changed device is pushed to any open dashboard
 (xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11]). Unknown sensor
 keys are dropped; an unknown device is auto-provisioned (xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6]).

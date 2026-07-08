@@ -40,7 +40,7 @@ public class TelemetryRetentionJob {
     Instant cutoff = clock.instant().minus(retention);
     long removed = history.deleteByRecordedAtBefore(cutoff);
     if (removed > 0) {
-      log.info("Pruned {} sensor readings older than {}", removed, retention);
+      log.info("Pruned {} sensor readings recorded before {}", removed, cutoff);
     }
   }
 }
