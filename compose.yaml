@@ -1,0 +1,26 @@
+# Run the SmartHome hub as a single, always-on service:
+#
+#   docker compose up -d        (or: podman-compose up -d)
+#
+# The dashboard and API are then on http://localhost:8080. Everything else (Hue bridges, MQTT
+# sensors, the AI assistant key, ...) is configured in the dashboard after first launch and
+# persisted, so the hub restores it on the next start.
+services:
+  hub:
+    image: ghcr.io/felixgeisler/smarthome:latest
+    container_name: smarthome
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # The H2 database and all persisted settings live here, so they survive restarts and
+      # image upgrades. Removing this volume resets the hub to a fresh install.
+      - smarthome-data:/app/data
+    environment:
+      # Optional shortcut for the AI assistant: set this in the environment to seed the Claude API
+      # key without entering it in the UI. Leave it unset to configure the assistant in the
+      # dashboard instead.
+      SMARTHOME_ANTHROPIC_API_KEY: ${SMARTHOME_ANTHROPIC_API_KEY:-}
+
+volumes:
+  smarthome-data:

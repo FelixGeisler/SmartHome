@@ -1,0 +1,13 @@
+# Build output and downloaded toolchains: rebuilt inside the image, never copied from the host.
+target/
+frontend/node_modules/
+frontend/dist/
+
+# Runtime data must never leak into the image (it would bake in a stale database).
+data/
+
+# Version control and local tooling.
+.git/
+.gitignore
+.idea/
+*.iml

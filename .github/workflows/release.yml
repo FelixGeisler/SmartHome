@@ -1,0 +1,74 @@
+name: Release
+
+# Build and publish the single container image when a version tag is pushed, e.g. `git tag v0.1.0`.
+# ci.yml stays the quality gate for every PR and push to main; this workflow is additive.
+#
+# One-time step after the FIRST release: GHCR creates the new package as private, and GITHUB_TOKEN
+# cannot change that. To let anyone pull `ghcr.io/felixgeisler/smarthome` anonymously (as the README
+# quick start does), open the package on GitHub once, set its visibility to Public, and link it to
+# this repository. Later releases need no manual step.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+# Serialize releases so a slower older build can never overwrite a newer image's `latest`.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: Build & publish container image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # The Dockerfile builds the (architecture-independent) jar on the native build platform, so
+      # QEMU only runs the trivial runtime-stage steps under arm64, never Maven or npm.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Derives image tags from the git tag (v0.1.0 -> 0.1.0, 0.1, latest) and standard OCI labels.
+      # metadata-action lowercases the image name, so the repo publishes to
+      # ghcr.io/felixgeisler/smarthome.
+      - name: Derive image tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          # latest=auto tags a stable release as `latest` but leaves prerelease tags (v1.2.0-rc1)
+          # off it, so a prerelease never becomes the default image compose users pull.
+          flavor: |
+            latest=auto
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: hub
+          file: hub/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Publish a clean two-arch manifest (amd64 + arm64) without extra attestation entries.
+          provenance: false
