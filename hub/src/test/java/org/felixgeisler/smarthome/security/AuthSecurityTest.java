@@ -40,6 +40,12 @@ class AuthSecurityTest {
     mvc.perform(get("/api/devices")).andExpect(status().isUnauthorized());
   }
 
+  @DisplayName("the Swagger UI entry point requires a session")
+  @Test
+  void swaggerUiRequiresAuthentication() throws Exception {
+    mvc.perform(get("/swagger-ui.html")).andExpect(status().isUnauthorized());
+  }
+
   @DisplayName("the auth status endpoint is public")
   @Test
   void authStatusIsPublic() throws Exception {
