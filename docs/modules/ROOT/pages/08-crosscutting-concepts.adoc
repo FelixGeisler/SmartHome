@@ -3,5 +3,9 @@
 [cols="1,3",options="header"]
 |===
 | Concern | How it is handled
+| Authentication | A session login guards the API and dashboard; one administrator, set on first start (xref:adr/0013-guard-the-hub-with-a-session-login.adoc[ADR 13])
+| Persistence | JPA to an embedded database, schema owned by Flyway migrations (xref:adr/0007-persist-the-device-registry-with-flyway-migrations.adoc[ADR 7])
+| Live updates | Device changes are pushed to the dashboard over Server-Sent Events (xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11])
+| Error responses | Exceptions map to RFC 9457 `ProblemDetail`: 400 invalid, 404 missing, 409 duplicate
 | Logging | SLF4J
 |===
