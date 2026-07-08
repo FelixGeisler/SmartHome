@@ -19,6 +19,7 @@
 ** xref:adr/0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10: Telemetry streaming read model]
 ** xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11: Live updates over Server-Sent Events]
 ** xref:adr/0012-automate-device-actions-with-a-rules-engine-on-the-event-bus.adoc[ADR 12: Automations on the event bus]
+** xref:adr/0013-embed-sensor-history-in-the-hub-database.adoc[ADR 13: Embedded sensor history]
 * xref:10-quality-requirements.adoc[10. Quality Requirements]
 * xref:11-risks-and-technical-debt.adoc[11. Risks and Technical Debt]
 * xref:12-glossary.adoc[12. Glossary]

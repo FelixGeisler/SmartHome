@@ -11,13 +11,6 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.type.preferred_enum_jdbc_type: VARCHAR
-  kafka:
-    bootstrap-servers: ${SMARTHOME_KAFKA_BOOTSTRAP:localhost:19092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        max.block.ms: 5000
 
 smarthome:
   assistant:

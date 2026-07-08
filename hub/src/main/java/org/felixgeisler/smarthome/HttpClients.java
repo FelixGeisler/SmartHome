@@ -7,7 +7,7 @@ import org.springframework.web.client.RestClient;
 /**
  * Factory for outbound {@link RestClient}s with bounded connect and read timeouts, so a hub-to-
  * service call can never hang indefinitely. Centralizes the timeout policy shared by every outbound
- * client (Hue, Shelly, Elasticsearch, Anthropic); see {@code AI-SECURITY-POLICY.md}.
+ * client (Hue, Shelly, Anthropic); see {@code AI-SECURITY-POLICY.md}.
  */
 public final class HttpClients {
 

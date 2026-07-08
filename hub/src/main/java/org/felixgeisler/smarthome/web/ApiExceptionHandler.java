@@ -16,7 +16,6 @@ import org.felixgeisler.smarthome.integration.hue.HueBridgeException;
 import org.felixgeisler.smarthome.room.RoomAlreadyExistsException;
 import org.felixgeisler.smarthome.room.RoomLayoutException;
 import org.felixgeisler.smarthome.room.RoomNotFoundException;
-import org.felixgeisler.smarthome.telemetry.TelemetryHistoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -117,16 +116,6 @@ public class ApiExceptionHandler {
     // Client-actionable: the hub could not reach or use the Homematic CCU (unreachable, not
     // connected, or a failed login).
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
-  }
-
-  @ExceptionHandler(TelemetryHistoryException.class)
-  ProblemDetail handleTelemetryHistory(TelemetryHistoryException ex) {
-    // The streaming store (Elasticsearch) is a downstream dependency; surface its unavailability
-    // as a bad gateway, and keep the cause out of the client response.
-    String reason = ex.getMessage();
-    log.warn("Could not read telemetry history: {}", reason);
-    return ProblemDetail.forStatusAndDetail(
-        HttpStatus.BAD_GATEWAY, "Sensor history is currently unavailable.");
   }
 
   @ExceptionHandler(AssistantException.class)

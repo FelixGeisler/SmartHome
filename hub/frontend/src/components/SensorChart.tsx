@@ -7,7 +7,7 @@ import type { Sensor } from '../api/devices'
 import { fetchSensorHistory, type ReadingPoint } from '../api/telemetry'
 
 interface SensorChartProps {
-  /** The device's external id, as published onto the telemetry topic. */
+  /** The device's external id the readings are keyed by. */
   deviceExternalId: string
   /** The charted sensor; its latest reading is appended live as it updates. */
   sensor: Sensor
@@ -56,7 +56,7 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
 
   // Load the history window on mount and again after every stream reconnect (readings that
   // arrived during a gap were never pushed). The result is merged: live points newer than the
-  // fetched window survive, since the search index lags ingestion. A failed load retries itself.
+  // fetched window survive a load that raced them. A failed load retries itself.
   useEffect(() => {
     let cancelled = false
     let retryTimer: ReturnType<typeof setTimeout> | undefined
@@ -233,8 +233,8 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
 
 /**
  * Merges a freshly loaded history window with the current series: the window wins for its own
- * span, and live-appended points newer than its last reading survive, since the search index the
- * window comes from lags ingestion.
+ * span, and live-appended points newer than its last reading survive, since a live reading can
+ * arrive between the history fetch request and its response.
  */
 function mergeSeries(loaded: ReadingPoint[], current: ReadingPoint[]): ReadingPoint[] {
   const lastLoaded =

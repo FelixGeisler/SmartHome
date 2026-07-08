@@ -6,7 +6,6 @@ Spring Boot smart-home hub.
 
 - **Repository layout:** the Spring Boot hub (server + the bundled React UI) lives in `hub/`
   (`hub/src`, `hub/frontend`, `hub/pom.xml`). `infrastructure/` holds what the hub runs against:
-  `infrastructure/streaming/` (the Redpanda → Kafka Connect → Elasticsearch → Kibana stack) and
   `infrastructure/sensor-node/` (the Python sensor node plus its Mosquitto broker config). `docs/`
   has the arc42 docs. The repo root is just the umbrella.
 - Spring Boot with Spring Data JPA, built with Maven; always use the wrapper from `hub/`

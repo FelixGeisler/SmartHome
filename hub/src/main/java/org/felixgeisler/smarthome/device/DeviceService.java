@@ -170,7 +170,7 @@ public class DeviceService {
     // Saving also pushes the device's new latest values to any live dashboard (surfacing a freshly
     // auto-provisioned node without a reload).
     Device saved = saveAndPublish(device);
-    // Tee the reading to outbound integrations (telemetry streaming) without coupling to them.
+    // Record the reading into the sensor history store, decoupled through the domain event.
     saved.getSensors().stream()
         .filter(sensor -> sensor.getKey().equals(sensorKey))
         .findFirst()

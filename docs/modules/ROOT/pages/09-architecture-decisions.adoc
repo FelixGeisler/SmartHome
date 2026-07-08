@@ -21,3 +21,5 @@ points to its successor through its status line.
 * xref:adr/0009-call-the-claude-api-through-a-thin-client-with-bounded-tool-use.adoc[ADR 9: Call the Claude API through a thin client with bounded tool use]
 * xref:adr/0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10: Stream telemetry through a broker into a search-index read model]
 * xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11: Push live dashboard updates with Server-Sent Events]
+* xref:adr/0012-automate-device-actions-with-a-rules-engine-on-the-event-bus.adoc[ADR 12: Automate device actions with a rules engine on the event bus]
+* xref:adr/0013-embed-sensor-history-in-the-hub-database.adoc[ADR 13: Embed sensor history in the hub database]

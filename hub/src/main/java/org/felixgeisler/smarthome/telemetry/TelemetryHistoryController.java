@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST endpoint serving a sensor's reading history from the telemetry pipeline (issue #43). */
+/** REST endpoint serving a sensor's reading history from the hub's own database. */
 @RestController
 @RequestMapping("/api/telemetry")
 public class TelemetryHistoryController {

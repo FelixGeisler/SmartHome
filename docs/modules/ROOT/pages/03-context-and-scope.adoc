@@ -11,13 +11,11 @@ rectangle "SmartHome Hub" as hub
 node "Smart device" as device
 node "MQTT broker" as broker
 node "Solar inverter" as inverter
-node "Streaming pipeline" as pipeline
 cloud "Claude API" as claude
 client --> hub : REST / JSON
 hub --> device : commands + state
 hub --> broker : subscribes\n(sensor readings)
 hub --> inverter : reads telemetry\n(Modbus)
-hub <--> pipeline : readings out,\nhistory back
 hub --> claude : assistant chat
 @enduml
 ----
@@ -29,11 +27,10 @@ hub --> claude : assistant chat
 | Smart device | State | Commands
 | MQTT broker | Sensor readings (published by sensor nodes) | Nothing
 | Solar inverter | Sensor readings (polled over Modbus) | Nothing
-| Streaming pipeline | Sensor history (from the search index) | Each recorded reading
 | Claude API | Assistant replies, tool calls | Prompts, tool results
 |===
 
 == Scope
 
 Register, list, read, and command devices. Around that core the hub ingests sensor readings,
-streams them out for history, and exposes the same device operations to the AI assistant.
+records their history for charts, and exposes the same device operations to the AI assistant.

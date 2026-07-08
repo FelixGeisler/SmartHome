@@ -3,8 +3,8 @@ package org.felixgeisler.smarthome.device;
 import java.time.Instant;
 
 /**
- * Domain event published when a sensor reading has been recorded, letting outbound integrations
- * (such as telemetry streaming) react without the device service depending on them.
+ * Domain event published when a sensor reading has been recorded, letting listeners such as the
+ * history recorder react without the device service depending on them.
  *
  * @param deviceExternalId the reporting device's external id
  * @param sensorKey the key of the sensor the reading is for

@@ -2,9 +2,10 @@
 <FindBugsFilter>
     <!-- Constructor-injected Spring beans store their collaborators by design; that's dependency
          injection, not exposed mutable state. SpotBugs raises EI_EXPOSE_REP2 whenever a bean stores
-         a constructor-injected concrete service (HueBridgeService, MqttConnection, DeviceService);
-         the classes below are the ones that inject such a service. The check stays active everywhere
-         else (e.g., the response/request DTOs still need defensive copies). -->
+         a constructor-injected collaborator such as a concrete service (HueBridgeService,
+         MqttConnection) or a Spring Data repository; the classes below are the ones it flags. The
+         check stays active everywhere else (e.g., the response/request DTOs still need defensive
+         copies). -->
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Or>
@@ -32,7 +33,9 @@
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomLayoutService"/>
-            <Class name="org.felixgeisler.smarthome.telemetry.TelemetryKafkaPublisher"/>
+            <Class name="org.felixgeisler.smarthome.telemetry.SensorReadingRecorder"/>
+            <Class name="org.felixgeisler.smarthome.telemetry.TelemetryHistoryService"/>
+            <Class name="org.felixgeisler.smarthome.telemetry.TelemetryRetentionJob"/>
             <Class name="org.felixgeisler.smarthome.realtime.DeviceEventStreamController"/>
         </Or>
     </Match>

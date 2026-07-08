@@ -25,9 +25,7 @@ rectangle "SmartHome Hub" {
 }
 
 database "Database" as db
-database "Search index" as idx
 node "Device ecosystems\n(plugs, bridges, broker, inverter)" as world
-node "Streaming pipeline" as pipeline
 cloud "Claude API" as claude
 
 client --> fe
@@ -35,8 +33,7 @@ fe --> device : REST (/api)
 realtime --> fe : live updates (SSE)
 assistant --> claude : chat
 integration --> world : device I/O
-telemetry --> pipeline : publish
-telemetry --> idx : query history
+telemetry --> db : JPA
 automation --> device : run actions
 device --> db : JPA
 automation --> db : JPA
@@ -49,13 +46,13 @@ settings --> db : JPA
 | Block | Responsibility
 | `frontend` | The dashboard: a React SPA (toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, groups them on a room floor plan, and hosts the AI chat. It sees only the REST contract, never the domain model.
 | `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
-| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side. Its parts are its <<wb-device,whitebox>>.
+| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event the history side consumes. Its parts are its <<wb-device,whitebox>>.
 | `capability` | The neutral state and command vocabulary (on/off, brightness as %, color as CIE xy, color temperature in Kelvin) that every adapter speaks, so the core never learns a vendor's model.
 | `room` | Groups devices into rooms (a Home Assistant "area"): a device belongs to zero or one room. Room CRUD lives here; the device core owns the assignment, so a room change rides the same live-update path.
 | `floor` | Groups rooms into building floors (a Home Assistant "floor"): a room belongs to zero or one floor. Floor CRUD lives here; the room side owns the assignment.
 | `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Its parts are its <<wb-integration,whitebox>>.
 | `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, inverter, or assistant key survives a restart.
-| `telemetry` | The sensor-history read side (served over the API from a search index) and the publisher that puts each recorded reading onto the streaming topic. Its parts are its <<wb-telemetry,whitebox>>.
+| `telemetry` | The sensor-history side: it records each reading into the database and serves a sensor's recent history over the API. Its parts are its <<wb-telemetry,whitebox>>.
 | `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
 | `automation` | A rules engine that acts on the hub's behalf: when a trigger fires and its conditions hold, it runs device actions through the same neutral command path the UI uses (ADR 12). It reacts to the same device and reading events the rest of the system already publishes.
 | `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
@@ -156,20 +153,20 @@ skinparam componentStyle rectangle
 
 [device core] as device
 package "telemetry" {
-  [Kafka publisher] as pub
+  [Reading recorder] as rec
   [History service] as hist
   [History API] as histapi
+  [Retention job] as ret
 }
 [frontend] #line.dashed
 [assistant]
-node "Streaming pipeline" as pipeline
-database "Search index" as idx
+database "Database" as db
 
-device --> pub : reading recorded
-pub --> pipeline : publish
-pipeline --> idx : sink
+device --> rec : reading recorded
+rec --> db : append reading
 histapi --> hist : query
-hist --> idx : read history
+hist --> db : read history
+ret --> db : prune old readings
 [frontend] --> histapi : history (/api)
 [assistant] ..> hist : tool-use
 @enduml
@@ -178,7 +175,8 @@ hist --> idx : read history
 [cols="1,3",options="header"]
 |===
 | Part | Responsibility
-| `TelemetryKafkaPublisher` | Listens for reading events and publishes them onto the streaming pipeline.
-| `TelemetryHistoryService` | Reads sensor history back from the search index.
+| `SensorReadingRecorder` | Listens for reading events and appends each numeric reading to the database.
+| `TelemetryHistoryService` | Reads a sensor's recent history back from the database.
 | `TelemetryHistoryController` | Serves that history over the REST API.
+| `TelemetryRetentionJob` | Prunes readings past the retention window to bound the table.
 |===
