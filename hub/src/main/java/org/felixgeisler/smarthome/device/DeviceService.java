@@ -217,7 +217,6 @@ public class DeviceService {
     Map<String, Object> command = Map.of(ON_STATE, desired);
     adapters.get(device.getAdapterType()).sendCommand(device.getExternalId(), command);
     device.putState(ON_STATE, String.valueOf(desired));
-    device.markSeen(clock.instant());
     return saveAndPublish(device);
   }
 
@@ -265,7 +264,6 @@ public class DeviceService {
     }
     dispatch(device, requested);
     persist(device, requested);
-    device.markSeen(clock.instant());
     return saveAndPublish(device);
   }
 

@@ -1,0 +1,17 @@
+= Automations
+
+An automation lets the hub act on its own. Each one is a trigger, optional conditions, and one or
+more actions, built on the *Automations* page.
+
+.The automation builder: a *When* trigger, optional *If* conditions, and *Then* actions.
+image::automations.png[The automation builder]
+
+* *Trigger* (one or more, any of which starts it): a *sensor threshold*, when a reading crosses a
+  value, or a *schedule*, at a time of day on chosen days.
+* *Conditions* (optional, all must hold): a device is in an expected state, so a run can be guarded,
+  for example only when a lamp is already off.
+* *Actions* (one or more, run in order): command a device (power, brightness, or color temperature)
+  or toggle it on or off.
+
+Automations use the same commands the dashboard does, so anything you can control by hand, an
+automation can control for you. Toggle one off to keep it without letting it run.

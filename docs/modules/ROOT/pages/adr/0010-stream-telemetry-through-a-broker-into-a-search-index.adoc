@@ -1,13 +1,28 @@
 = ADR 10: Stream telemetry through a broker into a search-index read model
 
 == Status
-Superseded by xref:0013-embed-sensor-history-in-the-hub-database.adoc[ADR 13].
+Superseded by xref:0014-embed-sensor-history-in-the-hub-database.adoc[ADR 14].
 
 == Context
-Sensor readings arrive continuously (ADR 6), but the device registry keeps only the latest value per sensor (ADR 7): a relational registry is the wrong home for an ever-growing time series, and the hub should not take on storing and querying one itself. The dashboard still needs history to chart, and the readings should stay open to analytics tools without the hub growing an endpoint per question.
+Sensor readings arrive continuously (ADR 6), but the registry keeps only the latest value per sensor (ADR 7). A relational registry is the wrong home for an ever-growing time series, and the hub should not store and query one itself. The dashboard still needs history to chart, and the readings should stay open to analytics tools without the hub growing an endpoint per question.
 
 == Decision
-Every recorded reading is published, keyed by device, onto a telemetry topic on a Kafka-API broker. Publishing is fire-and-forget: a pipeline failure is logged and never fails ingest. The hub runs no consumer of its own: a standard connector sinks the topic into a search index, and the hub's history reads query that index. The broker, connector, index, and its exploration UI run as a separate infrastructure stack beside the hub.
+Every recorded reading is published, keyed by device, onto a telemetry topic on a Kafka-API broker; the hub runs no consumer of its own.
+
+[cols="1,2",options="header"]
+|===
+| Stage | What happens
+| Publish | The hub puts each reading on the topic, fire-and-forget: a pipeline failure is logged and never fails ingest
+| Sink | A standard connector sinks the topic into a search index
+| Read | The hub's history endpoint queries that index
+|===
+
+The broker, connector, index, and its exploration UI run as a separate infrastructure stack beside the hub.
 
 == Consequences
-Ingest and history are decoupled: a pipeline that is down loses history but not live state. The dashboard keeps showing latest values, and charts resume when the stack returns. The topic is the single feed, so anything else that wants readings taps the topic or the index without touching the hub, and moving data is connector configuration rather than hub code. The trade-offs: history requires the infrastructure stack to run, and fire-and-forget means readings published while the broker is unreachable are not replayed. That is accepted for telemetry, where readings recur on a short interval and the registry still holds the latest value.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| Ingest and history are decoupled: a down pipeline loses history but not live state | History requires the infrastructure stack to run
+| The topic is the single feed, so anything else taps it or the index without touching the hub, and moving data is connector configuration, not hub code | Fire-and-forget, so readings published while the broker is unreachable are not replayed (accepted: readings recur and the registry holds the latest)
+|===

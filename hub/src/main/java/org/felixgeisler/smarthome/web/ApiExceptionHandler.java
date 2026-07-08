@@ -16,6 +16,7 @@ import org.felixgeisler.smarthome.integration.hue.HueBridgeException;
 import org.felixgeisler.smarthome.room.RoomAlreadyExistsException;
 import org.felixgeisler.smarthome.room.RoomLayoutException;
 import org.felixgeisler.smarthome.room.RoomNotFoundException;
+import org.felixgeisler.smarthome.security.AuthAlreadyConfiguredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -116,6 +117,12 @@ public class ApiExceptionHandler {
     // Client-actionable: the hub could not reach or use the Homematic CCU (unreachable, not
     // connected, or a failed login).
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+  }
+
+  @ExceptionHandler(AuthAlreadyConfiguredException.class)
+  ProblemDetail handleAuthAlreadyConfigured(AuthAlreadyConfiguredException ex) {
+    // Client-actionable: first-run setup ran but an administrator already exists.
+    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
   }
 
   @ExceptionHandler(AssistantException.class)

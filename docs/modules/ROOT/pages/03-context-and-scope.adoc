@@ -8,14 +8,10 @@
 left to right direction
 actor "API client" as client
 rectangle "SmartHome Hub" as hub
-node "Smart device" as device
-node "MQTT broker" as broker
-node "Solar inverter" as inverter
+node "Devices & gateways" as devices
 cloud "Claude API" as claude
 client --> hub : REST / JSON
-hub --> device : commands + state
-hub --> broker : subscribes\n(sensor readings)
-hub --> inverter : reads telemetry\n(Modbus)
+hub <--> devices : commands out,\nstate + readings in
 hub --> claude : assistant chat
 @enduml
 ----
@@ -24,13 +20,12 @@ hub --> claude : assistant chat
 |===
 | Partner | Sends | Receives
 | API client | Registrations, commands, prompts | Device views, state, assistant replies, problem responses
-| Smart device | State | Commands
-| MQTT broker | Sensor readings (published by sensor nodes) | Nothing
-| Solar inverter | Sensor readings (polled over Modbus) | Nothing
+| Devices & gateways | State and sensor readings | Commands
 | Claude API | Assistant replies, tool calls | Prompts, tool results
 |===
 
 == Scope
 
-Register, list, read, and command devices. Around that core the hub ingests sensor readings,
-records their history for charts, and exposes the same device operations to the AI assistant.
+Register, list, read, and command devices, and organize them into rooms and floors. Around that
+core the hub ingests sensor readings, records their history for charts, runs automations that act on
+those readings and on schedules, and exposes the same device operations to the AI assistant.

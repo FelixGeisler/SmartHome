@@ -9,6 +9,9 @@ A device reaches the hub one of two ways:
   you connect the hub to the bridge once, and it brings in the devices behind it.
 * *Directly*: The device exposes its own network API, so the hub talks to it directly.
 
+.Devices and integrations are set up on the *Configuration* page.
+image::configuration.png[The Configuration page with its device and integration panels]
+
 == Devices behind a bridge
 
 Connect the hub to the bridge once; how its devices appear then depends on what the bridge can do.
@@ -27,6 +30,16 @@ The bridge reports its own lights, so you pick them rather than entering each by
 
 The access key the bridge returns is connection state, never committed to source.
 
+=== A Homematic CCU
+
+The CCU fronts a whole house of Homematic devices, so you connect it once and pick channels.
+
+. Use *Connect a Homematic CCU* and enter its host and your CCU web credentials.
+. Once connected, the hub lists the CCU's channels. Select the ones to add; switches and dimmers
+  arrive with their controls, climate and contact channels as sensors that report readings.
+
+The CCU password is connection state, never committed to source.
+
 === An MQTT broker
 
 A broker can't list what publishes through it, so you declare each sensor node yourself.
@@ -40,6 +53,9 @@ A broker can't list what publishes through it, so you declare each sensor node y
 
 A Shelly Plug is reached straight over HTTP, with no bridge. Use *Add device* → *Shelly Plug* and
 enter its host.
+
+A Solakon inverter is reached over Modbus TCP. Use *Connect a Solakon inverter* and enter its host,
+port, and unit id; its power and energy readings then flow in.
 
 == From the API
 

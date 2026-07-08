@@ -1,4 +1,4 @@
-= ADR 13: Embed sensor history in the hub database
+= ADR 14: Embed sensor history in the hub database
 
 == Status
 Accepted. Supersedes xref:0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10].

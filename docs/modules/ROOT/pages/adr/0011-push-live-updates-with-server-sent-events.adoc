@@ -4,12 +4,23 @@
 Accepted
 
 == Context
-The dashboard has to reflect changes it did not cause: a reading arriving from a sensor node, a device auto-provisioned from telemetry, or a light another client just switched. It used to re-fetch the whole device list on a timer, adding latency up to the poll interval and refetching the whole list for every client on each tick. The hub emits domain events when a device changes or a reading is recorded, so the missing piece is a way to push those to the browser.
+The dashboard must reflect changes it did not cause: a reading from a node, a device auto-provisioned from telemetry, or a light another client switched. It used to re-fetch the whole device list on a timer, adding latency up to the poll interval and refetching everything for every client on each tick. The hub emits domain events on every device change and reading, so the missing piece is pushing them to the browser.
 
 == Decision
-The hub pushes device changes to the dashboard over Server-Sent Events (SSE) rather than WebSocket. A single endpoint streams named events (a device changed, a device was removed) as they happen; the browser subscribes once with the built-in `EventSource` and applies each event to its local state. The push path listens for the device domain events the hub publishes on every mutation, so it stays decoupled from the device service. Commands continue to flow over REST, unchanged.
+The hub pushes device changes to the dashboard over Server-Sent Events: a single endpoint streams named events, the browser subscribes once with the built-in `EventSource`, and commands continue over REST.
 
-WebSocket was considered and rejected: it is a bidirectional, separately negotiated protocol, and its only advantage here would be client-to-server messages over the socket, which this design does not need. SSE runs over ordinary HTTP on the same origin as the API and needs no new dependency or handshake.
+[cols="1,1",options="header"]
+|===
+| SSE (chosen) | WebSocket (rejected)
+| Ordinary HTTP, same origin as the API, no new dependency or handshake | A separately negotiated, bidirectional protocol
+| One-way server push, which is all this needs | Its only edge here is client-to-server messages over the socket, which this design never sends
+|===
 
 == Consequences
-Changes appear as they happen instead of on the next poll, and an idle dashboard makes no repeated requests. Because the stream carries only what changed, the client applies small updates rather than replacing the whole list. SSE is fire-and-forget: an event emitted while a client is briefly disconnected is not redelivered. The client re-syncs with a full fetch when the stream reconnects, and state is corrected by the next event or that re-sync. Server push means the hub holds one open connection per client, bounded by a stream timeout after which the client transparently reconnects. Fan-out runs on its own thread with the payload serialized once per event, so a slow or stalled client can never hold up telemetry ingest or a command request.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| Changes appear as they happen; an idle dashboard makes no repeated requests | Fire-and-forget: an event missed while briefly disconnected is not redelivered
+| The stream carries only what changed, so the client applies small updates, not a full replace | The client re-syncs with a full fetch on reconnect
+| Fan-out runs on its own thread, payload serialized once, so a slow client cannot hold up ingest or commands | The hub holds one open connection per client, bounded by a stream timeout after which the client reconnects
+|===

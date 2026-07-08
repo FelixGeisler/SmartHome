@@ -7,7 +7,19 @@ Accepted
 The dashboard is an SPA and the only client of the REST API. A separate origin or reverse proxy would add CORS and an independent deployment we don't need.
 
 == Decision
-The Maven build compiles the SPA into the jar under classpath:/static. Spring serves it at /, with non-/api routes falling back to index.html. In development, the Vite dev server proxies /api to Spring.
+The Maven build compiles the SPA into the jar under `classpath:/static`; Spring serves it at `/`, with non-`/api` routes falling back to `index.html`.
+
+[cols="1,2",options="header"]
+|===
+| Mode | How the SPA and API are served
+| Production | One jar serves the SPA at `/` and the API under `/api`, same origin
+| Development | The Vite dev server serves the SPA and proxies `/api` to Spring
+|===
 
 == Consequences
-One artifact, no CORS, UI and API are always on one version. Cost: a frontend-only change rebuilds the whole jar, and the build fetches Node on a cold cache (skip with -Dskip.frontend=true).
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| One artifact; UI and API are always on one version | A frontend-only change rebuilds the whole jar
+| Same origin, so no CORS or proxy to configure | A cold build fetches Node (skip with `-Dskip.frontend=true`)
+|===
