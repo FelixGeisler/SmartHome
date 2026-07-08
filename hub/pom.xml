@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.felixgeisler</groupId>
     <artifactId>smarthome</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>SmartHome</name>
     <description>SmartHome</description>
     <url>https://github.com/FelixGeisler/SmartHome</url>
