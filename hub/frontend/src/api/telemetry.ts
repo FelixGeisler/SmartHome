@@ -9,9 +9,8 @@ export interface ReadingPoint {
 }
 
 /**
- * Fetches a sensor's reading history from the streaming store (Elasticsearch, via the hub),
- * oldest first. The series is keyed by the device's external id, which is what the hub publishes
- * onto the telemetry topic.
+ * Fetches a sensor's reading history from the hub, oldest first. The series is keyed by the
+ * device's external id.
  *
  * @param deviceExternalId the device's external id
  * @param sensorKey the sensor's key within its device

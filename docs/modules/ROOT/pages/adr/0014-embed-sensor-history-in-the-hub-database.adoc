@@ -1,0 +1,13 @@
+= ADR 14: Embed sensor history in the hub database
+
+== Status
+Accepted. Supersedes xref:0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10].
+
+== Context
+The dashboard charts a sensor's recent readings. ADR 10 served that history from a search index filled by a separate streaming stack beside the hub: a Kafka-API broker, a sink connector, the index, and an exploration UI. For a self-hosted home hub that ships as a single container, that stack is a large operating burden for a small amount of data. A home has on the order of dozens of sensors reporting every few minutes, and the hub only ever queried the index as a plain per-sensor, time-window lookup, using none of its search or aggregation power.
+
+== Decision
+The hub records each numeric reading into its own database, the one that already holds the device registry, and serves history from there. A listener on the recorded-reading domain event appends the reading in the same transaction that recorded it, and a scheduled job prunes readings past a retention window to bound the table. The history endpoint and its response are unchanged, so the dashboard is untouched. The broker, connector, index, and exploration UI are removed.
+
+== Consequences
+The hub is self-contained: history works in the single container with no extra services, which is the point of the packaged product. The read model is one indexed table, which answers the recent-window chart query directly and keeps the hub to a single datastore. The recorded-reading event remains the seam, so exporting readings to an external time-series or streaming system stays possible as an optional integration that consumes the event, not a re-architecture. The trade-offs: history is bounded by the retention window rather than kept indefinitely, and large-scale aggregation and full-text analytics are no longer available out of the box. Both are acceptable for a home hub, where the alternative is running a multi-service stack most users will not; a power user who wants them adds the export integration.

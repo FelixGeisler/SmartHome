@@ -25,7 +25,8 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Fans device changes out to every connected dashboard over Server-Sent Events (ADR 11). Listening
  * for the device domain events keeps this outbound push decoupled from the device service, the same
- * way telemetry streaming is; a client that has gone away is dropped on the next failed send.
+ * way the history recorder and automations do; a client that has gone away is dropped on the next
+ * failed send.
  *
  * <p>Fan-out runs on its own single broadcast thread, never on the publisher's: a slow or stalled
  * client must not hold up telemetry ingest or a command request. The payload is serialized once per

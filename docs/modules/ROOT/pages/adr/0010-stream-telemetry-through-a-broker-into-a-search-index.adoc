@@ -1,7 +1,7 @@
 = ADR 10: Stream telemetry through a broker into a search-index read model
 
 == Status
-Accepted
+Superseded by xref:0014-embed-sensor-history-in-the-hub-database.adoc[ADR 14].
 
 == Context
 Sensor readings arrive continuously (ADR 6), but the registry keeps only the latest value per sensor (ADR 7). A relational registry is the wrong home for an ever-growing time series, and the hub should not store and query one itself. The dashboard still needs history to chart, and the readings should stay open to analytics tools without the hub growing an endpoint per question.

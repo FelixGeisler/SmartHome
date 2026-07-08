@@ -2,8 +2,8 @@
 
 The hub is a single self-contained Spring Boot JAR, with an embedded database, that serves the
 dashboard SPA and the REST API (xref:adr/0001-serve-the-spa-from-the-spring-boot-jar.adoc[ADR 1]). It
-reaches devices and gateways over the home LAN, streams telemetry to an optional infrastructure stack
-for history, and calls the Claude API for the assistant.
+reaches devices and gateways over the home LAN, records reading history in its own database, and
+calls the Claude API for the assistant.
 
 [plantuml,deployment,svg]
 ----
@@ -18,13 +18,11 @@ node "Host" {
   database "embedded DB" as db
 }
 node "Home LAN\ndevices & gateways" as lan
-node "Streaming stack (Podman)\noptional, for history" as stack
 cloud "Claude API" as claude
 
 spa --> app : HTTP, same origin
 app --> db : JPA
 app <--> lan : LAN protocols\n(HTTP, MQTT, Modbus, JSON-RPC)
-app <--> stack : telemetry out,\nhistory back
 app --> claude : HTTPS (tool-use)
 @enduml
 ----
@@ -34,8 +32,7 @@ app --> claude : HTTPS (tool-use)
 | Node / channel | Role
 | Browser | Loads the SPA from the jar over the same origin, so no CORS
 | `smarthome.jar` (Host) | The whole hub in one process: serves the SPA at `/` and the API under `/api`
-| embedded DB (Host) | The hub's on-disk database on the same host, written over JPA (ADR 7)
+| embedded DB (Host) | The hub's on-disk database on the same host, written over JPA (ADR 7); holds the device registry and sensor reading history
 | Home LAN devices & gateways | Devices and bridges the hub reaches over the LAN: Shelly and Hue over HTTP, sensor nodes over MQTT (via a broker, see the xref:guide::mqtt-sensors.adoc[MQTT sensors guide]), a Solakon inverter over Modbus TCP, and a Homematic CCU over JSON-RPC
-| Streaming stack (Podman) | Optional, for sensor history: Kafka (Redpanda), Kafka Connect, Elasticsearch, and Kibana; the hub publishes readings and reads history back (ADR 10)
 | Claude API | External cloud service the assistant calls over HTTPS for tool-use turns (ADR 9)
 |===

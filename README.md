@@ -5,7 +5,7 @@ A self-hosted smart-home hub: one dashboard for devices from different ecosystem
 [![CI](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml/badge.svg)](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml)
 [![Docs](https://github.com/FelixGeisler/SmartHome/actions/workflows/docs.yml/badge.svg)](https://felixgeisler.github.io/SmartHome/)
 
-SmartHome brings devices from different ecosystems into one web dashboard, running on your own hardware as a single jar. No vendor apps and no required cloud account, so your devices and their data stay on your home network.
+SmartHome brings devices from different ecosystems into one web dashboard, running on your own hardware as a single container. No vendor apps and no required cloud account, so your devices and their data stay on your home network.
 
 ![The SmartHome dashboard: device cards with their controls](docs/images/dashboard.png)
 
@@ -16,7 +16,7 @@ SmartHome brings devices from different ecosystems into one web dashboard, runni
 - **Automations.** Act on sensor thresholds and schedules.
 - **AI assistant.** Query and control your home in plain language, with your own Anthropic key.
 - **Sensor history.** Chart each sensor's readings over time.
-- **Self-hosted and extensible.** One jar on your hardware, and a new ecosystem is one adapter.
+- **Self-hosted and extensible.** One container on your hardware, and a new ecosystem is one adapter.
 
 ![Devices grouped by room on a floor plan](docs/images/rooms.png)
 
@@ -27,6 +27,20 @@ SmartHome brings devices from different ecosystems into one web dashboard, runni
 - **Homematic** devices, through a CCU: switches and dimmers, plus climate and contact sensors.
 - **Solakon** solar inverters: power and energy readings over Modbus.
 - **MQTT sensor nodes**: temperature, humidity, pressure, CO2, and air quality.
+
+## Quick start
+
+The hub ships as a single container image that bundles its own Java runtime, so nothing else has to
+be installed. With Docker or Podman, from the repository root:
+
+```sh
+docker compose up -d
+```
+
+The dashboard and API are then on <http://localhost:8080>, and the image is published for both
+`amd64` and `arm64`, so the same command works on a PC, a home server, or a Raspberry Pi. The
+container restarts on boot, keeping the hub running as an always-on service. Building from source and
+first-time setup are covered in the [user guide](https://felixgeisler.github.io/SmartHome/guide/).
 
 ## Documentation
 

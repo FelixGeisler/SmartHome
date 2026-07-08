@@ -17,7 +17,6 @@ import org.felixgeisler.smarthome.room.RoomAlreadyExistsException;
 import org.felixgeisler.smarthome.room.RoomLayoutException;
 import org.felixgeisler.smarthome.room.RoomNotFoundException;
 import org.felixgeisler.smarthome.security.AuthAlreadyConfiguredException;
-import org.felixgeisler.smarthome.telemetry.TelemetryHistoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -124,16 +123,6 @@ public class ApiExceptionHandler {
   ProblemDetail handleAuthAlreadyConfigured(AuthAlreadyConfiguredException ex) {
     // Client-actionable: first-run setup ran but an administrator already exists.
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-  }
-
-  @ExceptionHandler(TelemetryHistoryException.class)
-  ProblemDetail handleTelemetryHistory(TelemetryHistoryException ex) {
-    // The streaming store (Elasticsearch) is a downstream dependency; surface its unavailability
-    // as a bad gateway, and keep the cause out of the client response.
-    String reason = ex.getMessage();
-    log.warn("Could not read telemetry history: {}", reason);
-    return ProblemDetail.forStatusAndDetail(
-        HttpStatus.BAD_GATEWAY, "Sensor history is currently unavailable.");
   }
 
   @ExceptionHandler(AssistantException.class)

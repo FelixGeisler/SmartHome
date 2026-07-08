@@ -51,20 +51,20 @@ participant "MQTT broker" as B
 participant MqttSensorListener as L
 participant DeviceService as S
 participant DeviceRepository as R
-participant TelemetryKafkaPublisher as P
-participant "Streaming pipeline" as K
+participant SensorReadingRecorder as P
+database "Database" as DB
 
 N -> B : publish home/<device>/<sensor>
 B -> L : deliver message
 L -> S : recordReading(externalId, sensor, value)
 S -> R : save latest value
 S ->> P : SensorReadingRecorded (domain event)
-P -> K : publish, keyed by device
+P -> DB : append reading
 @enduml
 ----
 
-Recording never waits on the pipeline; publishing is fire-and-forget, so a pipeline that is unreachable
-is logged, not fatal to ingest (xref:adr/0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10]).
+The reading and its history row are written in the same transaction, so the history is exactly the
+readings the hub recorded (xref:adr/0014-embed-sensor-history-in-the-hub-database.adoc[ADR 14]).
 The changed device is pushed to any open dashboard
 (xref:adr/0011-push-live-updates-with-server-sent-events.adoc[ADR 11]). Unknown sensor
 keys are dropped; an unknown device is auto-provisioned (xref:adr/0006-mqtt-runtime-integration-and-auto-provisioning.adoc[ADR 6]).

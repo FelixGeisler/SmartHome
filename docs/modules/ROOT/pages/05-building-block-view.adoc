@@ -35,7 +35,7 @@ integration --> world : device I/O
 | `frontend` | The React SPA dashboard: register, control, chart, and group devices, plus the AI chat. It sees only the REST contract, never the domain model.
 | `device` core | The device domain: the neutral model and capabilities (ADR 3), control logic and persistence, and the organizing layers (rooms, floors, dashboard layout). Its parts are its <<wb-device,whitebox>>.
 | `integration` | The `DeviceAdapter` port and the registry that routes to it, one sub-package per ecosystem (ADR 4). Its parts are its <<wb-integration,whitebox>>.
-| `services` | Built on the core: automations (ADR 12), the AI assistant (ADR 9), telemetry history (ADR 10), and live dashboard updates over SSE (ADR 11).
+| `services` | Built on the core: automations (ADR 12), the AI assistant (ADR 9), telemetry history (ADR 14), and live dashboard updates over SSE (ADR 11).
 |===
 
 == Level 2
@@ -125,20 +125,20 @@ skinparam componentStyle rectangle
 
 [device core] as device
 package "telemetry" {
-  [TelemetryKafkaPublisher] as pub
-  [TelemetryHistoryService] as hist
-  [TelemetryHistoryController] as histapi
+  [Reading recorder] as rec
+  [History service] as hist
+  [History API] as histapi
+  [Retention job] as ret
 }
 [frontend] #line.dashed
 [assistant]
-node "Streaming pipeline" as pipeline
-database "Search index" as idx
+database "Database" as db
 
-device --> pub : reading recorded
-pub --> pipeline : publish
-pipeline --> idx : sink
+device --> rec : reading recorded
+rec --> db : append reading
 histapi --> hist : query
-hist --> idx : read history
+hist --> db : read history
+ret --> db : prune old readings
 [frontend] --> histapi : history (/api)
 [assistant] ..> hist : tool-use
 @enduml
@@ -147,7 +147,8 @@ hist --> idx : read history
 [cols="1,3",options="header"]
 |===
 | Part | Responsibility
-| `TelemetryKafkaPublisher` | Listens for reading events and publishes them onto the streaming pipeline.
-| `TelemetryHistoryService` | Reads sensor history back from the search index.
+| `SensorReadingRecorder` | Listens for reading events and appends each numeric reading to the database.
+| `TelemetryHistoryService` | Reads a sensor's recent history back from the database.
 | `TelemetryHistoryController` | Serves that history over the REST API.
+| `TelemetryRetentionJob` | Prunes readings past the retention window to bound the table.
 |===

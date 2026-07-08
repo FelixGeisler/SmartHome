@@ -134,8 +134,8 @@ describe('SensorChart', () => {
     )
     await screen.findByRole('img', { name: 'temp history, 3 readings' })
 
-    // A reconnect bumps the token; the search index still lags, so the refetch returns the same
-    // two stored points. The appended live reading must survive the merge.
+    // A reconnect bumps the token; the refetch returns the same two stored points (a live reading
+    // can arrive after the window is read). The appended live reading must survive the merge.
     rerender(
       <SensorChart
         deviceExternalId="dev-1"
@@ -179,7 +179,7 @@ describe('SensorChart', () => {
     try {
       const fetchMock = vi
         .fn()
-        .mockRejectedValueOnce(new Error('search index unreachable'))
+        .mockRejectedValueOnce(new Error('history unavailable'))
         .mockResolvedValueOnce(jsonResponse(storedPoints))
       vi.stubGlobal('fetch', fetchMock)
 

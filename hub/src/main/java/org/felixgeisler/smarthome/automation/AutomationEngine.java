@@ -25,8 +25,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Runs automations when their triggers fire. A threshold trigger reacts to the sensor-reading
- * domain event, so the engine stays decoupled from the device service the same way telemetry
- * streaming and the live dashboard do; a schedule trigger is evaluated on a once-a-minute tick.
+ * domain event, so the engine stays decoupled from the device service the same way the history
+ * recorder and the live dashboard do; a schedule trigger is evaluated on a once-a-minute tick.
  * Either way it reuses {@link DeviceService} for actions, inheriting its capability validation,
  * adapter routing, and live push.
  *
