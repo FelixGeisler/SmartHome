@@ -2,14 +2,16 @@
 
 == Run the hub
 
-Build the single jar (it bundles the dashboard) and run it:
+The hub ships as a single container image that bundles its own Java runtime, so nothing else has to
+be installed. With Docker or Podman, from the repository root:
 
 [source,bash]
 ----
-cd hub
-./mvnw clean package
-java -jar target/smarthome-*.jar
+docker compose up -d
 ----
+
+The image is published for both `amd64` and `arm64`, so the same command works on a PC, a home
+server, or a Raspberry Pi, and the container restarts on boot to stay running as a service.
 
 Then open the dashboard at http://localhost:8080. On first start it asks you to create the
 administrator account; after that, the login guards the dashboard and the API. Use *Log out* in the
@@ -21,6 +23,18 @@ To reach it from outside, put it behind a reverse proxy that terminates TLS.
 The hub also serves a live, interactive API reference (generated from the code) at
 http://localhost:8080/swagger-ui.html, with the raw OpenAPI document at
 http://localhost:8080/v3/api-docs.
+
+== Build from source
+
+To run against local changes instead of the published image, build the single jar (it bundles the
+dashboard) and run it:
+
+[source,bash]
+----
+cd hub
+./mvnw clean package
+java -jar target/smarthome-*.jar
+----
 
 == Develop with live reload
 
