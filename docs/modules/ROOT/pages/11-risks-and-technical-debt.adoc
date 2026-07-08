@@ -3,5 +3,6 @@
 [cols="1,3",options="header"]
 |===
 | Item | Description
-| Unauthenticated API | Any network client can register and control devices; the API has no authentication or authorization yet.
+| Plaintext LAN transport | The hub speaks plain HTTP and keeps integration secrets at rest in its local database, trusting the home LAN. Reaching it from an untrusted network needs a TLS-terminating reverse proxy in front (xref:adr/0013-guard-the-hub-with-a-session-login.adoc[ADR 13]).
+| Single administrator | One shared account guards the hub; there are no per-user accounts, roles, or audit trail.
 |===

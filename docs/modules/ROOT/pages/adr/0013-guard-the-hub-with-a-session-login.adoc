@@ -1,0 +1,28 @@
+= ADR 13: Guard the hub with a session login for a single administrator
+
+== Status
+Accepted
+
+== Context
+The hub controls a household's devices and holds integration secrets, yet any client on the network could call its API. It runs on a trusted home LAN, is a single-household appliance (one operator, not a directory of users), and must be usable without an account-provisioning step.
+
+== Decision
+The API and dashboard require an authenticated session, established from one administrator account created on first start. Transport stays plain HTTP: on a trusted LAN, TLS adds operational cost without answering the threat that matters, so a deployment needing encryption or remote access fronts the hub with a TLS-terminating reverse proxy.
+
+[cols="1,1",options="header"]
+|===
+| In scope | Out of scope
+| One administrator, created on first start | Per-user accounts, roles, groups
+| Server session over form credentials, CSRF on writes | OAuth, external identity providers
+| Credentials in the settings store (ADR 8), no user table | A users table or migration
+| Plain HTTP on the trusted LAN | Built-in TLS
+|===
+
+== Consequences
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| Casual network access is closed behind one login | One shared account, so no per-operator audit trail
+| No user table and nothing to migrate | Plain HTTP exposes the session to anyone reading LAN traffic, accepted under the trusted-LAN assumption
+| No account-provisioning step to set up | Encrypted or remote access needs a reverse proxy in front
+|===

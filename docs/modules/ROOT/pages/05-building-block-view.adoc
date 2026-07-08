@@ -1,8 +1,8 @@
 = 5. Building Block View
 
 The hub is a single Spring Boot backend built from feature packages, with a bundled React SPA as its browser client.
-The Level 1 diagram shows the outward-facing blocks; the table below lists every block, including internal ones like `capability`, `room`, `floor`, and `web`.
-Level 2 zooms into the three with real internal structure: `device`, `integration`, and `telemetry`.
+Level 1 keeps to the essentials: the `device` core, the `integration` seam that plugs in device ecosystems, and the supporting `services` (automation, assistant, telemetry, realtime) built on the core. The hub's external neighbors are in the xref:03-context-and-scope.adoc[context view].
+Level 2 opens up `device`, `integration`, and `telemetry` for their internal structure.
 
 == Level 1
 
@@ -11,54 +11,31 @@ Level 2 zooms into the three with real internal structure: `device`, `integratio
 @startuml
 skinparam componentStyle rectangle
 
-actor "API client" as client
 [frontend] as fe #line.dashed
 
 rectangle "SmartHome Hub" {
-  [assistant]
-  [device]
-  [integration]
-  [telemetry]
-  [realtime]
-  [automation]
-  [settings]
+  [device core] as device
+  [integration] as integration
+  [services] as services
 }
 
-database "Database" as db
-database "Search index" as idx
-node "Device ecosystems\n(plugs, bridges, broker, inverter)" as world
-node "Streaming pipeline" as pipeline
-cloud "Claude API" as claude
+node "Device ecosystems" as world
 
-client --> fe
-fe --> device : REST (/api)
-realtime --> fe : live updates (SSE)
-assistant --> claude : chat
+fe --> device : REST
+services --> fe : live updates
+device <--> integration
+services --> device
 integration --> world : device I/O
-telemetry --> pipeline : publish
-telemetry --> idx : query history
-automation --> device : run actions
-device --> db : JPA
-automation --> db : JPA
-settings --> db : JPA
 @enduml
 ----
 
-[cols="1,3",options="header"]
+[cols="1,4",options="header"]
 |===
 | Block | Responsibility
-| `frontend` | The dashboard: a React SPA (toolchain under `hub/frontend/`) that registers, lists, and controls devices, charts sensor history, groups them on a room floor plan, and hosts the AI chat. It sees only the REST contract, never the domain model.
-| `web` | Cross-cutting web concerns: maps exceptions to RFC 9457 `ProblemDetail`, serves the SPA, and exposes the OpenAPI document.
-| `device` | Application core: the device model plus register / list / control logic and persistence. It records inbound sensor readings and emits a reading event for the streaming side. Its parts are its <<wb-device,whitebox>>.
-| `capability` | The neutral state and command vocabulary (on/off, brightness as %, color as CIE xy, color temperature in Kelvin) that every adapter speaks, so the core never learns a vendor's model.
-| `room` | Groups devices into rooms (a Home Assistant "area"): a device belongs to zero or one room. Room CRUD lives here; the device core owns the assignment, so a room change rides the same live-update path.
-| `floor` | Groups rooms into building floors (a Home Assistant "floor"): a room belongs to zero or one floor. Floor CRUD lives here; the room side owns the assignment.
-| `integration` | The `DeviceAdapter` port and the registry that routes to it; one sub-package per ecosystem plugs in here. Its parts are its <<wb-integration,whitebox>>.
-| `settings` | Persisted, auto-restored integration connections and keys, so a paired bridge, broker, inverter, or assistant key survives a restart.
-| `telemetry` | The sensor-history read side (served over the API from a search index) and the publisher that puts each recorded reading onto the streaming topic. Its parts are its <<wb-telemetry,whitebox>>.
-| `realtime` | Pushes device changes to the dashboard over Server-Sent Events (ADR 11), listening for the same device events the rest of the system already publishes.
-| `automation` | A rules engine that acts on the hub's behalf: when a trigger fires and its conditions hold, it runs device actions through the same neutral command path the UI uses (ADR 12). It reacts to the same device and reading events the rest of the system already publishes.
-| `assistant` | The AI control surface: it turns natural-language prompts into tool-use calls against the same device and telemetry services the UI uses.
+| `frontend` | The React SPA dashboard: register, control, chart, and group devices, plus the AI chat. It sees only the REST contract, never the domain model.
+| `device` core | The device domain: the neutral model and capabilities (ADR 3), control logic and persistence, and the organizing layers (rooms, floors, dashboard layout). Its parts are its <<wb-device,whitebox>>.
+| `integration` | The `DeviceAdapter` port and the registry that routes to it, one sub-package per ecosystem (ADR 4). Its parts are its <<wb-integration,whitebox>>.
+| `services` | Built on the core: automations (ADR 12), the AI assistant (ADR 9), telemetry history (ADR 10), and live dashboard updates over SSE (ADR 11).
 |===
 
 == Level 2
@@ -75,7 +52,7 @@ package "device" {
   [DeviceController] as ctl
   [DeviceService] as svc
   [DeviceRepository] as repo
-  [Device model] as model
+  [Device (model)] as model
 }
 [capability] as cap
 interface "DeviceAdapter\n(port)" as port
@@ -113,27 +90,19 @@ skinparam componentStyle rectangle
 
 [device core] as device
 package "integration" {
+  [DeviceAdapterRegistry] as registry
   interface "DeviceAdapter\n(port)" as port
-  [registry]
-  [Hue adapter] as hue
-  [Shelly adapter] as shelly
-  [MQTT listener] as mqtt
-  [Solakon poller] as solakon
+  [command adapters] as adapters
+  [telemetry sources] as sources
 }
-node "Command device\n(Shelly / Hue)" as plug
-node "MQTT broker" as broker
-node "Solar inverter" as inverter
+node "Device ecosystems" as world
 
-device --> registry : route command
-registry --> port
-hue ..|> port
-shelly ..|> port
-hue --> plug
-shelly --> plug
-broker --> mqtt : subscribe
-inverter --> solakon : poll (Modbus)
-mqtt --> device : record readings
-solakon --> device : record readings
+device --> registry : command
+registry --> adapters : route by type
+adapters ..|> port
+adapters --> world : vendor API
+world --> sources : readings
+sources --> device : record readings
 @enduml
 ----
 
@@ -142,8 +111,8 @@ solakon --> device : record readings
 | Part | Responsibility
 | `DeviceAdapter` (port) | The neutral outbound port a command device is reached through.
 | `DeviceAdapterRegistry` | Resolves the adapter for a device by its adapter type.
-| Command adapters (`hue`, `shelly`) | Implement the port, translating a neutral command into the vendor's API.
-| Telemetry listeners (`mqtt`, `solakon`) | Implement no command adapter; they feed readings straight into the core: MQTT by subscribing to a broker, Solakon by polling a solar inverter over Modbus.
+| Command adapters (`hue`, `shelly`, `homematic`) | Implement the port, translating a neutral command into the vendor's API.
+| Telemetry sources (`mqtt`, `solakon`, and the `shelly` and `homematic` pollers) | Feed readings straight into the core: MQTT by subscribing to a broker, the others by polling a device or gateway. An ecosystem can do both: Shelly and Homematic command and report.
 |===
 
 [#wb-telemetry]
@@ -156,9 +125,9 @@ skinparam componentStyle rectangle
 
 [device core] as device
 package "telemetry" {
-  [Kafka publisher] as pub
-  [History service] as hist
-  [History API] as histapi
+  [TelemetryKafkaPublisher] as pub
+  [TelemetryHistoryService] as hist
+  [TelemetryHistoryController] as histapi
 }
 [frontend] #line.dashed
 [assistant]

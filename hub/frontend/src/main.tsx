@@ -5,6 +5,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './index.css'
 import App from './App.tsx'
+import { AuthGate } from './components/AuthGate.tsx'
 
 // BrowserRouter gives clean URLs (/dashboard, /configuration). In production Spring forwards
 // unmatched non-API routes to index.html (see SpaResourceConfig) so deep links and reloads
@@ -12,7 +13,9 @@ import App from './App.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <AuthGate>
+        <App />
+      </AuthGate>
     </BrowserRouter>
   </StrictMode>,
 )

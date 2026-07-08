@@ -7,7 +7,21 @@ Accepted
 Ecosystems differ in direction (some take commands, some only report) and topology (some per device, some behind a bridge). The core must absorb a new one without reshaping.
 
 == Decision
-Each ecosystem lives in its own integration package. Outbound commands go through a device-adapter port found via a registry. Inbound updates skip that port and write to the device directly but still pass through the contract, so they're validated. Inbound covers sensor readings and a controllable device reporting its own state changes (a light switched from the vendor app). A connector and an adapter of one integration share an id, so the registry can confirm at startup that every command path has a registered adapter.
+Each ecosystem lives in its own integration package, and both directions pass through the neutral contract, so the core absorbs a new ecosystem without reshaping.
+
+[cols="1,2,1",options="header"]
+|===
+| Direction | Path | Example
+| Outbound (commands) | Through the device-adapter port, resolved via a registry | Toggle a plug
+| Inbound (updates) | Straight to the device, skipping the port but still validated by the contract | A sensor reading, or a light switched from the vendor app
+|===
+
+A connector and its adapter share an id, so the registry confirms at startup that every command path has a registered adapter.
 
 == Consequences
-A new ecosystem plugs into the port or the inbound path without touching the core. Unifying the inbound and outbound directions is deferred until each has more than one example.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| A new ecosystem plugs into the port or the inbound path without touching the core | Inbound and outbound stay two paths; unifying them is deferred until each has more than one example
+| A startup check catches a command device whose adapter is missing | Inbound writes bypass the port, so they rely on the contract alone for validation
+|===

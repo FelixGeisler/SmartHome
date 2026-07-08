@@ -4,10 +4,19 @@
 Accepted
 
 == Context
-The hub has an AI assistant that answers questions about the home and acts on it from natural language. Anthropic ships SDKs, and LLM frameworks would wrap the Messages API, its tool-use protocol, and conversation handling behind their own abstractions. The assistant's needs are small: send a conversation, offer a fixed set of tools, execute the calls the model makes, and return the answer. Its API key cannot live in static config; like every other integration connection it is entered at runtime and persisted (ADR 5, ADR 8).
+The hub's AI assistant answers questions about the home and acts on it from natural language. Anthropic ships SDKs, and LLM frameworks would wrap the Messages API behind their own abstractions, but the assistant's needs are small: send a conversation, offer a fixed set of tools, run the calls the model makes, return the answer. Its API key is entered at runtime and persisted (ADR 5, ADR 8).
 
 == Decision
-The assistant calls the Claude API through the hub's own thin HTTP client rather than an SDK or LLM framework. The tools it offers are a fixed, hub-defined set mapped directly onto the same services the REST API uses, so the assistant can do exactly what any API client can do, nothing more. The tool-use loop is bounded: tool results are fed back to the model for at most a configured number of rounds, after which the request fails rather than loops. The key is runtime-configured and persisted in the settings store (ADR 8).
+The assistant calls the Claude API through the hub's own thin HTTP client, not an SDK or framework.
+
+* Tools are a fixed, hub-defined set mapped onto the same services the REST API uses, so the assistant can do exactly what an API client can, nothing more.
+* The tool-use loop is bounded: results feed back for at most a configured number of rounds, then the request fails rather than loops.
+* The key is runtime-configured and persisted in the settings store (ADR 8).
 
 == Consequences
-No SDK or framework dependency to track: the hub owns the one endpoint it calls, and an API change lands in one client class. Routing every tool through the existing service layer means the assistant inherits the domain's validation and capability gating and can never bypass them. The bounded loop fails a runaway conversation with a clear error rather than looping without limit. The trade-off: a protocol feature arrives only when the hub implements it, accepted while the assistant needs so little of the protocol.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| No SDK or framework dependency; an API change lands in one client class | The hub tracks the Messages API itself, so a protocol feature arrives only when it implements it
+| Every tool routes through the service layer, inheriting domain validation and capability gating, and a bounded loop fails a runaway conversation cleanly | Accepted while the assistant needs so little of the protocol
+|===

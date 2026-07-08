@@ -4,10 +4,21 @@
 Accepted
 
 == Context
-Integrations are configured at runtime rather than from static config (ADR 5): a Hue bridge is paired, an MQTT broker is pointed at, an assistant key is entered. ADR 6 and ADR 7 deferred persisting these credentials as session state. In practice that is the wrong behavior for a hub: a bridge paired once, or a key entered once, should not have to be re-established on every restart. These values are also a poor fit for the relational registry; they are a handful of singular settings, not rows in the device model.
+Integrations are configured at runtime (ADR 5): a Hue bridge is paired, an MQTT broker pointed at, an assistant key entered. ADR 6 and ADR 7 deferred persisting these credentials, but re-establishing them on every restart is the wrong behavior for a hub. They are also a poor fit for the relational registry: a handful of singular settings, not rows in the device model.
 
 == Decision
-Integration connection settings (the paired Hue bridge host and application key, the MQTT broker connection, and the assistant API key) are persisted in a dedicated key-value settings store, a `hub_setting` table owned by a Flyway migration and kept separate from the device registry (ADR 7). On startup the hub reads each setting back and re-establishes the connection, so the paired bridge, broker, and key survive a restart. The stored secrets are held at rest in the same local database; they are never logged and never returned in API responses.
+Integration connection settings are persisted in a dedicated key-value settings store, a `hub_setting` table separate from the device registry (ADR 7).
+
+* On startup the hub reads each setting back and re-establishes the connection.
+* Persisting a new kind of connection is a new key, not a schema change.
+* Secrets are held at rest in the same local database, never logged, never returned by the API.
+
+Persisted settings include the Hue bridge host and key, the MQTT broker, the Solakon and Homematic connections, the assistant API key, and the administrator credentials (ADR 13).
 
 == Consequences
-A configured hub comes back as it was left: no re-pairing, no re-entering keys. Because a setting is a simple key-value entry rather than part of the relational model, persisting a new kind of connection is a new key, not a schema change. The trade-off is secrets at rest in the local store; this is accepted because the store sits on the same trusted, single-host machine as the hub, and it is the asset the security policy calls out to protect. A networked or multi-tenant deployment would need encryption at rest and stricter handling of those credentials.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| A configured hub comes back as it was left: no re-pairing, no re-entering keys | Secrets sit at rest in the local store (accepted: the same trusted single-host machine as the hub)
+| A new kind of connection is a new key, not a schema change | A networked or multi-tenant deployment would need encryption at rest and stricter handling
+|===

@@ -11,7 +11,12 @@ cd hub
 java -jar target/smarthome-*.jar
 ----
 
-Then open the dashboard at http://localhost:8080.
+Then open the dashboard at http://localhost:8080. On first start it asks you to create the
+administrator account; after that, the login guards the dashboard and the API. Use *Log out* in the
+header to end the session.
+
+The hub is built for a trusted home LAN and speaks plain HTTP, so do not expose it to the internet.
+To reach it from outside, put it behind a reverse proxy that terminates TLS.
 
 The hub also serves a live, interactive API reference (generated from the code) at
 http://localhost:8080/swagger-ui.html, with the raw OpenAPI document at

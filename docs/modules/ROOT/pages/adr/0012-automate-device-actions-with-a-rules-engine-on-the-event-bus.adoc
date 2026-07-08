@@ -4,16 +4,50 @@
 Accepted
 
 == Context
-The hub should act on its own: when a sensor crosses a threshold, when a device changes, or on a schedule, it should run device commands without a person in the loop. This is the Home Assistant and Matter shape of an automation, a rule of the form when a trigger fires, if some conditions hold, then run actions in order. The hub already publishes domain events on every device change and every recorded reading, and already routes neutral commands to devices through a capability-checked service, so an automation engine mostly has to react to those events and drive that service. It must not become a bottleneck: telemetry ingest and command handling run on hot paths, and a device an action talks to may be slow or unreachable.
+The hub should act on its own: when a sensor crosses a threshold or on a schedule, it runs device commands with no person in the loop. This is the Home Assistant and Matter shape of an automation: when a trigger fires, if conditions hold, then run actions in order. The hub already publishes a domain event on every reading and device change, and already routes neutral commands through a capability-checked service, so an engine mostly reacts to those events and drives that service. It must not become a bottleneck: telemetry ingest and command handling are hot paths, and a device an action targets may be slow or unreachable.
+
+[cols="1,2",options="header"]
+|===
+| Rejected alternative | Why
+| An opaque rule document | The engine has to query and index rules and join them to devices
+| A separate message broker | The in-process event publisher already carries the events an automation reacts to
+|===
 
 == Decision
-Automations are first-class, relationally persisted rules, evaluated by an engine that listens to the domain events the hub already emits and runs actions through the existing device service.
+Automations are relationally persisted rules, evaluated by an engine that listens to the events the hub already emits and runs actions through the existing device service. New trigger, condition, and action kinds plug in behind small handler registries, the same ports-and-adapters seam the integrations use.
 
-A rule is an aggregate of ordered triggers, conditions, and actions, each a typed row with a kind discriminator, stored in its own table rather than as an opaque document, because the engine queries rules and they reference the device domain. New trigger, condition, and action kinds plug in behind small handler registries, the same ports-and-adapters seam the device integrations use, so the set of kinds grows without touching the engine.
+[plantuml,automation-flow,svg]
+----
+@startuml
+left to right direction
+skinparam componentStyle rectangle
+[reading + device\nevents] as ev
+[Automation engine] as eng
+rectangle "Rule" {
+  [Trigger\n(edge-triggered)] as t
+  [Conditions] as c
+  [Actions] as a
+}
+[Device service\n(neutral command path)] as svc
+node "Devices" as dev
 
-The engine reacts to the existing reading and device events rather than introducing a new bus, and it runs actions by calling the neutral command path on the device service, inheriting that path's capability validation, adapter routing, and live push for free. Two properties keep it off the hot paths. It edge-triggers: a threshold rule fires on the reading that crosses the boundary, not on every later reading that stays past it, tracked by a small in-memory record of each trigger's last result. And actions run on a dedicated bounded worker thread, never on the publisher's, so a slow or unreachable device cannot hold up telemetry ingest, mirroring how live updates are fanned out.
+ev --> eng : react
+eng --> t : on event / schedule
+t --> c : fired
+c --> a : all hold
+a --> svc : run in order
+svc --> dev : command
+note bottom of eng : actions run on a bounded\nworker thread, off the publisher
+@enduml
+----
 
-A document blob was rejected because the engine has to query and index rules and join them to devices; a separate message broker was rejected because the in-process event publisher already carries exactly the events an automation reacts to.
+The engine edge-triggers, firing on the reading that crosses the boundary rather than every reading that stays past it, and runs actions on a dedicated worker thread so a slow device cannot hold up ingest.
 
 == Consequences
-The hub acts autonomously, and an automation reuses the device contract end to end, so an action can do anything a user could do from the UI and its result is pushed live like any other change. Adding a capability, a new trigger source or a new kind of action, is a handler plus a row type, not an engine rewrite. Because rules reference devices by id without a database foreign key, a rule outlives the devices it names, and a stale reference is handled at run time rather than cascading. The edge-tracking state lives in memory, so it is rebuilt after a restart and a rule re-establishes its baseline on the next reading; the engine forgets a rule's state when it is disabled, replaced, or removed, so a stale latch cannot suppress a later crossing. Running actions off the publisher thread means an automation's effects are eventually consistent with the reading that triggered them rather than synchronous with it, the same trade the live-update fan-out already makes.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| An action can do anything a user can from the UI, pushed live like any other change | Effects are eventually consistent with the triggering reading, not synchronous with it
+| A new trigger, condition, or action kind is a handler plus a row type, not an engine rewrite | The edge-latch state lives in memory: it rebuilds after a restart and re-baselines on the next reading
+| Rules reference devices by id without a foreign key, so a rule outlives a device it names | A stale device reference is handled at run time rather than prevented
+|===

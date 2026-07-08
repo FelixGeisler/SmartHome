@@ -4,10 +4,21 @@
 Accepted
 
 == Context
-Devices vary: some switch, some dim or change color, some only report readings. Deriving behavior from a fixed device category can't tell two same-category devices with different abilities apart and makes every new behavior a schema change.
+Devices vary: some switch, some dim or change color, some only report readings. Deriving behavior from a fixed device category can't tell two same-category devices with different abilities apart, and makes every new behavior a schema change.
 
 == Decision
-A device declares a set of capabilities (on/off, brightness, color, color temperature), each a typed contract that owns the neutral attributes it reports and the commands it accepts. Capabilities compose and are not inherited from a category. The set is fixed when the device is registered or provisioned, and stored on the device. A command using a capability the device doesn't have is rejected. Category is used only for grouping and icons, never to gate commands. Sensor readings are separate measurement channels, not capabilities.
+A device declares a set of capabilities, each a typed contract that owns the neutral attributes it reports and the commands it accepts.
+
+* Capabilities *compose*; they are not inherited from a category.
+* The set is fixed at registration or provisioning and stored on the device.
+* A command using a capability the device lacks is rejected.
+* Category drives grouping and icons only, never the command gate.
+* Sensor readings are separate measurement channels, not capabilities.
 
 == Consequences
-Adding a device kind means listing its capabilities. Adding a behavior means one capability plus its contract. The capability set is the source of truth for the command gate, adapters, and dashboard controls. State is stored as strings; the contract enforces its shape.
+[cols="1,1",options="header"]
+|===
+| Gain | Cost
+| A new device kind is a list of capabilities; a new behavior is one capability plus its contract | State is stored as strings, so the contract, not the column type, enforces its shape
+| The capability set is the single source of truth for the command gate, adapters, and dashboard controls | The set of capabilities is fixed in code, so adding one is a code change
+|===

@@ -239,6 +239,23 @@ class DeviceServiceTest {
     verify(devices, never()).save(any());
   }
 
+  @DisplayName("toggle() does not mark an unreachable device reachable")
+  @Test
+  void toggle_doesNotMarkAnUnreachableDeviceReachable() {
+    Device device =
+        new Device(
+            "light-1", "Strip", DeviceType.HUE_LIGHT, "hue", Set.of(Capability.SWITCHABLE));
+    device.putState("on", "false");
+    device.setReachable(false);
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.toggle(1L);
+
+    assertFalse(device.isReachable());
+  }
+
   @DisplayName("register() saves a new device when none exists yet")
   @Test
   void register_savesNewDeviceWhenAbsent() {
@@ -692,6 +709,20 @@ class DeviceServiceTest {
     verify(adapter).sendCommand(eq("light-1"), commandCaptor.capture());
     assertEquals(false, commandCaptor.getValue().get("on"));
     assertEquals("false", result.getState().get("on"));
+  }
+
+  @DisplayName("applyCommand() does not mark an unreachable device reachable")
+  @Test
+  void applyCommand_doesNotMarkAnUnreachableDeviceReachable() {
+    Device device = richLight();
+    device.setReachable(false);
+    when(devices.findById(1L)).thenReturn(Optional.of(device));
+    when(adapters.get("hue")).thenReturn(adapter);
+    when(devices.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.applyCommand(1L, new CommandRequest(true, null, null, null));
+
+    assertFalse(device.isReachable());
   }
 
   @DisplayName("applyCommand() rejects color and color temperature in one command")
