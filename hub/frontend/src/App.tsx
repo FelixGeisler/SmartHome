@@ -24,33 +24,27 @@ import { DashboardPage, type LoadState } from './pages/DashboardPage'
 import { RoomsFloorPlan } from './pages/RoomsFloorPlan'
 
 /**
- * Application shell: loads the devices and keeps them live over the event stream, owns the shared
- * device state, and routes between the Dashboard (control) and Configuration (setup) views.
+ * Application shell: owns the shared device state and keeps it live over the event stream.
  *
- * <p>Synchronization model: pushed events are applied as they arrive, and every stream (re)connect
- * triggers a full list re-sync. Because a fetched snapshot can predate events that arrive while the
- * fetch is in flight, those events are replayed on top of the fetched list instead of being
- * clobbered by it.
+ * <p>A fetched snapshot can predate events that arrive while its fetch is in flight, so those
+ * events are replayed on top of the fetched list instead of being clobbered by it.
  */
 function App() {
   const [devices, setDevices] = useState<Device[]>([])
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [error, setError] = useState<string | null>(null)
   const [busyIds, setBusyIds] = useState<ReadonlySet<number>>(new Set())
-  // Bumped on every stream (re)connect; charts refetch their history window when it changes,
-  // since readings that arrived during a stream gap were never pushed.
+  // Bumped on every stream (re)connect so charts refetch history missed during a stream gap.
   const [syncToken, setSyncToken] = useState(0)
 
-  // The saved dashboard arrangement, or null until one has ever been saved (a first-run dashboard
-  // shows every device; a saved-but-empty layout stays empty). `draft` holds the unsaved edit copy
-  // while `editing`; the committed `layout` is what other views and a reload see.
+  // null until a layout has ever been saved: a first-run dashboard shows every device, a
+  // saved-but-empty one stays empty. `draft` is the unsaved edit copy; `layout` is committed.
   const [layout, setLayout] = useState<CardLayout[] | null>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<CardLayout[]>([])
   const [saving, setSaving] = useState(false)
 
-  // Re-sync bookkeeping: the newest sync wins (seq), and events that arrive while its fetch is in
-  // flight are collected so they can be replayed over the fetched snapshot.
+  // The newest sync wins (seq); events arriving during its in-flight fetch are collected for replay.
   const syncSeq = useRef(0)
   const pendingEvents = useRef<StreamEvent[]>([])
   const collecting = useRef(false)
@@ -85,14 +79,13 @@ function App() {
       })
   }, [])
 
-  // Initial load. The stream below also syncs on its first open; the seq guard makes the
-  // overlap harmless, and this direct call covers a broken event stream.
+  // Initial load; also covers a broken event stream. The seq guard makes the overlap with the
+  // stream's own first-open sync harmless.
   useEffect(() => {
     sync()
   }, [sync])
 
-  // Load the saved dashboard arrangement once. A missing or unreadable layout just leaves the
-  // default device order; the layout is advisory and reconciled against the live device list.
+  // The layout is advisory: a missing or unreadable one just leaves the default device order.
   useEffect(() => {
     getLayout()
       .then((saved) => setLayout(saved ? saved.cards : null))
@@ -101,8 +94,26 @@ function App() {
       })
   }, [])
 
-  // Stay live over the event stream instead of polling. Events also apply during an in-flight
-  // sync (recorded for replay), so the UI reacts immediately without racing the fetch.
+  // Save an auto-placement, debounced so a batch of adds coalesces into one write.
+  const layoutDirty = useRef(false)
+  const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!layoutDirty.current || layout === null) {
+      return
+    }
+    layoutDirty.current = false
+    const cards = layout
+    if (layoutSaveTimer.current !== null) {
+      clearTimeout(layoutSaveTimer.current)
+    }
+    layoutSaveTimer.current = setTimeout(() => {
+      void saveLayout({ cards }).catch(() => {
+        // A failed save just leaves the device in the add-card picker; nothing else is lost.
+      })
+    }, 250)
+  }, [layout])
+
+  // Events also apply during an in-flight sync (recorded for replay), so the UI never races the fetch.
   useEffect(() => {
     const record = (event: StreamEvent) => {
       if (collecting.current) {
@@ -163,33 +174,37 @@ function App() {
   function handleRegistered(device: Device) {
     // The stream also pushes the new device; upsert so the two paths never double-add it.
     setDevices((current) => upsert(current, device))
+    // Auto-place a hand-added device onto an arranged dashboard; stream-provisioned ones don't.
+    setLayout((current) => {
+      if (current === null || current.some((card) => card.deviceId === device.id)) {
+        return current
+      }
+      layoutDirty.current = true
+      return addCard(current, device)
+    })
   }
 
   function handleDeviceUpdated(device: Device) {
-    // A room assignment or a rename returns the updated device; fold it in the way command
-    // responses are, so the change shows immediately without waiting for the stream to echo it.
+    // Fold in the updated device now, so a rename or room change shows without waiting for the
+    // stream to echo it.
     setDevices((current) => patch(current, device))
   }
 
   function handleDeviceDeleted(id: number) {
-    // The stream also pushes a device-removed event; drop it now so the change is immediate, and
-    // the pushed event then finds nothing left to remove.
+    // Drop it now so the change is immediate; the stream's later removed event finds nothing to remove.
     setDevices((current) => remove(current, id))
   }
 
-  // The cards on the dashboard: the curated draft while editing, else the committed layout (with a
-  // tidy every-device default before the dashboard has ever been arranged). Live stream events (a
-  // device added or removed elsewhere) flow through, so the grid stays consistent.
+  // Curated draft while editing, else the committed layout (a tidy every-device default before it
+  // has ever been arranged). Live stream events flow through so the grid stays consistent.
   const cards = useMemo(
     () => (editing ? curate(devices, draft) : displayCards(devices, layout)),
     [devices, editing, draft, layout],
   )
   const gridLayout = useMemo(() => toGridLayout(cards), [cards])
-  // The devices the add-card picker can offer: those not already on the (draft) dashboard.
   const addableDevices = useMemo(() => available(devices, draft), [devices, draft])
 
   function enterEdit() {
-    // Seed the draft from what is on screen, so arranging starts from the current cards.
     setDraft(displayCards(devices, layout))
     setEditing(true)
   }
@@ -212,8 +227,7 @@ function App() {
     }
   }
 
-  // Each drag or resize hands back the whole new grid layout; keep the draft in step with it,
-  // carrying over each card's hidden-chart selection (the grid layout holds only geometry).
+  // The grid layout holds only geometry, so carry over each card's hidden-chart selection.
   function handleLayoutChange(next: Layout) {
     setDraft((current) => fromGridLayout(next, current))
   }
@@ -334,7 +348,6 @@ function iconNavClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'app__icon-link app__icon-link--active' : 'app__icon-link'
 }
 
-/** The gear that opens Configuration; a settings area reached from the corner, not the main nav. */
 function GearIcon() {
   return (
     <svg
@@ -354,7 +367,6 @@ function GearIcon() {
   )
 }
 
-/** Signs the single administrator out; an icon in the corner, like the Configuration gear. */
 function LogoutIcon() {
   return (
     <svg
@@ -375,10 +387,8 @@ function LogoutIcon() {
   )
 }
 
-/** One pushed stream event, kept for replay when it arrives during an in-flight sync. */
 type StreamEvent = { kind: 'changed'; device: Device } | { kind: 'removed'; id: number }
 
-/** Replaces a device by id, or appends it when unknown. Pushed snapshots are always current. */
 function upsert(current: Device[], device: Device): Device[] {
   return current.some((existing) => existing.id === device.id)
     ? current.map((existing) => (existing.id === device.id ? device : existing))
@@ -386,15 +396,13 @@ function upsert(current: Device[], device: Device): Device[] {
 }
 
 /**
- * Replaces a device by id only when it is still listed. Command responses go through here rather
- * than upsert: a response says nothing about existence, so it must not resurrect a device another
- * client deleted while the command was in flight.
+ * Replaces a device by id only when it is still listed, so a command response never resurrects a
+ * device another client deleted while the command was in flight.
  */
 function patch(current: Device[], device: Device): Device[] {
   return current.map((existing) => (existing.id === device.id ? device : existing))
 }
 
-/** Drops a device by id; shared by local deletion and the pushed device-removed event. */
 function remove(current: Device[], id: number): Device[] {
   return current.filter((existing) => existing.id !== id)
 }

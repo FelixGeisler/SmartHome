@@ -8,6 +8,7 @@ import { listDevices, registerDevice, sendCommand, toggleDevice } from './api/de
 import { listAutomations } from './api/automations'
 import { type DeviceStreamHandlers, openDeviceStream } from './api/events'
 import { listFloors } from './api/floors'
+import { getLayout, saveLayout } from './api/dashboard'
 import { getRoomsLayout, listRooms } from './api/rooms'
 import App from './App'
 
@@ -20,10 +21,15 @@ vi.mock('./api/devices', async (importOriginal) => ({
   sendCommand: vi.fn(),
 }))
 
-// The live stream is opened by App; mock it so tests can drive events directly. A test that needs
-// to push events overrides the implementation to capture the handlers.
+// Mock the live stream so tests can drive events directly.
 vi.mock('./api/events', () => ({
   openDeviceStream: vi.fn(() => () => {}),
+}))
+
+// Mock both so a test can arrange the dashboard and assert what gets persisted.
+vi.mock('./api/dashboard', () => ({
+  getLayout: vi.fn(),
+  saveLayout: vi.fn(),
 }))
 
 vi.mock('./api/rooms', () => ({
@@ -56,15 +62,13 @@ vi.mock('./api/automations', () => ({
   deleteAutomation: vi.fn(),
 }))
 
-// Render react-grid-layout as a plain container so the dashboard's cards render under jsdom without
-// RGL's DOM measurement and drag internals (which don't run there).
+// Render react-grid-layout as a plain container: RGL's DOM measurement and drag internals don't run under jsdom.
 vi.mock('react-grid-layout', () => ({
   __esModule: true,
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   useContainerWidth: () => ({ width: 1200, containerRef: { current: null }, mounted: true }),
 }))
 
-/** Renders App and returns the handlers it registered with the (mocked) event stream. */
 function captureStreamHandlers(): () => DeviceStreamHandlers {
   let handlers: DeviceStreamHandlers | undefined
   vi.mocked(openDeviceStream).mockImplementation((registered) => {
@@ -103,6 +107,8 @@ function renderApp() {
 describe('App', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(getLayout).mockResolvedValue(null)
+    vi.mocked(saveLayout).mockResolvedValue({ cards: [] })
   })
 
   it('shows the dashboard with the loaded devices by default', async () => {
@@ -181,6 +187,45 @@ describe('App', () => {
     await user.click(screen.getByRole('link', { name: 'Dashboard' }))
 
     expect(await screen.findByText('Heater')).toBeInTheDocument()
+  })
+
+  it('auto-places a device you add onto an already-arranged dashboard', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    vi.mocked(getLayout).mockResolvedValue({ cards: [{ deviceId: 1, x: 0, y: 0, w: 4, h: 7 }] })
+    vi.mocked(registerDevice).mockResolvedValue(heater)
+    const user = userEvent.setup()
+    renderApp()
+    await screen.findByText('Desk Lamp')
+    expect(screen.queryByText('Heater')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('link', { name: 'Configuration' }))
+    await user.type(screen.getByLabelText('Name'), 'Heater')
+    await user.type(screen.getByLabelText('Host'), '192.168.1.52')
+    await user.click(screen.getByRole('button', { name: 'Add device' }))
+    await user.click(screen.getByRole('link', { name: 'Dashboard' }))
+
+    expect(await screen.findByText('Heater')).toBeInTheDocument()
+    await waitFor(() => expect(saveLayout).toHaveBeenCalled())
+    expect(saveLayout).toHaveBeenLastCalledWith({
+      cards: expect.arrayContaining([expect.objectContaining({ deviceId: heater.id })]),
+    })
+  })
+
+  it('leaves an auto-provisioned device off an already-arranged dashboard', async () => {
+    vi.mocked(listDevices).mockResolvedValue([lamp])
+    vi.mocked(getLayout).mockResolvedValue({ cards: [{ deviceId: 1, x: 0, y: 0, w: 4, h: 7 }] })
+    const handlers = captureStreamHandlers()
+    renderApp()
+    await screen.findByText('Desk Lamp')
+
+    // A sensor node auto-provisions and arrives over the stream, not through registration.
+    const node: Device = { ...heater, id: 3, name: 'Living Room Node' }
+    act(() => {
+      handlers().onDeviceChanged(node)
+    })
+
+    expect(screen.queryByText('Living Room Node')).not.toBeInTheDocument()
+    expect(saveLayout).not.toHaveBeenCalled()
   })
 
   it('surfaces a load error with a Retry that reloads', async () => {
