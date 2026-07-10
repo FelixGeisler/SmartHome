@@ -31,15 +31,9 @@ import org.hibernate.annotations.DynamicUpdate;
 /**
  * A smart-home device known to the hub.
  *
- * <p>A command device is reached through the {@code DeviceAdapter} named by
- * {@link #getAdapterType()}, using {@link #getExternalId()} as its address within that integration.
- * A sensing device has no command adapter; it owns {@link #getSensors() sensors} whose readings
- * arrive as inbound telemetry.
- *
- * <p>{@code @DynamicUpdate} so an update writes only the columns that actually changed. A device is
- * written from several paths at once (a user toggle, the reachability sweep, and the Shelly meter
- * poll recording readings), so a full-row update would let one path overwrite a field, such as the
- * on/off state or the name, that another path had just changed.
+ * <p>{@code @DynamicUpdate} writes only changed columns: a device is written from several paths at
+ * once (user toggle, reachability sweep, meter-poll readings), so a full-row update would let one
+ * path clobber a field another had just changed.
  */
 @Entity
 @Table(name = "devices")
@@ -66,36 +60,30 @@ public class Device {
   @Enumerated(EnumType.STRING)
   private Set<Capability> capabilities = EnumSet.noneOf(Capability.class);
 
-  // Null for sensing devices: their integration is inbound telemetry, not a command adapter.
+  // Null for sensing devices, which have no command adapter.
   @Column
   private String adapterType;
 
-  // The last known runtime state as key/value entries (e.g., on="true"), interpreted per
-  // capability. Eagerly fetched: the map is small and open-in-view is off, so a lazy
-  // collection would not survive past the service layer.
+  // Eagerly fetched: open-in-view is off, so a lazy collection would not survive the service layer.
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "device_state", joinColumns = @JoinColumn(name = "device_id"))
   @MapKeyColumn(name = "state_key")
   @Column(name = "state_value", nullable = false)
   private Map<String, String> state = new HashMap<>();
 
-  // Declared sensors and their latest readings; empty for non-sensing devices. Eagerly fetched
-  // for the same reason as the state map: the response view is built after the session closes.
+  // Eagerly fetched: the response view is built after the session closes.
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
   @JoinColumn(name = "device_id", nullable = false)
   private List<Sensor> sensors = new ArrayList<>();
 
-  // The room this device belongs to, or null when unassigned. Eagerly fetched like the other
-  // associations because the response view is built after the session closes.
+  // Eagerly fetched: the response view is built after the session closes.
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "room_id")
   private Room room;
 
-  // Whether the hub last found the device reachable; false surfaces it as offline in the UI.
   @Column(nullable = false)
   private boolean reachable = true;
 
-  // When the hub last heard from the device through a reading, or null.
   @Column(name = "last_seen_at")
   private Instant lastSeenAt;
 
@@ -105,26 +93,24 @@ public class Device {
   }
 
   /**
-   * Creates a device whose capabilities are the defaults declared by its {@link DeviceType}.
+   * Creates a device with its {@link DeviceType} default capabilities.
    *
    * @param externalId the device's address within its integration
    * @param name human-readable device name
    * @param type the device category
-   * @param adapterType identifier of the command adapter that handles this device, or null for a
-   *     sensing device with no command adapter
+   * @param adapterType command adapter id, or null for a sensing device
    */
   public Device(String externalId, String name, DeviceType type, String adapterType) {
     this(externalId, name, type, adapterType, type.getCapabilities());
   }
 
   /**
-   * Creates a device with an explicit capability set, as detected at discovery.
+   * Creates a device with an explicit capability set.
    *
    * @param externalId the device's address within its integration
    * @param name human-readable device name
    * @param type the device category
-   * @param adapterType identifier of the command adapter that handles this device, or null for a
-   *     sensing device with no command adapter
+   * @param adapterType command adapter id, or null for a sensing device
    * @param capabilities what this device can do
    */
   public Device(
@@ -167,9 +153,9 @@ public class Device {
   }
 
   /**
-   * Returns what this device can do, as detected at discovery.
+   * Returns what this device can do.
    *
-   * @return the device's capabilities (read-only view)
+   * @return the capabilities (read-only view)
    */
   public Set<Capability> getCapabilities() {
     return Collections.unmodifiableSet(capabilities);
@@ -189,7 +175,7 @@ public class Device {
   }
 
   /**
-   * Records one state entry, e.g. {@code on="true"} after a successful toggle.
+   * Records one state entry.
    *
    * @param key the state key
    * @param value the new value
@@ -210,9 +196,9 @@ public class Device {
   /**
    * Declares a sensor on this device.
    *
-   * @param key the sensor's key within this device (e.g. {@code "temperature"})
+   * @param key the sensor's key within this device
    * @param type what the sensor measures
-   * @param unit the unit its readings are expressed in (e.g. {@code "°C"})
+   * @param unit the unit its readings are expressed in
    */
   public void addSensor(String key, SensorType type, String unit) {
     sensors.add(new Sensor(key, type, unit));
@@ -224,7 +210,7 @@ public class Device {
    * @param sensorKey the key of the sensor the reading is for
    * @param value the reading value
    * @param at when the reading was taken
-   * @return true if a declared sensor matched and was updated; false otherwise
+   * @return true if a declared sensor matched
    */
   public boolean recordReading(String sensorKey, String value, Instant at) {
     for (Sensor sensor : sensors) {
@@ -257,7 +243,7 @@ public class Device {
   /** Removes this device from its room, leaving it unassigned. */
   @SuppressWarnings("PMD.NullAssignment")
   public void clearRoom() {
-    // Null is the "unassigned" state for the optional room association.
+    // Null is the unassigned state for the optional room association.
     this.room = null;
   }
 
@@ -279,9 +265,10 @@ public class Device {
   }
 
   /**
-   * Records that the hub just heard from the device through a fresh reading, which also marks it
-   * reachable. A command is not a reading: a bridge accepts a command for an unreachable device, so
-   * a command device's reachability is left to its adapter probe, not asserted on send.
+   * Records a fresh reading from the device, which also marks it reachable.
+   *
+   * <p>A command is not a reading: a bridge accepts commands for an unreachable device, so command
+   * reachability is left to the adapter probe, not asserted on send.
    *
    * @param at when the hub heard from the device
    */

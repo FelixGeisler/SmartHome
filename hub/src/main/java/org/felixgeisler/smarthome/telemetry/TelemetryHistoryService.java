@@ -11,9 +11,7 @@ import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 /**
- * Serves a sensor's reading history from the hub's own database. Every reading is appended by
- * {@link SensorReadingRecorder}, so the history is a read model this service exposes for the trend
- * charts.
+ * Serves a sensor's reading history from the hub's own database.
  */
 @Service
 @EnableConfigurationProperties(TelemetryHistoryProperties.class)
@@ -43,12 +41,11 @@ public class TelemetryHistoryService {
    * @param deviceId the reporting device's external id
    * @param sensorKey the sensor's key within its device
    * @param lookback how far back to read
-   * @return the matching readings, capped at the configured maximum; empty if none were recorded
+   * @return the matching readings, capped at the configured maximum
    */
   public List<ReadingPoint> history(String deviceId, String sensorKey, Duration lookback) {
     Instant from = clock.instant().minus(lookback);
-    // Query newest first so the cap keeps the most recent readings when a busy sensor exceeds it,
-    // then reverse to oldest first for the chart.
+    // Query newest first so the cap keeps the most recent readings, then reverse for the chart.
     List<SensorReadingHistory> rows =
         readings.findByDeviceIdAndSensorKeyAndRecordedAtGreaterThanEqualOrderByRecordedAtDesc(
             deviceId, sensorKey, from, Limit.of(maxPoints));

@@ -1,19 +1,12 @@
 import type { Device, Sensor } from './api/devices'
 import { hasColor, hasColorTemperature, isDimmable, isSensing, isSwitchable } from './api/devices'
 
-/** The visual kind of a device's floor-plan symbol. */
 export type IconKind = 'bulb' | 'plug' | 'solar' | 'thermometer' | 'humidity' | 'power' | 'gauge'
 
-/** Reading types shown before others as a device's headline: produced power, then climate. */
+/** Headline reading types in priority order: produced power, then climate. */
 const PRIMARY_ORDER = ['PV_POWER', 'OUTPUT_POWER', 'TEMPERATURE', 'HUMIDITY']
 
-/**
- * The device's primary reading, the one worth showing on the floor: a produced-power channel for an
- * inverter, else temperature, else humidity, else the first declared sensor. Null for a non-sensor.
- *
- * @param device the device to read
- * @returns the headline sensor, or null when the device declares none
- */
+/** The device's headline reading: produced power, else temperature, else humidity, else the first sensor. Null for a non-sensor. */
 export function primarySensor(device: Device): Sensor | null {
   for (const type of PRIMARY_ORDER) {
     const match = device.sensors.find((sensor) => sensor.type === type)
@@ -24,16 +17,10 @@ export function primarySensor(device: Device): Sensor | null {
   return device.sensors[0] ?? null
 }
 
-/** Short acronyms kept uppercase when humanizing a reading key. */
+/** Acronyms kept uppercase when humanizing a reading key. */
 const READING_ACRONYMS: Record<string, string> = { pv: 'PV', co2: 'CO2', soc: 'SoC' }
 
-/**
- * A short human label for a reading, derived from its key: "batteryTemp" becomes "Battery Temp",
- * "pvPower" becomes "PV Power", "co2" becomes "CO2". Lets a device say which value is which.
- *
- * @param sensor the reading to label
- * @returns a title-cased label
- */
+/** A short human label for a reading key: "batteryTemp" becomes "Battery Temp", "co2" becomes "CO2". */
 export function sensorLabel(sensor: Sensor): string {
   return sensor.key
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -48,13 +35,9 @@ export function sensorLabel(sensor: Sensor): string {
 }
 
 /**
- * Chooses a floor-plan glyph for a device: a bulb for anything light-like, a sun for the solar
- * inverter, a reading-specific gauge for a sensor, and a plug for a plain switch. Capabilities and
- * the solar type are checked before the generic sensor and switch cases, so a lamp never reads as a
- * plug and the inverter (which also reports temperatures) never reads as a thermometer.
- *
- * @param device the device to symbolize
- * @returns the glyph kind
+ * Chooses a floor-plan glyph. Capabilities and the solar type are checked before the generic sensor
+ * and switch cases, so a lamp never reads as a plug and the inverter (which also reports
+ * temperatures) never reads as a thermometer.
  */
 export function deviceIconKind(device: Device): IconKind {
   const lightLike =
@@ -88,15 +71,14 @@ export function deviceIconKind(device: Device): IconKind {
   return 'plug'
 }
 
-/** Reading types that measure temperature, so their value can be tinted on a warm-cool scale. */
+/** Reading types that measure temperature, for the warm-cool tint. */
 const TEMPERATURE_TYPES = new Set(['TEMPERATURE', 'BATTERY_TEMPERATURE', 'INVERTER_TEMPERATURE'])
 
-/** True when the sensor measures a temperature. */
 export function isTemperatureReading(sensor: Sensor): boolean {
   return TEMPERATURE_TYPES.has(sensor.type)
 }
 
-/** Color stops from cool to hot, in degrees Celsius, for the temperature tint. */
+/** Color stops from cool to hot, in degrees Celsius. */
 const TEMPERATURE_STOPS: { t: number; rgb: [number, number, number] }[] = [
   { t: 5, rgb: [74, 163, 255] },
   { t: 18, rgb: [52, 199, 89] },
@@ -104,13 +86,7 @@ const TEMPERATURE_STOPS: { t: number; rgb: [number, number, number] }[] = [
   { t: 30, rgb: [255, 59, 48] },
 ]
 
-/**
- * A cool-to-warm color for a temperature in Celsius: blue when cold, green when comfortable, amber
- * then red as it climbs, so a reading tells you hot or cold before you read the number.
- *
- * @param celsius the temperature to color
- * @returns an {@code rgb(...)} color string
- */
+/** A cool-to-warm color for a temperature in Celsius, blue when cold through red when hot. */
 export function temperatureColor(celsius: number): string {
   const first = TEMPERATURE_STOPS[0]
   const last = TEMPERATURE_STOPS[TEMPERATURE_STOPS.length - 1]

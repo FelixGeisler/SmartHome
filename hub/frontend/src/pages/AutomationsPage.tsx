@@ -26,15 +26,10 @@ import {
 } from '../automationForm'
 
 interface AutomationsPageProps {
-  /** The live devices, used to populate the builder's device and sensor pickers. */
   devices: Device[]
 }
 
-/**
- * Lists automations and hosts a guided builder for creating and editing them: pick a sensor and
- * threshold (when), optional device-state checks (if), and one or more device actions (then). A
- * "Run now" button fires an automation's actions on demand to test the wiring.
- */
+/** Lists automations and hosts a guided builder for creating and editing them. */
 export function AutomationsPage({ devices }: AutomationsPageProps) {
   const [automations, setAutomations] = useState<Automation[]>([])
   const [loading, setLoading] = useState(true)

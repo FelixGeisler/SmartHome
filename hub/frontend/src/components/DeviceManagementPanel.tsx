@@ -4,19 +4,11 @@ import { deleteDevice, renameDevice } from '../api/devices'
 import { isOffline } from '../deviceHealth'
 
 interface DeviceManagementPanelProps {
-  /** Every registered device, from the shared app state. */
   devices: Device[]
-  /** Called with the renamed device so the shared state shows the new name at once. */
   onRenamed: (device: Device) => void
-  /** Called with the removed device's id so it drops from the shared state at once. */
   onDeleted: (id: number) => void
 }
 
-/**
- * Lists every registered device and lets you rename or delete one. A delete asks for a second click
- * first, since it is destructive; a sensor node that is still publishing reappears on its next
- * reading.
- */
 export function DeviceManagementPanel({
   devices,
   onRenamed,

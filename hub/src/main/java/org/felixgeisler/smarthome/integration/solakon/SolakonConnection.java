@@ -20,17 +20,15 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 /**
- * Manages the hub's connection to a Solakon ONE (FoxESS) inverter as a runtime-configured
- * integration: on connect it registers the inverter as a sensing device and starts polling its
- * Modbus registers, recording each metric as a sensor reading. Read-only for now. A poll opens a
- * short-lived Modbus connection, so a briefly-offline inverter simply misses a cycle and recovers
- * on the next one.
+ * Manages the hub's connection to a Solakon ONE (FoxESS) inverter, polling its Modbus registers.
+ *
+ * <p>Each poll opens a short-lived Modbus connection, so a briefly-offline inverter simply misses a
+ * cycle and recovers on the next one.
  */
 @Service
 @EnableConfigurationProperties(SolakonProperties.class)
 public class SolakonConnection {
 
-  /** The single device the inverter registers as; its readings are the polled metrics. */
   private static final String DEVICE_EXTERNAL_ID = "solakon-one";
 
   private static final String DEVICE_NAME = "Solakon ONE";
@@ -47,11 +45,11 @@ public class SolakonConnection {
   private final DeviceService devices;
   private final SettingsStore settings;
 
-  // The configured endpoint, or null when disconnected. Volatile so the poll thread sees a
-  // consistent snapshot without contending with connect/disconnect for the monitor.
+  // Configured endpoint, or null when disconnected. Volatile so the poll thread sees a consistent
+  // snapshot without contending with connect/disconnect for the monitor.
   private volatile Endpoint endpoint;
 
-  // The poll scheduler while connected, else null. Written only under this monitor.
+  // Poll scheduler while connected, else null. Written only under this monitor.
   private volatile ScheduledExecutorService poller;
 
   /**
@@ -69,8 +67,7 @@ public class SolakonConnection {
   }
 
   /**
-   * Reconnects on startup to the inverter last connected, so a configured inverter survives a
-   * restart. A failure here is logged and left for the user to retry, never faulting startup.
+   * Reconnects on startup to the last connected inverter, so it survives a restart.
    */
   @EventListener(ApplicationReadyEvent.class)
   public void reconnectLast() {
@@ -87,8 +84,7 @@ public class SolakonConnection {
   }
 
   /**
-   * Connects to the inverter, registers it as a device, and starts polling its metrics, replacing
-   * any existing connection. An unreachable inverter is reported as a false result, not thrown.
+   * Connects to the inverter, registers it as a device, and starts polling.
    *
    * @param host the inverter host (IP or hostname)
    * @param port the Modbus TCP port
@@ -99,7 +95,7 @@ public class SolakonConnection {
     Endpoint candidate = new Endpoint(host, port, unitId);
     if (!probe(candidate)) {
       // Probe before touching the current connection, so a failed attempt leaves any existing
-      // inverter still polling rather than stopping it and lying about being connected.
+      // inverter still polling.
       return false;
     }
     stopPolling();
@@ -117,7 +113,7 @@ public class SolakonConnection {
   @SuppressWarnings("PMD.NullAssignment")
   public synchronized void disconnect() {
     stopPolling();
-    // Null is the connection state: "no inverter connected", so isConnected() reports cleanly.
+    // Null marks "no inverter connected", so isConnected() reports cleanly (PMD.NullAssignment).
     this.endpoint = null;
     settings.remove(HOST_SETTING);
     settings.remove(PORT_SETTING);
@@ -177,7 +173,7 @@ public class SolakonConnection {
       devices.register(
           DEVICE_EXTERNAL_ID, DEVICE_NAME, DeviceType.SOLAR_INVERTER, null, null, sensors);
     } catch (DeviceAlreadyExistsException ex) {
-      // Registered on an earlier connect; keep the existing device and its reading history.
+      // Registered on an earlier connect; keep the existing device and its history.
       log.debug("Solakon device already registered; reusing it");
     }
   }
@@ -188,8 +184,8 @@ public class SolakonConnection {
 
   private void startPolling() {
     long seconds = Math.max(1, properties.pollSeconds());
-    // Assigned straight to the field (no local) so the scheduler's lifetime is owned by
-    // stopPolling(), which shuts it down; the poller outlives this method by design.
+    // Assigned straight to the field so its lifetime is owned by stopPolling(); the poller
+    // outlives this method by design.
     this.poller = Executors.newSingleThreadScheduledExecutor(SolakonConnection::pollThread);
     this.poller.scheduleWithFixedDelay(this::poll, 0, seconds, TimeUnit.SECONDS);
   }

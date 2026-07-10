@@ -12,9 +12,8 @@ interface AuthGateProps {
 const MIN_PASSWORD_LENGTH = 8
 
 /**
- * Gates the app behind the single administrator login. On first start it shows a setup form to
- * choose the credentials; after that a login form; once authenticated it renders the app. A 401
- * from any API call drops back to the login form.
+ * Gates the app behind the single administrator login: a setup form on first start, then a login
+ * form, then the app. A 401 from any API call drops back to the login form.
  */
 export function AuthGate({ children }: AuthGateProps) {
   const [status, setStatus] = useState<AuthStatus | null>(null)

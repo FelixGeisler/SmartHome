@@ -6,8 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Applies a neutral command to a device (ADR 3), setting any of power, brightness, or color
- * temperature. Validation and adapter routing are the device service's; this only translates the
- * stored action into a command.
+ * temperature.
  */
 @Component
 public class DeviceCommandActionHandler implements ActionHandler {

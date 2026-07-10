@@ -1,6 +1,6 @@
 import type { IconKind } from '../deviceIcon'
 
-/** Shared attributes for the floor-plan glyphs; line art in the toolbar/card convention. */
+/** Shared attributes for the floor-plan glyphs. */
 const GLYPH = {
   viewBox: '0 0 24 24',
   width: 24,
@@ -14,7 +14,7 @@ const GLYPH = {
   focusable: false,
 } as const
 
-/** Renders the inline SVG symbol for a device kind; the accessible name lives on the wrapper. */
+/** Inline SVG symbol for a device kind; the accessible name lives on the wrapper. */
 export function DeviceGlyph({ kind }: { kind: IconKind }) {
   switch (kind) {
     case 'bulb':

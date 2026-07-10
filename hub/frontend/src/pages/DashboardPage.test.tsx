@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { DashboardPage } from './DashboardPage'
 
-// Render react-grid-layout as a plain container: these tests exercise our wiring, not RGL's DOM
-// measurement and drag internals, which don't run under jsdom.
+// Render react-grid-layout as a plain container: RGL's DOM measurement and drag internals don't run under jsdom.
 vi.mock('react-grid-layout', () => ({
   __esModule: true,
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -167,7 +166,6 @@ describe('DashboardPage', () => {
       cardLayouts: [{ deviceId: 3, x: 0, y: 0, w: 4, h: 7, hiddenSensors: ['humidity'] }],
     })
 
-    // The deselected humidity reading is not rendered; temperature still is.
     expect(screen.getByText('21 °C')).toBeInTheDocument()
     expect(screen.queryByText('40 %')).not.toBeInTheDocument()
 

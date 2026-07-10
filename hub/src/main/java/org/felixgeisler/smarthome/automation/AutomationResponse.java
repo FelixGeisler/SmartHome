@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @param id the automation id
  * @param name a human-readable name
- * @param enabled whether the automation reacts to triggers
+ * @param enabled whether it reacts to triggers
  * @param triggers the triggers, any of which starts it
  * @param conditions the conditions, all of which must hold
  * @param actions the actions, run in order
@@ -33,13 +33,13 @@ public record AutomationResponse(
   /**
    * A trigger in the REST contract.
    *
-   * @param kind what kind of trigger this is
-   * @param deviceId the id of the device whose telemetry is watched
-   * @param sensorKey the key of the sensor the reading is for
+   * @param kind the trigger kind
+   * @param deviceId the watched device
+   * @param sensorKey the sensor key the reading is for
    * @param comparison how the reading is weighed against the threshold
-   * @param threshold the threshold the reading is compared to
+   * @param threshold the threshold compared to
    * @param atTime the time of day a schedule fires
-   * @param onDays the days a schedule fires on; empty means every day
+   * @param onDays the days a schedule fires; empty means every day
    */
   public record TriggerResponse(
       TriggerKind kind,
@@ -70,8 +70,8 @@ public record AutomationResponse(
   /**
    * A condition in the REST contract.
    *
-   * @param kind what kind of condition this is
-   * @param deviceId the id of the device whose state is checked
+   * @param kind the condition kind
+   * @param deviceId the device whose state is checked
    * @param stateKey the state key to read
    * @param expected the value the state must equal
    */
@@ -90,11 +90,11 @@ public record AutomationResponse(
   /**
    * An action in the REST contract.
    *
-   * @param kind what kind of action this is
-   * @param deviceId the id of the device to act on
-   * @param on the desired power state, or null
-   * @param brightness the desired brightness percentage, or null
-   * @param colorTemperatureK the desired color temperature in Kelvin, or null
+   * @param kind the action kind
+   * @param deviceId the device to act on
+   * @param on desired power state, or null
+   * @param brightness desired brightness percent, or null
+   * @param colorTemperatureK desired color temperature in Kelvin, or null
    */
   public record ActionResponse(
       ActionKind kind, Long deviceId, Boolean on, Integer brightness, Integer colorTemperatureK) {

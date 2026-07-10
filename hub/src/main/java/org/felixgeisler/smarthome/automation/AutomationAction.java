@@ -10,12 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * Something an automation does to a device when it runs. A {@link ActionKind#DEVICE_TOGGLE} flips a
- * switchable device; a {@link ActionKind#DEVICE_COMMAND} sets any of power, brightness, or color
- * temperature, mirroring the neutral device command (ADR 3). Command fields left null are not sent.
+ * Something an automation does to a device when it runs (ADR 3). Command fields left null are not
+ * sent.
  *
- * <p>The device is referenced by id for the same reason as {@link AutomationTrigger}: an automation
- * outlives the devices it names.
+ * <p>The device is referenced by id because an automation outlives the devices it names.
  */
 @Entity
 @Table(name = "automation_actions")
@@ -42,18 +40,16 @@ public class AutomationAction {
   private Integer colorTemperatureK;
 
   /** Required by JPA. */
-  protected AutomationAction() {
-    // Intentionally empty.
-  }
+  protected AutomationAction() {}
 
   /**
    * Creates an action.
    *
-   * @param kind what kind of action this is
-   * @param deviceId the id of the device to act on
-   * @param on the desired power state for a command action, or null to leave it unchanged
-   * @param brightness the desired brightness percentage for a command action, or null
-   * @param colorTemperatureK the desired color temperature in Kelvin for a command action, or null
+   * @param kind the action kind
+   * @param deviceId the device to act on
+   * @param on desired power state, or null to leave unchanged
+   * @param brightness desired brightness percent, or null
+   * @param colorTemperatureK desired color temperature in Kelvin, or null
    */
   public AutomationAction(
       ActionKind kind, Long deviceId, Boolean on, Integer brightness, Integer colorTemperatureK) {

@@ -16,13 +16,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A rule that runs actions when a trigger fires and its conditions hold: the Home Assistant and
- * Matter shape of when (any {@link AutomationTrigger} fires), if (all {@link AutomationCondition
- * conditions} hold), then (each {@link AutomationAction} runs in order).
+ * A rule whose actions run when a trigger fires and all conditions hold (when/if/then).
  *
- * <p>The three lists are ordered so they are stable across reloads and so multiple eager lists on
- * one aggregate are not mapped as bags. All are small and are edited as a whole, so they are
- * replaced rather than mutated element by element.
+ * <p>The lists carry an {@code @OrderColumn} so multiple eager lists on one aggregate are not
+ * mapped as bags, and are replaced wholesale rather than mutated element by element.
  */
 @Entity
 @Table(name = "automations")
@@ -54,15 +51,13 @@ public class Automation {
   private List<AutomationAction> actions = new ArrayList<>();
 
   /** Required by JPA. */
-  protected Automation() {
-    // Intentionally empty.
-  }
+  protected Automation() {}
 
   /**
-   * Creates an automation with no triggers, conditions, or actions yet.
+   * Creates an empty automation.
    *
    * @param name a human-readable name
-   * @param enabled whether the automation reacts to triggers
+   * @param enabled whether it reacts to triggers
    */
   public Automation(String name, boolean enabled) {
     this.name = name;

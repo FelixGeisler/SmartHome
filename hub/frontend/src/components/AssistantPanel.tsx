@@ -2,11 +2,6 @@ import { useEffect, useState } from 'react'
 import { assistantStatus, setAssistantKey } from '../api/assistant'
 import { StatusBadge } from './StatusBadge'
 
-/**
- * Sets the assistant's Anthropic API key at runtime, the way the MQTT broker and Hue bridge are
- * configured here. The key is stored in the hub's local settings (so it survives a restart) and
- * never shown again, so the field shows status, not the value.
- */
 export function AssistantPanel() {
   const [apiKey, setApiKey] = useState('')
   const [configured, setConfigured] = useState(false)

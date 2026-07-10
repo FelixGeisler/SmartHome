@@ -7,10 +7,10 @@ import java.util.Optional;
 import org.felixgeisler.smarthome.device.SensorType;
 
 /**
- * Maps a Homematic channel's sensor datapoints to the hub's neutral {@link SensorType} vocabulary,
- * with any unit conversion the CCU needs. The CCU reports current in milliamps and its energy
- * counter in watt-hours, so those are scaled to the amperes and kilowatt-hours the matching sensor
- * types use; the rest already share the CCU's unit.
+ * Maps a Homematic channel's sensor datapoints to the hub's neutral {@link SensorType} vocabulary.
+ *
+ * <p>Current is scaled from milliamps to amperes and the energy counter from watt-hours to
+ * kilowatt-hours; the rest already share the CCU's unit.
  */
 final class HomematicDatapoints {
 

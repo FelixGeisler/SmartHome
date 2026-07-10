@@ -10,12 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * An extra check that must hold for a triggered automation to run. Milestone 1 models a device
- * state check: the {@link #getDeviceId() device}'s runtime state under {@link #getStateKey() a key}
- * must equal an {@link #getExpected() expected value}.
+ * An extra check that must hold for a triggered automation to run.
  *
- * <p>The device is referenced by id for the same reason as {@link AutomationTrigger}: an automation
- * outlives the devices it names.
+ * <p>The device is referenced by id because an automation outlives the devices it names.
  */
 @Entity
 @Table(name = "automation_conditions")
@@ -39,17 +36,15 @@ public class AutomationCondition {
   private String expected;
 
   /** Required by JPA. */
-  protected AutomationCondition() {
-    // Intentionally empty.
-  }
+  protected AutomationCondition() {}
 
   /**
    * Creates a condition.
    *
-   * @param kind what kind of condition this is
-   * @param deviceId the id of the device whose state is checked
+   * @param kind the condition kind
+   * @param deviceId the device whose state is checked
    * @param stateKey the state key to read
-   * @param expected the value the state must equal for the condition to hold
+   * @param expected the value the state must equal
    */
   public AutomationCondition(ConditionKind kind, Long deviceId, String stateKey, String expected) {
     this.kind = kind;

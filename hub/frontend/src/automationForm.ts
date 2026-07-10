@@ -8,7 +8,7 @@ import type {
   TriggerKind,
 } from './api/automations'
 
-/** The trigger being edited: a sensor threshold, or a schedule (time of day + days of week). */
+/** The trigger being edited: a sensor threshold or a schedule. */
 export interface TriggerDraft {
   kind: TriggerKind
   deviceId: string
@@ -19,7 +19,7 @@ export interface TriggerDraft {
   onDays: string[]
 }
 
-/** A device-state condition being edited: the device must be on or off. */
+/** A device-state condition being edited. */
 export interface ConditionDraft {
   /** A stable client-only id, so removing a row keeps React keyed by row, not by index. */
   key: string
@@ -27,7 +27,7 @@ export interface ConditionDraft {
   expected: 'true' | 'false'
 }
 
-/** An action being edited: a toggle, or a command setting any of power, brightness, or color temp. */
+/** An action being edited. */
 export interface ActionDraft {
   /** A stable client-only id, so removing a row keeps React keyed by row, not by index. */
   key: string
@@ -40,7 +40,7 @@ export interface ActionDraft {
 
 let rowKeySeq = 0
 
-/** A stable id for a new builder row, so React reconciles editable rows by identity, not position. */
+/** A stable id for a new builder row. */
 function nextRowKey(): string {
   rowKeySeq += 1
   return `row-${rowKeySeq}`
@@ -56,7 +56,7 @@ export interface AutomationDraft {
   actions: ActionDraft[]
 }
 
-/** The comparison choices offered in the builder, with human-readable labels. */
+/** Comparison choices for the builder. */
 export const COMPARISON_OPTIONS: ReadonlyArray<{ value: Comparison; label: string }> = [
   { value: 'GREATER_THAN', label: 'rises above (>)' },
   { value: 'GREATER_THAN_OR_EQUAL', label: 'reaches (≥)' },
@@ -71,12 +71,11 @@ const COMPARISON_SYMBOLS: Record<Comparison, string> = {
   LESS_THAN_OR_EQUAL: '≤',
 }
 
-/** The math symbol for a comparison. */
 export function comparisonSymbol(comparison: Comparison): string {
   return COMPARISON_SYMBOLS[comparison]
 }
 
-/** The days of the week offered as checkboxes in the schedule builder, Monday first. */
+/** Day-of-week choices for the schedule builder, Monday first. */
 export const DAY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'MONDAY', label: 'Mon' },
   { value: 'TUESDAY', label: 'Tue' },
@@ -91,7 +90,7 @@ const DAY_LABELS: Record<string, string> = Object.fromEntries(
   DAY_OPTIONS.map((day) => [day.value, day.label]),
 )
 
-/** A blank automation to start the builder from. */
+/** A blank draft to start the builder from. */
 export function emptyDraft(): AutomationDraft {
   return {
     id: null,
@@ -111,12 +110,10 @@ export function emptyDraft(): AutomationDraft {
   }
 }
 
-/** A blank condition row. */
 export function emptyCondition(): ConditionDraft {
   return { key: nextRowKey(), deviceId: '', expected: 'true' }
 }
 
-/** A blank action row. */
 export function emptyAction(): ActionDraft {
   return {
     key: nextRowKey(),
@@ -128,7 +125,6 @@ export function emptyAction(): ActionDraft {
   }
 }
 
-/** Loads an existing automation into an editable draft. */
 export function draftFromAutomation(automation: Automation): AutomationDraft {
   const trigger = automation.triggers[0]
   return {
@@ -183,7 +179,6 @@ function triggerToInput(trigger: TriggerDraft): AutomationTrigger {
   }
 }
 
-/** Converts a draft into the request body the API expects. */
 export function draftToInput(draft: AutomationDraft): AutomationInput {
   return {
     name: draft.name.trim(),
@@ -216,7 +211,7 @@ export function draftToInput(draft: AutomationDraft): AutomationInput {
   }
 }
 
-/** Returns the first problem with a draft as a message, or null when it is ready to save. */
+/** The first problem with a draft, or null when it is ready to save. */
 export function draftError(draft: AutomationDraft): string | null {
   if (draft.name.trim() === '') {
     return 'Give the automation a name.'

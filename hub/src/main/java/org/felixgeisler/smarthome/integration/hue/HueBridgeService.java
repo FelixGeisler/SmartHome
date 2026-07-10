@@ -19,13 +19,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * Talks to a Philips Hue bridge: pairing, light discovery, and on/off control.
- *
- * <p>Holds the bridge connection state (host and application key) seeded from {@link HueProperties}
- * and updated by {@link #pair(String)}. The integration is a configured connection, not a persisted
- * entity, so a key obtained by pairing lasts for the run unless it is also set in configuration.
- */
+/** Talks to a Philips Hue bridge: pairing, light discovery, and on/off control. */
 @Service
 @EnableConfigurationProperties(HueProperties.class)
 public class HueBridgeService {
@@ -62,10 +56,7 @@ public class HueBridgeService {
     this.restClient = HttpClients.withTimeouts(TIMEOUT, TIMEOUT);
   }
 
-  /**
-   * Restores a bridge paired on a previous run, so its credentials survive a restart. A persisted
-   * host and key override the configured seed.
-   */
+  /** Restores a bridge paired on a previous run, so its credentials survive a restart. */
   @PostConstruct
   void restore() {
     settings.get(HOST_SETTING).ifPresent(bridgeHost::set);
@@ -86,7 +77,7 @@ public class HueBridgeService {
   }
 
   /**
-   * Pairs with the bridge at the given host. The bridge link button must be pressed first.
+   * Pairs with the bridge at the given host, whose link button must be pressed first.
    *
    * @param host the bridge host (IP or host[:port])
    * @return true if pairing succeeded; false if the link button had not been pressed

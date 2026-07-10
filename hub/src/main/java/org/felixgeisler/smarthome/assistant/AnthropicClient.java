@@ -17,10 +17,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 /**
- * Thin client for the Anthropic Messages API, called over HTTP like the Hue integration so the hub
- * takes on no LLM framework dependency. Exposes just enough of the wire contract for a tool-use
- * loop: a request carries the system prompt, the running message list, and the tool definitions; a
- * response carries the assistant's content blocks and why it stopped.
+ * Thin HTTP client for the Anthropic Messages API, avoiding any LLM framework dependency.
  */
 @Component
 @EnableConfigurationProperties(AssistantProperties.class)
@@ -28,13 +25,12 @@ class AnthropicClient {
 
   private static final String ANTHROPIC_VERSION = "2023-06-01";
 
-  /** Settings key under which a runtime-set API key is persisted across restarts. */
+  /** Settings key for the persisted API key. */
   private static final String API_KEY_SETTING = "assistant.apiKey";
 
   private final RestClient http;
   private final String url;
-  // Held in a reference so the key can be set at runtime from the Configuration view, the way the
-  // MQTT and Hue integrations are configured, while still seeding from the environment at startup.
+  // In a reference so the key can be set at runtime, seeded from the environment at startup.
   private final AtomicReference<String> apiKey = new AtomicReference<>();
   private final String model;
   private final int maxTokens;
@@ -46,26 +42,23 @@ class AnthropicClient {
     this.model = properties.model();
     this.maxTokens = properties.maxTokens();
     this.settings = settings;
-    // A tool-use turn can take a while; keep the per-call read timeout generous.
+    // A tool-use turn can take a while; keep the read timeout generous.
     this.http = HttpClients.withTimeouts(Duration.ofSeconds(5), Duration.ofSeconds(60));
   }
 
-  /** Restores a previously saved key on startup, so a key set last run survives a restart. */
+  /** Restores a saved key on startup. */
   @PostConstruct
   void restore() {
     settings.get(API_KEY_SETTING).ifPresent(apiKey::set);
   }
 
-  /**
-   * Sets the API key at runtime, overriding whatever was seeded from the environment, and persists
-   * it so it is restored on the next boot.
-   */
+  /** Sets the API key at runtime and persists it. */
   void configure(String key) {
     apiKey.set(key);
     settings.save(API_KEY_SETTING, key);
   }
 
-  /** True when an API key is set, so the hub still boots and runs without one. */
+  /** True when an API key is set. */
   boolean isConfigured() {
     String key = apiKey.get();
     return key != null && !key.isBlank();
@@ -75,10 +68,10 @@ class AnthropicClient {
    * Sends one Messages API request and returns the assistant's reply.
    *
    * @param system the system prompt
-   * @param messages the running conversation, oldest first
-   * @param tools the tools the assistant may call
+   * @param messages the conversation, oldest first
+   * @param tools the callable tools
    * @return the assistant's response
-   * @throws AssistantException if the API could not be reached or returned an error
+   * @throws AssistantException if the API failed
    */
   Response createMessage(String system, List<Message> messages, List<Tool> tools) {
     Request body = new Request(model, maxTokens, system, messages, tools);
@@ -106,12 +99,12 @@ class AnthropicClient {
       List<Message> messages,
       List<Tool> tools) {}
 
-  /** One conversation message: a role and its content blocks. */
+  /** One conversation message. */
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)
   record Message(String role, List<Block> content) {}
 
-  /** A content block; only the fields relevant to its {@code type} are populated. */
+  /** A content block; only fields relevant to its {@code type} are set. */
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)
   record Block(
@@ -129,7 +122,7 @@ class AnthropicClient {
       return new Block("text", text, null, null, null, null, null, null);
     }
 
-    /** A tool result fed back to the model for the given tool-use id. */
+    /** A tool result for the given tool-use id. */
     static Block toolResult(String toolUseId, String result, boolean error) {
       return new Block(
           "tool_result", null, null, null, null, toolUseId, result, error ? Boolean.TRUE : null);

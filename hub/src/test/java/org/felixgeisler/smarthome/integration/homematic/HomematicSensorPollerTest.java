@@ -27,7 +27,6 @@ class HomematicSensorPollerTest {
   @Mock private HomematicCcuService ccu;
 
   private HomematicSensorPoller poller() {
-    // Runnable::run makes the poll run synchronously in the test thread.
     return new HomematicSensorPoller(devices, ccu, Runnable::run);
   }
 

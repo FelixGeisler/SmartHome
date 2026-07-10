@@ -102,7 +102,6 @@ describe('HuePanel', () => {
     const user = userEvent.setup()
     render(<HuePanel onRegistered={vi.fn()} />)
 
-    // First attempt pairs and discovers a light.
     await user.type(screen.getByLabelText('Bridge host'), '192.168.1.10')
     await user.click(screen.getByRole('button', { name: /pair/i }))
     expect(await screen.findByLabelText('Living Room Lamp')).toBeInTheDocument()

@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react'
 import { connectMqtt, disconnectMqtt, mqttStatus } from '../api/mqtt'
 import { StatusBadge } from './StatusBadge'
 
-/**
- * Connects the hub to an MQTT broker. Sensor nodes that publish to the broker then appear on the
- * dashboard automatically, so there is nothing to register by hand here.
- */
 export function MqttPanel() {
   const [host, setHost] = useState('')
   const [port, setPort] = useState('1883')
@@ -29,8 +25,7 @@ export function MqttPanel() {
       const parsedPort = trimmedPort === '' ? undefined : Number(trimmedPort)
       const result = await connectMqtt(host.trim(), parsedPort)
       setConnected(result.connected)
-      // A "not connected" result is a failed attempt, so surface it as an error, not a neutral
-      // status line where it reads like a hint.
+      // A "not connected" result is a failed attempt; surface it as an error.
       if (result.connected) {
         setStatus(result.message)
       } else {

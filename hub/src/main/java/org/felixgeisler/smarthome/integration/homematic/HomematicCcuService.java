@@ -27,14 +27,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Talks to a Homematic CCU over its JSON-RPC API ({@code /api/homematic.cgi}): session login,
- * device discovery, and reading and writing channel datapoints.
+ * Talks to a Homematic CCU over its JSON-RPC API ({@code /api/homematic.cgi}).
  *
- * <p>Holds the connection state (host and credentials) seeded from {@link HomematicProperties} and
- * updated by {@link #connect(String, String, String)}, persisted through {@link SettingsStore} so a
- * connected CCU survives a restart. A session is obtained lazily and cached; because the CCU caps
- * concurrent sessions and expires idle ones, an expired session (JSON-RPC error 400) is
- * transparently re-established once and the call retried.
+ * <p>A session is cached and, because the CCU caps concurrent sessions and expires idle ones, an
+ * expired session (JSON-RPC error 400) is re-established once and the call retried.
  */
 @Service
 @EnableConfigurationProperties(HomematicProperties.class)
@@ -42,12 +38,10 @@ public class HomematicCcuService {
 
   private static final Logger log = LoggerFactory.getLogger(HomematicCcuService.class);
 
-  /** JSON-RPC error code returned when the session id is missing or expired. */
+  /** JSON-RPC error code for a missing or expired session. */
   private static final int SESSION_EXPIRED = 400;
 
-  /**
-   * JSON-RPC error code returned when the credentials are wrong (or too many sessions are open).
-   */
+  /** JSON-RPC error code for wrong credentials (or too many open sessions). */
   private static final int INVALID_CREDENTIALS = 501;
 
   /** Datapoint operation bits reported by {@code getParamsetDescription}. */
@@ -98,10 +92,7 @@ public class HomematicCcuService {
     this.restClient = HttpClients.withTimeouts(TIMEOUT, TIMEOUT);
   }
 
-  /**
-   * Restores a CCU connected on a previous run, so its credentials survive a restart. Persisted
-   * values override the configured seed.
-   */
+  /** Restores a CCU connected on a previous run, so its credentials survive a restart. */
   @PostConstruct
   void restore() {
     settings.get(HOST_SETTING).ifPresent(host::set);
@@ -143,8 +134,7 @@ public class HomematicCcuService {
       throw new HomematicCcuException("Homematic CCU login failed: " + env.error().message());
     }
     String sid = sessionId(env);
-    // Commit the new connection only after the login succeeds, so a rejected attempt cannot break
-    // an existing working connection.
+    // Commit only after login succeeds, so a rejected attempt cannot break a working connection.
     session.set(sid);
     host.set(authority);
     username.set(user);
@@ -157,9 +147,7 @@ public class HomematicCcuService {
   }
 
   /**
-   * Discovers the CCU's controllable and sensing channels, ready to register as hub devices. Each
-   * channel is classified from its datapoints: a writable {@code STATE} bool is a switch; a
-   * datapoint that maps to a neutral sensor type makes a sensing channel.
+   * Discovers the CCU's controllable and sensing channels as hub devices.
    *
    * @return the discovered devices
    * @throws HomematicCcuException if no CCU is connected, or it could not be reached
@@ -429,8 +417,7 @@ public class HomematicCcuService {
     return new String[] {externalId.substring(0, slash), externalId.substring(slash + 1)};
   }
 
-  // Reduce a user-entered host to its bare authority, so a scheme, path, or query cannot be
-  // injected into the request.
+  // Reduce a user-entered host to its bare authority, so nothing extra can be injected.
   private static String authority(String hostInput) {
     String value = hostInput.trim().replaceFirst("^[a-zA-Z]+://", "");
     int slash = value.indexOf('/');

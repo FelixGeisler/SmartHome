@@ -3,9 +3,7 @@ package org.felixgeisler.smarthome.room;
 import java.util.List;
 
 /**
- * A saved floor-plan arrangement: each room's box position and size on the grid, and each placed
- * device's spot within its room. Like the dashboard layout, this is a UI concern stored verbatim;
- * the hub does not interpret the coordinates, which the frontend (a drag-and-drop floor plan) owns.
+ * A saved floor-plan arrangement of room boxes and device placements.
  *
  * @param rooms the placed room boxes, never null
  * @param devices the placed device positions, never null
@@ -31,7 +29,6 @@ public record RoomLayout(List<RoomBox> rooms, List<DevicePlacement> devices) {
 
   /**
    * One device's placed position within its room, as a fraction (0..1) of the room content rect.
-   * The hub stores it opaquely; the frontend owns the fraction semantics.
    *
    * @param deviceId the id of the placed device
    * @param fx the icon center's horizontal position, 0..1 of the room content rect width

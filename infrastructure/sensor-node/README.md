@@ -41,10 +41,10 @@ Once the venv and `sensor-node.env` exist, install the systemd service with the 
 bash install.sh
 ```
 
-It fills in this Pi's login user and the actual node directory, then enables and starts the unit,
-so it works whatever the Pi's username is and wherever you copied the node. The shipped
-`sensor-node.service` defaults to user `raspberry`; on that fleet you can also just `sudo cp` it and
-`systemctl enable --now sensor-node`, but `install.sh` is the safe path for any other user.
+It fills in this Pi's login user and node directory, then enables and starts the unit, so it works
+for any username and location. The shipped `sensor-node.service` defaults to user `raspberry`; on
+that fleet you can instead `sudo cp` it and `systemctl enable --now sensor-node`, but `install.sh`
+is the safe path for any other user.
 
 On the Pi that also runs the broker, enable Mosquitto on boot too:
 

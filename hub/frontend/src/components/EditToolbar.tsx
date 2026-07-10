@@ -1,9 +1,8 @@
 interface EditToolbarProps {
-  /** Whether the dashboard is currently in edit mode. */
   editing: boolean
-  /** True while a layout save is in flight; disables Save and Cancel. */
+  /** True while a save is in flight; disables Save and Cancel. */
   saving?: boolean
-  /** Accessible label and tooltip for the add button; defaults to the dashboard's "Add card". */
+  /** Label and tooltip for the add button. */
   addLabel?: string
   onEnterEdit: () => void
   onSave: () => void

@@ -19,10 +19,11 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
- * Locks the hub behind the single {@link AdminAccount}. The SPA assets and the auth endpoints stay
- * public so the login screen can load; everything else needs an authenticated session. Login uses a
- * session cookie, the SPA gets CSRF protection, and an unauthenticated API call returns 401 rather
- * than a redirect. This is a trusted-LAN posture; see ADR 13.
+ * Locks the hub behind the single {@link AdminAccount}; the SPA assets and auth endpoints stay
+ * public so the login screen can load.
+ *
+ * <p>An unauthenticated API call returns 401 rather than a redirect. Trusted-LAN posture; see
+ * ADR 13.
  */
 @Configuration
 @EnableWebSecurity

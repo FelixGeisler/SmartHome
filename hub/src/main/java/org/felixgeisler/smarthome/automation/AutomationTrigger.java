@@ -16,13 +16,10 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * A check that starts an automation. A {@link TriggerKind#SENSOR_THRESHOLD} weighs a reading from a
- * {@link #getDeviceId() device}'s {@link #getSensorKey() sensor} against a {@link #getThreshold()
- * threshold} by a {@link #getComparison() comparison}; a {@link TriggerKind#SCHEDULE} fires at a
- * {@link #getAtTime() time of day} on the chosen {@link #getOnDays() days of the week}.
+ * A check that starts an automation, by sensor threshold or by schedule.
  *
  * <p>The device is referenced by id, not a mapped association, because an automation outlives the
- * devices it names; a removed device must not cascade into it. A schedule references no device.
+ * devices it names; a removed device must not cascade into it.
  */
 @Entity
 @Table(name = "automation_triggers")
@@ -57,18 +54,16 @@ public class AutomationTrigger {
   private Set<DayOfWeek> onDays = EnumSet.noneOf(DayOfWeek.class);
 
   /** Required by JPA. */
-  protected AutomationTrigger() {
-    // Intentionally empty.
-  }
+  protected AutomationTrigger() {}
 
   /**
    * Creates a sensor-threshold trigger.
    *
-   * @param kind what kind of trigger this is
-   * @param deviceId the id of the device whose telemetry is watched
-   * @param sensorKey the key of the sensor the reading is for
+   * @param kind the trigger kind
+   * @param deviceId the watched device
+   * @param sensorKey the sensor key the reading is for
    * @param comparison how the reading is weighed against the threshold
-   * @param threshold the threshold the reading is compared to
+   * @param threshold the threshold compared to
    */
   public AutomationTrigger(
       TriggerKind kind, Long deviceId, String sensorKey, Comparison comparison, Double threshold) {

@@ -17,18 +17,17 @@ hub --> broker : subscribe\nhome/+/+
 
 == Run a broker
 
-The hub subscribes to one MQTT broker. Any broker works; Mosquitto is a common choice, and it can
-run on any always-on host on the LAN: a small board, a NAS, or a server. Install it, have it
-listen on the LAN so the hub can reach it, and require authentication for anything beyond a
-trusted network.
+The hub subscribes to one MQTT broker. Any broker works; Mosquitto is a common choice and runs on
+any always-on host on the LAN (a small board, a NAS, or a server). Install it, have it listen on the
+LAN so the hub can reach it, and require authentication for anything beyond a trusted network.
 
 == Point the hub at the broker
 
 The broker is connected from the web UI, not from static config: open *Configuration* (the gear
 icon in the top-right), go to the *MQTT* tab, enter the broker's host under *Connect an MQTT
-broker*, and connect. The hub remembers the connection
-and re-establishes it on restart. If the broker requires authentication, supply the credentials
-to the hub as `SMARTHOME_MQTT_USERNAME` / `SMARTHOME_MQTT_PASSWORD` environment variables.
+broker*, and connect. The hub remembers the connection and re-establishes it on restart. If the
+broker requires authentication, supply the credentials as `SMARTHOME_MQTT_USERNAME` /
+`SMARTHOME_MQTT_PASSWORD` environment variables.
 
 The hub subscribes to `home/+/+`.
 
@@ -48,14 +47,13 @@ mosquitto_pub -h <broker-host> -t home/living-room/temperature -m 21.6
 The node id and sensor key are the last two topic segments, so this creates a `living-room` node
 with a `temperature` sensor. Only recognized measurement keys (temperature, humidity, pressure, CO2,
 air quality, power, and so on) become sensors; an unknown key is ignored. A real node runs a small
-program that reads its sensors and publishes on an interval. A working reference (a Raspberry Pi
+program that reads its sensors and publishes on an interval; a working reference (a Raspberry Pi
 reading a couple of I²C sensors) is in `infrastructure/sensor-node/`.
 
-The hub stores each reading against the matching sensor, and the dashboard shows it, including a
-chart of each sensor's recent history.
+The hub stores each reading against the matching sensor, and the dashboard shows it with a chart of
+the sensor's recent history.
 
 == Broker and node on one host (optional)
 
 The broker and a sensor node need not be separate machines: one host can run the broker and also
-publish its own sensors. That is a convenience, not a requirement; any arrangement of a broker and
-nodes on the LAN works.
+publish its own sensors. Any arrangement of a broker and nodes on the LAN works.

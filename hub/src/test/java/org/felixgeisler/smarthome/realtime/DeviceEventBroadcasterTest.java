@@ -37,7 +37,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 class DeviceEventBroadcasterTest {
 
-  // A direct executor keeps the broadcast synchronous in tests; production uses its own thread.
+  // Direct executor: broadcasts run synchronously in tests.
   private final DeviceEventBroadcaster broadcaster =
       new DeviceEventBroadcaster(JsonMapper.builder().build(), Runnable::run);
 
@@ -75,7 +75,7 @@ class DeviceEventBroadcasterTest {
     broadcaster.onDeviceChanged(new DeviceChanged(sampleDevice()));
     broadcaster.onDeviceChanged(new DeviceChanged(sampleDevice()));
 
-    // The first send throws and drops the emitter, so the second broadcast never reaches it.
+    // The first send throws and drops the emitter, so the second never reaches it.
     verify(emitter, times(1)).send(any(SseEmitter.SseEventBuilder.class));
   }
 
@@ -111,8 +111,7 @@ class DeviceEventBroadcasterTest {
   @Test
   void erroredClient_stopsReceivingBroadcasts() throws IOException {
     SseEmitter emitter = mock(SseEmitter.class);
-    // ArgumentCaptor.forClass cannot express Consumer<Throwable>; the cast is safe because
-    // SseEmitter.onError only ever accepts that exact type.
+    // forClass cannot express Consumer<Throwable>; the cast is safe, onError only accepts it.
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Consumer<Throwable>> onError = ArgumentCaptor.forClass(Consumer.class);
     broadcaster.add(emitter);
@@ -147,8 +146,7 @@ class DeviceEventBroadcasterTest {
     ListAppender<ILoggingEvent> logged = new ListAppender<>();
     logged.start();
     logger.addAppender(logged);
-    // Capture the expected error here and keep it off the console, so the drop is asserted rather
-    // than left as an alarming stack trace in the build output.
+    // Keep the expected error off the console; the drop is asserted via the appender.
     logger.setAdditive(false);
 
     try {
@@ -158,10 +156,10 @@ class DeviceEventBroadcasterTest {
       logger.detachAppender(logged);
     }
 
-    // The bad event reaches no client: the serialization failure is swallowed, not propagated.
+    // The bad event reaches no client: the failure is swallowed, not propagated.
     verify(emitter, never()).send(any(SseEmitter.SseEventBuilder.class));
     verify(emitter, never()).send(anyString());
-    // And it is recorded, so a real serialization bug would surface in the logs rather than vanish.
+    // And it is recorded, so a real bug would surface in the logs.
     assertEquals(1, logged.list.size(), "the drop should be logged exactly once");
     ILoggingEvent event = logged.list.get(0);
     assertEquals(Level.ERROR, event.getLevel());

@@ -50,7 +50,7 @@ public class HomematicController {
   }
 
   /**
-   * Reports whether a CCU is currently connected, so the UI can show the connection at a glance.
+   * Reports whether a CCU is currently connected.
    *
    * @return the connection status
    */

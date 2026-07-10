@@ -10,14 +10,13 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Request body for creating or replacing an automation: a name, whether it is enabled, and its
- * triggers, conditions, and actions. A trigger and an action are required; conditions are optional.
+ * Request body for creating or replacing an automation.
  *
  * @param name a human-readable name
- * @param enabled whether the automation reacts to triggers; defaults to true when omitted
- * @param triggers the triggers, any of which starts the automation
- * @param conditions the conditions, all of which must hold for it to run
- * @param actions the actions, run in order when it runs
+ * @param enabled whether it reacts to triggers; defaults to true when omitted
+ * @param triggers the triggers, any of which starts it
+ * @param conditions the conditions, all of which must hold
+ * @param actions the actions, run in order
  */
 public record AutomationRequest(
     @NotBlank String name,
@@ -34,8 +33,7 @@ public record AutomationRequest(
   }
 
   /**
-   * Returns whether the automation should be enabled, defaulting to true when unspecified so a new
-   * automation is active unless explicitly created disabled.
+   * Returns the enabled flag, defaulting to true when unspecified.
    *
    * @return the effective enabled flag
    */
@@ -43,19 +41,19 @@ public record AutomationRequest(
     return enabled == null || enabled;
   }
 
-  // Shared so the reflectively-invoked validation methods below name one literal, not several.
+  // Shared so the reflective validation methods below name one literal, not several.
   private static final String UNUSED = "unused";
 
   /**
    * One trigger in a request.
    *
-   * @param kind what kind of trigger this is
-   * @param deviceId the id of the device whose telemetry is watched (sensor threshold only)
-   * @param sensorKey the key of the sensor the reading is for
+   * @param kind the trigger kind
+   * @param deviceId the watched device (sensor threshold only)
+   * @param sensorKey the sensor key the reading is for
    * @param comparison how the reading is weighed against the threshold
-   * @param threshold the threshold the reading is compared to
+   * @param threshold the threshold compared to
    * @param atTime the time of day a schedule fires
-   * @param onDays the days a schedule fires on; empty or omitted means every day
+   * @param onDays the days a schedule fires; empty or omitted means every day
    */
   public record TriggerRequest(
       @NotNull TriggerKind kind,
@@ -106,8 +104,8 @@ public record AutomationRequest(
   /**
    * One condition in a request.
    *
-   * @param kind what kind of condition this is
-   * @param deviceId the id of the device whose state is checked
+   * @param kind the condition kind
+   * @param deviceId the device whose state is checked
    * @param stateKey the state key to read
    * @param expected the value the state must equal
    */
@@ -136,11 +134,11 @@ public record AutomationRequest(
   /**
    * One action in a request.
    *
-   * @param kind what kind of action this is
-   * @param deviceId the id of the device to act on
-   * @param on the desired power state for a command action, or null to leave it unchanged
-   * @param brightness the desired brightness percentage for a command action, or null
-   * @param colorTemperatureK the desired color temperature in Kelvin for a command action, or null
+   * @param kind the action kind
+   * @param deviceId the device to act on
+   * @param on desired power state, or null to leave unchanged
+   * @param brightness desired brightness percent, or null
+   * @param colorTemperatureK desired color temperature in Kelvin, or null
    */
   public record ActionRequest(
       @NotNull ActionKind kind,

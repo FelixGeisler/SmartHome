@@ -110,7 +110,7 @@ describe('devices api client', () => {
   })
 
   it('falls back to the status code when the problem response has no detail', async () => {
-    // The API deliberately omits detail on some 5xx responses (see ApiExceptionHandler).
+    // The API omits detail on some 5xx responses (see ApiExceptionHandler).
     const problem = { type: 'about:blank', title: 'Internal Server Error', status: 500 }
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(problem, 500)))
 

@@ -7,9 +7,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
- * A minimal, read-only Modbus TCP client: it opens a socket to a device and reads holding registers
- * (function code 0x03), which is all the Solakon poller needs: no writes, no coils, no pooling. It
- * is not thread-safe; a client belongs to the single poll that opened it and is closed with it.
+ * A minimal, read-only Modbus TCP client reading holding registers (function code 0x03).
+ *
+ * <p>Not thread-safe: a client belongs to the single poll that opened it and is closed with it.
  */
 final class ModbusTcpClient implements AutoCloseable {
 

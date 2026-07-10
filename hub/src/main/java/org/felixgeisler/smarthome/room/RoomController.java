@@ -69,7 +69,7 @@ public class RoomController {
   }
 
   /**
-   * Deletes a room; any devices in it are unassigned first so they fall back to unassigned.
+   * Deletes a room, unassigning any devices in it first.
    *
    * @param id the room id
    * @return 204 No Content

@@ -10,12 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/**
- * One measurement channel on a {@link Device}, e.g. a temperature or humidity reading.
- *
- * <p>Type and unit are fixed when the sensor is declared at registration; {@code value} and
- * {@code updatedAt} stay null until the first reading arrives over the device's integration.
- */
+/** One measurement channel on a {@link Device}, e.g. a temperature or humidity reading. */
 @Entity
 @Table(name = "sensors")
 public class Sensor {
@@ -48,9 +43,9 @@ public class Sensor {
   /**
    * Declares a sensor with a fixed type and unit, awaiting its first reading.
    *
-   * @param key the sensor's key within its device (e.g. {@code "temperature"})
+   * @param key the sensor's key within its device
    * @param type what the sensor measures
-   * @param unit the unit its readings are expressed in (e.g. {@code "°C"})
+   * @param unit the unit its readings are expressed in
    */
   public Sensor(String key, SensorType type, String unit) {
     this.key = key;

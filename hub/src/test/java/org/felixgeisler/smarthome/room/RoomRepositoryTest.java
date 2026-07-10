@@ -13,8 +13,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.dao.DataIntegrityViolationException;
 
-// @DataJpaTest's slice doesn't include Flyway, so pull it in to run the real migrations against
-// the test database; the repository is then exercised on the same schema the application uses.
+// @DataJpaTest's slice excludes Flyway; pull it in to test against the real migrated schema.
 @DataJpaTest
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 class RoomRepositoryTest {

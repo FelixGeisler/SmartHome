@@ -7,10 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * A named storey that groups rooms, in the spirit of a Home Assistant "floor": a room belongs to
- * zero or one floor. A floor carries no behavior of its own; it is organizational metadata.
- */
+/** A named storey that groups rooms, like a Home Assistant "floor". */
 @Entity
 @Table(name = "floors")
 public class Floor {
@@ -22,7 +19,6 @@ public class Floor {
   @Column(nullable = false, unique = true)
   private String name;
 
-  /** Sort order among floors, from the lowest storey to the highest. */
   @Column(nullable = false)
   private int level;
 

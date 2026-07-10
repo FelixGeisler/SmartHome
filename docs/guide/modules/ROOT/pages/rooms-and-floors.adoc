@@ -1,8 +1,8 @@
 = Rooms and floors
 
 Group devices so the dashboard mirrors your home. A device belongs to at most one room, and a room
-to at most one floor. Grouping is only an organizing layer, so a device works the same whether or
-not it is assigned.
+to at most one floor. Grouping is only an organizing layer; a device works the same whether or not
+it is assigned.
 
 .The *Rooms* page: devices placed on a floor plan.
 image::rooms.png[Devices grouped by room on a floor plan]

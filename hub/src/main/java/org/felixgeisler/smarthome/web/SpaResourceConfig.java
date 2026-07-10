@@ -13,10 +13,9 @@ import org.springframework.web.servlet.resource.PathResourceResolver;
 /**
  * Serves the bundled single-page app and forwards its client-side routes to the entry point.
  *
- * <p>The dashboard uses history-based routing (BrowserRouter), so a deep link such as
- * {@code /dashboard} reaches the server as a real path. An existing file is served as-is; any
- * other path that is not an API or API-docs request falls back to {@code index.html}, letting the
- * SPA resolve the route in the browser.
+ * <p>The SPA uses history-based routing (BrowserRouter), so a deep link reaches the server as a
+ * real path. An existing file is served as-is; any other non-API path falls back to {@code
+ * index.html}.
  */
 @NullMarked
 @Configuration
@@ -39,8 +38,8 @@ public class SpaResourceConfig implements WebMvcConfigurer {
     @Override
     protected @Nullable Resource getResource(String resourcePath, Resource location)
         throws IOException {
-      // Delegate to the superclass so its path-traversal / under-location checks run; it returns
-      // null when no safe resource matches (missing file, or an attempted escape outside /static).
+      // Delegate to the superclass so its path-traversal checks run; it returns null when no safe
+      // resource matches.
       Resource resolved = super.getResource(resourcePath, location);
       if (resolved != null) {
         return resolved;
@@ -51,8 +50,8 @@ public class SpaResourceConfig implements WebMvcConfigurer {
           || resourcePath.startsWith("swagger-ui")) {
         return null;
       }
-      // When the SPA isn't bundled (e.g. a dev run with -Dskip.frontend=true), index.html is
-      // absent; return null for a clean 404 instead of throwing on the missing file.
+      // When the SPA isn't bundled (dev run with -Dskip.frontend=true), index.html is absent;
+      // return null for a clean 404.
       return INDEX.exists() ? INDEX : null;
     }
   }

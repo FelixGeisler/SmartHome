@@ -87,8 +87,8 @@ public class AutomationService {
     Automation automation = getById(id);
     if (automation.isEnabled() != enabled) {
       automation.setEnabled(enabled);
-      // Reset the edge state so a re-enabled automation reacts to the next crossing from a clean
-      // baseline, instead of a stale latch from before it was disabled suppressing it.
+      // Reset edge state so a re-enabled automation reacts from a clean baseline, not a stale
+      // latch from before it was disabled.
       engine.forget(automation);
     }
     return automations.save(automation);

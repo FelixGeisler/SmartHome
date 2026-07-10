@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Reads and writes persisted hub settings. Integrations use it to remember their connection
- * settings across restarts, so a configured broker, paired bridge, or API key is restored on the
- * next boot rather than set again by hand.
+ * Reads and writes persisted hub settings.
  */
 @Service
 public class SettingsStore {
@@ -48,7 +46,7 @@ public class SettingsStore {
   }
 
   /**
-   * Removes a setting if present, so a later read reports it unset.
+   * Removes a setting if present.
    *
    * @param key the setting key
    */

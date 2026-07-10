@@ -30,44 +30,40 @@ import { pointToFraction } from '../roomsLayout'
 import { BrightnessControl, ColorControl, ColorTemperatureControl } from './deviceControls'
 import { DeviceGlyph } from './DeviceGlyph'
 
-/** The data-transfer type a dragged device id rides on from the tray to a room box. */
+/** Data-transfer MIME for a dragged device id. */
 export const DEVICE_DND_MIME = 'application/x-smarthome-device'
 
 interface RoomBoxProps {
   room: Room
-  /** Devices assigned to this room. */
   devices: Device[]
-  /** One placement per assigned device (already reconciled by the page). */
+  /** One placement per assigned device (reconciled by the page). */
   placements: DevicePlacement[]
-  /** Registered devices not in any room; the choices the assign picker offers. */
+  /** Registered devices not in any room; the picker's choices. */
   unassigned: Device[]
-  /** True when the floor plan is in edit mode (boxes and icons move; device controls are off). */
+  /** True when the floor plan is in edit mode. */
   editing: boolean
   busyIds: ReadonlySet<number>
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
-  /** Assigns a device to the room, optionally at a dropped position (else a default slot). */
+  /** Assigns a device to the room, optionally at a dropped position. */
   onAssignDevice: (roomId: number, deviceId: number, position?: { fx: number; fy: number }) => void
   onClearDevice: (device: Device) => void
   onMovePlacement: (deviceId: number, fx: number, fy: number) => void
   onRenameRoom: (room: Room, name: string) => void
   onDeleteRoom: (room: Room) => void
-  /** The floors a room can be moved to; empty when no floors exist. */
   floors: Floor[]
   onSetRoomFloor: (room: Room, floorId: number | null) => void
 }
 
-/** True when the device offers something to operate beyond a plain on/off toggle. */
+/** True when the device has controls beyond a plain on/off toggle. */
 function hasControls(device: Device): boolean {
   return isDimmable(device) || hasColor(device) || hasColorTemperature(device)
 }
 
 /**
- * One room on the floor plan: its name over a floor on which each assigned device sits as a symbol
- * at its saved spot. In view mode the icons read their live values and control their devices (click
- * a lamp to toggle, or open brightness/color on it). In edit mode the box is draggable/resizable (by
- * the grid), the icons drag to reposition, devices drop in from the tray, and the room can be renamed
- * or deleted.
+ * One room on the floor plan: assigned devices sit as symbols at their saved spots. In view mode
+ * icons show live values and control their devices; in edit mode the box and icons drag, devices
+ * drop in from the tray, and the room can be renamed or deleted.
  */
 export function RoomBox({
   room,
@@ -228,9 +224,9 @@ interface RoomDeviceIconProps {
 }
 
 /**
- * One device as a floor-plan symbol at its placed spot. A switchable device's glyph is a toggle
- * button; a dimmable or color device also offers a controls popover; a sensor shows its reading as a
- * label. In edit mode the glyph is dragged (pointer events) to reposition it and controls are inert.
+ * One device as a floor-plan symbol at its placed spot: a toggle button when switchable, a controls
+ * popover when dimmable/color, a reading label for a sensor. In edit mode the glyph drags to
+ * reposition and controls are inert.
  */
 function RoomDeviceIcon({
   device,
@@ -249,7 +245,7 @@ function RoomDeviceIcon({
 
   const kind = deviceIconKind(device)
   const on = isSwitchable(device) && isOn(device)
-  // A lit lamp or a producing inverter glows; everything else sits quiet.
+  // A lit lamp or a producing inverter glows.
   const glow = on || kind === 'solar'
   const tint = on ? litColor(device) : undefined
 
@@ -260,7 +256,7 @@ function RoomDeviceIcon({
       : undefined
   const socSensor = device.sensors.find((sensor) => sensor.type === 'BATTERY_SOC')
   const soc = socSensor?.value == null ? null : Number(socSensor.value)
-  // Every reading other than the headline and the battery ring, shown as compact stats.
+  // Readings other than the headline and battery ring.
   const secondary = device.sensors.filter(
     (sensor) => sensor !== primary && sensor.type !== 'BATTERY_SOC',
   )
@@ -290,8 +286,8 @@ function RoomDeviceIcon({
     if (!dragging.current) {
       return
     }
-    // A move with no primary button held is a hover, not a drag: end a gesture whose pointerup or
-    // pointercancel was missed, so the icon never trails the cursor without a press.
+    // No primary button held means a missed pointerup/cancel; end the gesture so the icon doesn't
+    // trail the cursor.
     if ((event.buttons & 1) === 0) {
       dragging.current = false
       return
@@ -413,7 +409,7 @@ function RoomDeviceIcon({
   )
 }
 
-/** A lit lamp's color as hex, or undefined when it has none set (falls back to the on color). */
+/** A lit lamp's color as hex, or undefined when none is set. */
 function litColor(device: Device): string | undefined {
   if (!hasColor(device)) {
     return undefined
@@ -422,7 +418,7 @@ function litColor(device: Device): string | undefined {
   return xy === null ? undefined : xyToHex(xy.x, xy.y)
 }
 
-/** An accessible label for a non-toggle icon: the device name and each of its readings. */
+/** Accessible label for a non-toggle icon: name plus readings. */
 function describe(device: Device): string {
   if (device.sensors.length === 0) {
     return device.name
@@ -431,7 +427,7 @@ function describe(device: Device): string {
   return `${device.name}: ${readings}`
 }
 
-/** An uncontrolled field that renames the room on Enter or blur, ignoring an empty or unchanged name. */
+/** Uncontrolled field; renames on Enter or blur, ignoring an empty or unchanged name. */
 function RenameField({ room, onRename }: { room: Room; onRename: (room: Room, name: string) => void }) {
   function commit(value: string) {
     const name = value.trim()
@@ -457,17 +453,12 @@ function RenameField({ room, onRename }: { room: Room; onRename: (room: Room, na
 
 interface DevicePickerProps {
   room: Room
-  /** Registered devices not in any room. */
   devices: Device[]
   onClose: () => void
   onAdd: (device: Device) => void
 }
 
-/**
- * A modal listing the devices not in any room, so one can be assigned to this room. It stays open
- * after a pick so several devices can be added in one sitting; the accessible equivalent of dragging
- * a device from the tray.
- */
+/** Modal of unassigned devices; stays open after a pick so several can be added in one sitting. */
 function DevicePicker({ room, devices, onClose, onAdd }: DevicePickerProps) {
   return (
     <div className="card-picker" role="presentation" onClick={onClose}>

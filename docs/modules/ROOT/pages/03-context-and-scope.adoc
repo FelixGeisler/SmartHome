@@ -26,6 +26,6 @@ hub --> claude : assistant chat
 
 == Scope
 
-Register, list, read, and command devices, and organize them into rooms and floors. Around that
-core the hub ingests sensor readings, records their history for charts, runs automations that act on
-those readings and on schedules, and exposes the same device operations to the AI assistant.
+Register, list, read, and command devices, and organize them into rooms and floors. The hub also
+ingests sensor readings, records their history for charts, runs automations on readings and
+schedules, and exposes the same device operations to the AI assistant.

@@ -23,23 +23,19 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Fans device changes out to every connected dashboard over Server-Sent Events (ADR 11). Listening
- * for the device domain events keeps this outbound push decoupled from the device service, the same
- * way the history recorder and automations do; a client that has gone away is dropped on the next
- * failed send.
+ * Fans device changes out to every connected dashboard over Server-Sent Events (ADR 11).
  *
- * <p>Fan-out runs on its own single broadcast thread, never on the publisher's: a slow or stalled
- * client must not hold up telemetry ingest or a command request. The payload is serialized once per
- * event, not once per client, and if the broadcast queue ever fills because the thread is stuck on
- * a dead connection, further events are dropped (each client re-syncs on reconnect anyway).
+ * <p>Fan-out runs on its own broadcast thread, never the publisher's, so a slow client cannot
+ * hold up telemetry ingest or a command. If the broadcast queue fills, further events are dropped
+ * (each client re-syncs on reconnect).
  */
 @Component
 public class DeviceEventBroadcaster {
 
-  /** Name of the SSE event carrying a device's current view after it is added or changes. */
+  /** SSE event carrying a device's current view. */
   static final String DEVICE_CHANGED = "device-changed";
 
-  /** Name of the SSE event carrying the id of a device that was removed. */
+  /** SSE event carrying a removed device's id. */
   static final String DEVICE_REMOVED = "device-removed";
 
   private static final int QUEUE_CAPACITY = 512;
@@ -51,10 +47,11 @@ public class DeviceEventBroadcaster {
   private final Executor broadcasts;
 
   /**
-   * Creates the broadcaster with its own single broadcast thread. The annotation picks this
-   * constructor for injection over the executor-supplying one that tests use.
+   * Creates the broadcaster with its own single broadcast thread.
    *
-   * @param json the mapper used to serialize event payloads
+   * <p>{@code @Autowired} picks this constructor over the executor-supplying one that tests use.
+   *
+   * @param json the JSON mapper
    */
   @Autowired
   public DeviceEventBroadcaster(ObjectMapper json) {
@@ -67,9 +64,7 @@ public class DeviceEventBroadcaster {
   }
 
   /**
-   * Builds the single broadcast thread. The executor lives as long as the bean and is shut down in
-   * {@link #completeAll(ContextClosedEvent)}; when its queue fills because the thread is stuck on a
-   * dead connection, further events are dropped with a warning rather than blocking the publisher.
+   * Builds the single broadcast thread, dropping events rather than blocking when its queue fills.
    *
    * @return the broadcast executor
    */
@@ -97,11 +92,10 @@ public class DeviceEventBroadcaster {
   }
 
   /**
-   * Registers a client's event stream and wires its own removal when it completes, times out, or
-   * errors, so a disconnected client does not linger.
+   * Registers a client's event stream and removes it on completion, timeout, or error.
    *
    * @param emitter the emitter feeding one connected client
-   * @return the same emitter, so the controller can return it
+   * @return the same emitter
    */
   public SseEmitter add(SseEmitter emitter) {
     emitters.add(emitter);
@@ -136,16 +130,16 @@ public class DeviceEventBroadcaster {
   }
 
   /**
-   * Completes every open stream when the context starts closing. This must run on {@link
-   * ContextClosedEvent}, not {@code @PreDestroy}: graceful shutdown waits for in-progress async
-   * requests (which an open stream is) before beans are destroyed, so a later hook would let one
-   * open dashboard stall every hub shutdown for the whole graceful-shutdown timeout.
+   * Completes every open stream when the context starts closing.
+   *
+   * <p>Must run on {@link ContextClosedEvent}, not {@code @PreDestroy}: graceful shutdown waits for
+   * in-progress async requests (an open stream is one) before destroying beans, so a later hook
+   * would let one open dashboard stall shutdown for the whole graceful-shutdown timeout.
    *
    * @param event the context-closed event
    */
-  // PMD's CloseResource flags the pattern variable as an unclosed resource, but this method IS
-  // the shutdown path: the pool the bean owns is stopped here (shutdown, not close, so this
-  // never waits on the broadcast thread). Tests inject a plain Executor.
+  // PMD CloseResource flags the pattern variable, but this IS the shutdown path: the bean's pool is
+  // stopped here (shutdown, not close, so it never waits on the broadcast thread).
   @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void completeAll(ContextClosedEvent event) {
@@ -156,7 +150,7 @@ public class DeviceEventBroadcaster {
       try {
         emitter.complete();
       } catch (IllegalStateException ex) {
-        // The emitter already completed or errored on its own; nothing left to close.
+        // Already completed or errored on its own; nothing to close.
         log.debug("Live-update client was already closed during shutdown", ex);
       }
     }
@@ -179,7 +173,7 @@ public class DeviceEventBroadcaster {
   private void send(String name, String data) {
     for (SseEmitter emitter : emitters) {
       try {
-        // Pre-serialized JSON: the String converter writes it verbatim under the JSON media type.
+        // Pre-serialized JSON: written verbatim under the JSON media type.
         emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
       } catch (IOException | IllegalStateException ex) {
         log.debug("Live-update client went away; dropping it", ex);

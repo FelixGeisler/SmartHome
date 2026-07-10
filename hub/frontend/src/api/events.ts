@@ -1,6 +1,5 @@
 import type { Device } from './devices'
 
-/** Callbacks driven by the hub's live device event stream. */
 export interface DeviceStreamHandlers {
   /** A device was added or changed; the payload is its current view. */
   onDeviceChanged: (device: Device) => void
@@ -17,14 +16,10 @@ export interface DeviceStreamHandlers {
 const RETRY_MS = 5000
 
 /**
- * Subscribes to the hub's live device event stream (Server-Sent Events at {@code /api/events}) so
- * the dashboard reflects changes without polling. The browser's EventSource reconnects on its own
- * after a network drop, but gives up for good when a reconnect attempt gets an HTTP error response
- * (e.g. a proxy answering 502 while the hub restarts); in that case the stream is rebuilt from
- * scratch after a short pause, so the dashboard always comes back on its own.
- *
- * @param handlers callbacks for the stream's events
- * @returns a function that closes the stream and stops any pending rebuild
+ * Subscribes to the hub's live device event stream (SSE at /api/events). EventSource reconnects on
+ * its own after a network drop, but gives up for good when a reconnect gets an HTTP error (e.g. a
+ * proxy 502 during a hub restart); we rebuild from scratch after a pause so the stream always
+ * returns. The disposer closes the stream and cancels any pending rebuild.
  */
 export function openDeviceStream(handlers: DeviceStreamHandlers): () => void {
   let source: EventSource | null = null

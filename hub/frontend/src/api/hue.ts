@@ -1,6 +1,5 @@
 import { request } from './devices'
 
-/** A light discovered on the Hue bridge. */
 export interface HueLight {
   id: string
   name: string
@@ -9,18 +8,15 @@ export interface HueLight {
   capabilities: string[]
 }
 
-/** Result of a bridge pairing attempt. */
 export interface PairResult {
   paired: boolean
   message: string
 }
 
-/** Whether a Hue bridge is currently paired. */
 export interface HueStatus {
   paired: boolean
 }
 
-/** Reports whether a Hue bridge is currently paired. */
 export function hueStatus(): Promise<HueStatus> {
   return request<HueStatus>('/api/integrations/hue/status')
 }
@@ -34,7 +30,6 @@ export function pairBridge(host: string): Promise<PairResult> {
   })
 }
 
-/** Lists the lights on the paired bridge. */
 export function discoverLights(): Promise<HueLight[]> {
   return request<HueLight[]>('/api/integrations/hue/lights')
 }

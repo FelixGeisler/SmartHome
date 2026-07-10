@@ -15,17 +15,17 @@ import org.felixgeisler.smarthome.telemetry.TelemetryHistoryService;
 import org.springframework.stereotype.Component;
 
 /**
- * The assistant's tools, mapping the model's calls onto the hub's existing services. Results are
- * returned as compact text the model reads back; a tool never throws; a failure becomes an error
- * string so the model can explain it.
+ * The assistant's tools, mapping the model's calls onto the hub's services.
+ *
+ * <p>A tool never throws; a failure becomes an error string the model can explain.
  */
 @Component
 class AssistantTools {
 
-  /** CO2 above this (ppm) is worth flagging to the user. */
+  /** CO2 above this (ppm) is worth flagging. */
   private static final int CO2_CONCERN_PPM = 1000;
 
-  /** The tool argument naming a device by its external id. */
+  /** Tool argument for a device's external id. */
   private static final String DEVICE_ID = "deviceId";
 
   private final DeviceService devices;
@@ -108,7 +108,7 @@ class AssistantTools {
         default -> "Error: unknown tool " + name;
       };
     } catch (RuntimeException ex) {
-      // Any domain exception (not found, unsupported, invalid) becomes a result the model can read.
+      // Any domain exception becomes a result the model can read.
       return "Error: " + ex.getMessage();
     }
   }

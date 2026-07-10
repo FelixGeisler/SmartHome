@@ -14,19 +14,17 @@ import { SensorChart } from './SensorChart'
 
 interface DeviceCardProps {
   device: Device
-  /** True, while a command for this device is in flight; disables the toggle. */
+  /** True while a command is in flight; disables the toggle. */
   busy: boolean
   /** Bumped on every event-stream (re)connect; charts refetch their history when it changes. */
   syncToken?: number
-  /** True when the dashboard is in edit mode; shows the card as draggable/resizable. */
   editing?: boolean
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
-  /** Removes this card from the dashboard (edit mode only); the device stays registered. */
+  /** Removes this card from the dashboard; the device stays registered. */
   onRemove: (device: Device) => void
-  /** Sensor keys whose charts are hidden on this card; those readings are not rendered. */
   hiddenSensors?: string[]
-  /** Toggles a sensor's chart on this card (edit mode); omitted outside the dashboard. */
+  /** Toggles a sensor's chart (edit mode). */
   onToggleSensor?: (deviceId: number, sensorKey: string) => void
 }
 
@@ -156,7 +154,6 @@ export function DeviceCard({
   )
 }
 
-/** A trash-can glyph for the delete button. */
 function TrashIcon() {
   return (
     <svg

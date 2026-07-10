@@ -39,8 +39,8 @@ public class DayOfWeekSetConverter implements AttributeConverter<Set<DayOfWeek>,
     try {
       return Optional.of(DayOfWeek.valueOf(name));
     } catch (IllegalArgumentException ex) {
-      // A stored day that no longer maps to a weekday (a corrupted or hand-edited row) is dropped
-      // rather than throwing, which would fail loading every automation and the list endpoint.
+      // Drop a stored day that no longer maps to a weekday rather than throw, which would fail
+      // loading every automation.
       return Optional.empty();
     }
   }

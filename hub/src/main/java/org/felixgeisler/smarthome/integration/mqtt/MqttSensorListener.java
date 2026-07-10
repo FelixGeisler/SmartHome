@@ -12,16 +12,15 @@ import org.springframework.stereotype.Component;
 /**
  * Routes inbound MQTT messages to the device service as sensor readings.
  *
- * <p>Topics follow {@code <prefix>/<device-externalId>/<sensor-key>} and the payload is the
- * reading value; the device's external id and the sensor key are the last two segments. Topics
- * that do not carry both are logged and dropped.
+ * <p>Topics follow {@code <prefix>/<device-externalId>/<sensor-key>}; the last two segments are the
+ * device's external id and the sensor key. Topics missing both are logged and dropped.
  */
 @Component
 public class MqttSensorListener implements MqttCallback {
 
   private static final Logger log = LoggerFactory.getLogger(MqttSensorListener.class);
 
-  // A reading topic ends with the device's external id and then the sensor key.
+  // A reading topic's last two segments: external id, then sensor key.
   private static final int MIN_SEGMENTS = 2;
 
   private final DeviceService devices;
@@ -56,6 +55,6 @@ public class MqttSensorListener implements MqttCallback {
 
   @Override
   public void deliveryComplete(IMqttDeliveryToken token) {
-    // The hub only subscribes; it never publishes, so delivery callbacks carry no work.
+    // The hub only subscribes, never publishes, so there is no delivery work.
   }
 }

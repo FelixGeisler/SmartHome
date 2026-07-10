@@ -18,9 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Polls each Shelly plug's metering and records it as sensor readings on that plug's own device, so
- * the dashboard shows its power, energy, voltage, current, frequency, and internal temperature next
- * to the on/off toggle.
+ * Polls each Shelly plug's metering and records it as sensor readings on that plug's own device.
  *
  * <p>The reads run on the poller's own thread, never the scheduler's, so a slow or unreachable plug
  * cannot delay the scheduler that also drives the reachability sweep and schedule automations; a
@@ -82,8 +80,7 @@ public class ShellyMeterPoller {
   }
 
   /** Reads and records the metering of every Shelly plug. */
-  // A broad catch is deliberate: this runs on the meter thread and one plug's read failing must
-  // neither escape nor abandon the rest of the poll.
+  // Broad catch is deliberate: one plug's read failing must not abandon the rest of the poll.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public void poll() {
     String shelly = adapter.adapterType();
@@ -119,8 +116,8 @@ public class ShellyMeterPoller {
     if (status.aenergy() == null || status.aenergy().total() == null) {
       return;
     }
-    // Convert watt-hours to kilowatt-hours by shifting the decimal point, so the value stays exact
-    // instead of picking up the float noise a raw 1000.0 double division leaves (e.g. 2967.3 Wh).
+    // Shift the decimal point rather than divide by 1000.0, so the value stays exact instead of
+    // picking up float noise (e.g. 2967.3 Wh).
     BigDecimal kwh = BigDecimal.valueOf(status.aenergy().total()).movePointLeft(3);
     devices.recordReading(externalId, SensorType.ENERGY_TOTAL.getKey(), format(kwh));
   }
@@ -140,7 +137,7 @@ public class ShellyMeterPoller {
    * @param event the context-closed event
    */
   // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the pool the
-  // bean owns is stopped here (shutdown, not close). Tests inject a plain Executor.
+  // bean owns is stopped (shutdown, not close).
   @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {

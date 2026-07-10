@@ -4,9 +4,8 @@ A reference for reaching a Solakon (FoxESS) inverter over Modbus TCP when it is 
 network as the hub, for example when the inverter is far from any Ethernet drop. A Raspberry Pi sits
 next to the inverter, gives it a network connection, and relays Modbus TCP so the hub can poll it.
 
-This is only needed when the inverter cannot be plugged straight into your LAN. If it is already on
-your network with Modbus TCP enabled, point the hub at it directly and skip this (see the Solakon
-steps in `docs/guide/modules/ROOT/pages/adding-devices.adoc`).
+If the inverter is already on your network with Modbus TCP enabled, point the hub at it directly and
+skip this (see the Solakon steps in `docs/guide/modules/ROOT/pages/adding-devices.adoc`).
 
 ## How it fits together
 
@@ -21,8 +20,7 @@ steps in `docs/guide/modules/ROOT/pages/adding-devices.adoc`).
 
 Give the inverter-facing interface a private network and share the Pi's uplink to it. With
 NetworkManager this is the "Shared to other computers" IPv4 method on that interface, which sets up
-the address, NAT, and a small DHCP server. The inverter then gets an address on that private network
-and reaches the internet through the Pi.
+the address, NAT, and a small DHCP server.
 
 ## Run the Modbus relay
 

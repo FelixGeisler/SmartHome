@@ -38,12 +38,10 @@ import {
 import type { LoadState } from './DashboardPage'
 
 interface RoomsFloorPlanProps {
-  /** The live devices, shared with the dashboard; each is placed in its room or the tray. */
   devices: Device[]
   busyIds: ReadonlySet<number>
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
-  /** Folds a device the floor plan reassigned (or cleared) back into the shared device state. */
   onDeviceUpdated: (device: Device) => void
 }
 
@@ -59,18 +57,11 @@ const FALLBACK_WIDTH = 1200
 // `.room-icon` is here so dragging a device icon repositions the icon, never the room box.
 const DRAG_CANCEL = 'button, input, select, a, .room-icon'
 
-/** True when the room is not assigned to any floor. */
 function isUnassigned(room: Room): boolean {
   return room.floorId === null || room.floorId === undefined
 }
 
-/**
- * The Rooms view: a spatial floor plan of room boxes on a grid, grouped by building floor. A dot
- * rail on the side switches floors, showing one storey at a time. Each box is a floor on which its
- * devices sit as symbols; in view mode the icons read their values and control their devices, and in
- * edit mode the boxes and icons are arranged, floors and rooms managed, and rooms moved between
- * floors. Box and device positions persist as a settings blob.
- */
+/** The Rooms view: a spatial floor plan of room boxes on a grid, grouped by building floor. */
 export function RoomsFloorPlan({
   devices,
   busyIds,
@@ -133,8 +124,7 @@ export function RoomsFloorPlan({
     loadFloors()
   }, [loadRooms, loadFloors])
 
-  // Load the saved arrangement once. A missing or unreadable layout just leaves the tidy default;
-  // the layout is advisory and reconciled against the live rooms and devices.
+  // The layout is advisory: a missing or unreadable one just leaves the tidy default.
   useEffect(() => {
     getRoomsLayout()
       .then((saved) => {
@@ -151,21 +141,20 @@ export function RoomsFloorPlan({
     (device) => device.roomId === null || device.roomId === undefined,
   )
   const hasUnassignedRooms = rooms.some(isUnassigned)
-  // The selected floor, corrected so the view is never stranded on an empty, dot-less bucket: after
-  // the last unassigned room is placed, or an empty active floor is deleted, fall back to a floor.
+  // Corrected so the view is never stranded on an empty, dot-less bucket (last unassigned room
+  // placed, or the active floor deleted): fall back to a floor.
   const fallbackFloorId = hasFloors ? floors[0].id : null
   const selectionValid =
     (activeFloorId === null && hasUnassignedRooms) || floors.some((f) => f.id === activeFloorId)
   const effectiveFloorId = selectionValid ? activeFloorId : fallbackFloorId
   const activeFloor = floors.find((floor) => floor.id === effectiveFloorId) ?? null
-  // The rooms on the shown floor (or every room when no floors exist yet).
   const visibleRooms = hasFloors
     ? rooms.filter((room) => (room.floorId ?? null) === effectiveFloorId)
     : rooms
   const visibleById = new Map(visibleRooms.map((room) => [room.id, room]))
   const placements = editing ? draftPlacements : savedPlacements
-  // Every shown room gets a box. In edit mode the draft holds the boxes for floors touched this
-  // session; fall back to the saved layout (or a default) so switching floors never blanks a floor.
+  // In edit mode the draft holds boxes only for floors touched this session; fall back to the
+  // saved layout so switching floors never blanks a floor.
   const boxes = editing
     ? displayBoxes(visibleRooms, mergeBoxes(draft, savedLayout ?? []))
     : displayBoxes(visibleRooms, savedLayout)
@@ -199,8 +188,8 @@ export function RoomsFloorPlan({
     const devicePlacements = rooms.flatMap((room) =>
       placementsToSave(devicesIn(room.id), draftPlacements),
     )
-    // The draft only holds this floor's boxes; merge it over the saved boxes so the other floors'
-    // room positions survive, dropping any box whose room no longer exists.
+    // Merge the draft (this floor's boxes) over the saved boxes so other floors' positions survive,
+    // dropping any box whose room no longer exists.
     const liveRoomIds = new Set(rooms.map((room) => room.id))
     const boxById = new Map<number, RoomBoxLayout>()
     for (const box of savedLayout ?? []) {
@@ -226,8 +215,7 @@ export function RoomsFloorPlan({
     }
   }
 
-  // A drag or resize hands back the shown floor's grid; merge it into the draft so boxes for other
-  // floors touched earlier this session are kept rather than replaced.
+  // Merge into the draft so boxes for other floors touched earlier this session are kept.
   function handleLayoutChange(next: Layout) {
     const nextBoxes = fromGridLayout(next)
     const nextIds = new Set(nextBoxes.map((box) => box.roomId))
@@ -322,8 +310,8 @@ export function RoomsFloorPlan({
     clearDeviceRoom(device.id)
       .then((updated) => {
         onDeviceUpdated(updated)
-        // Drop the placement only after the clear succeeds; a failed request must not strip the
-        // placement while the device is still in the room (its icon would jump to the default slot).
+        // Drop the placement only after the clear succeeds; otherwise a failed request would jump
+        // the icon to the default slot while the device is still in the room.
         setDraftPlacements((current) =>
           current.filter((placement) => placement.deviceId !== device.id),
         )
@@ -488,7 +476,6 @@ export function RoomsFloorPlan({
   )
 }
 
-/** An uncontrolled field that renames a floor on Enter or blur, ignoring an empty or unchanged name. */
 function FloorNameField({
   floor,
   onRename,
@@ -518,7 +505,6 @@ function FloorNameField({
   )
 }
 
-/** Merges box lists by room id, letting the primary list (the draft) win over the fallback. */
 function mergeBoxes(primary: RoomBoxLayout[], fallback: RoomBoxLayout[]): RoomBoxLayout[] {
   const byId = new Map<number, RoomBoxLayout>()
   for (const box of fallback) {
@@ -530,14 +516,12 @@ function mergeBoxes(primary: RoomBoxLayout[], fallback: RoomBoxLayout[]): RoomBo
   return [...byId.values()]
 }
 
-/** Replaces a device's placement by id, or appends it when the device has none yet. */
 function upsertPlacement(placements: DevicePlacement[], next: DevicePlacement): DevicePlacement[] {
   return placements.some((placement) => placement.deviceId === next.deviceId)
     ? placements.map((placement) => (placement.deviceId === next.deviceId ? next : placement))
     : [...placements, next]
 }
 
-/** The hint shown when the floor plan has no rooms to show, tailored to the situation. */
 function emptyHint(editing: boolean, hasFloors: boolean): string {
   if (hasFloors) {
     return editing

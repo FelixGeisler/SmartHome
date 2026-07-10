@@ -142,7 +142,6 @@ class HomematicCcuServiceTest {
     assertTrue(service.connect(host, "Admin", "admin"));
     assertFalse(service.connect(host, "Admin", "wrong"));
 
-    // The original connection still works: the rejected attempt did not overwrite its credentials.
     assertEquals("1", service.readValue("HmIP-RF/0001DD89A4662F:3", "STATE"));
   }
 

@@ -17,7 +17,7 @@ public class DeviceAlreadyExistsException extends RuntimeException {
   }
 
   /**
-   * Creates the exception for a duplicate external id, preserving the underlying cause.
+   * Creates the exception, preserving the underlying cause.
    *
    * @param externalId the external id that already exists
    * @param cause the underlying persistence failure

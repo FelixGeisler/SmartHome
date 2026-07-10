@@ -4,14 +4,12 @@ import type { Device } from './api/devices'
 
 /** Grid geometry shared with the grid config in DashboardPage. */
 export const GRID_COLS = 12
-/** Default placement for a newly added card. */
 const DEFAULT_W = 4
 const DEFAULT_H = 7
-/** Smallest a card may be resized to, so it never collapses to nothing. */
 const MIN_W = 2
 const MIN_H = 3
 
-/** Places every device in a tidy grid; the default view before the dashboard has been arranged. */
+/** Default grid before the dashboard has been arranged. */
 export function placeAll(devices: Device[]): CardLayout[] {
   const cards: CardLayout[] = []
   let x = 0
@@ -27,32 +25,27 @@ export function placeAll(devices: Device[]): CardLayout[] {
   return cards
 }
 
-/** Keeps only the cards whose device still exists, preserving their saved placement. */
+/** Keeps only cards whose device still exists. */
 export function curate(devices: Device[], cards: CardLayout[]): CardLayout[] {
   const live = new Set(devices.map((device) => device.id))
   return cards.filter((card) => live.has(card.deviceId))
 }
 
 /**
- * The cards to show for a committed layout: the curated set once the dashboard has been arranged
- * (`saved` is a list, even an empty one), or every device (a tidy default) before then (`saved` is
- * null, meaning nothing has been saved yet).
- *
- * @param devices the live devices
- * @param saved the saved card placements, or null when nothing has been saved
- * @returns the cards to show
+ * The curated set once arranged (saved is a list, even empty), or every device as a default before
+ * then (saved is null).
  */
 export function displayCards(devices: Device[], saved: CardLayout[] | null): CardLayout[] {
   return saved === null ? placeAll(devices) : curate(devices, saved)
 }
 
-/** The registered devices not currently on the dashboard; the choices the add-card picker offers. */
+/** Devices not on the dashboard; the add-card picker's choices. */
 export function available(devices: Device[], cards: CardLayout[]): Device[] {
   const shown = new Set(cards.map((card) => card.deviceId))
   return devices.filter((device) => !shown.has(device.id))
 }
 
-/** Adds a card for a device at the bottom of the layout, unless it is already placed. */
+/** Appends a card at the bottom, unless already placed. */
 export function addCard(cards: CardLayout[], device: Device): CardLayout[] {
   if (cards.some((card) => card.deviceId === device.id)) {
     return cards
@@ -61,12 +54,12 @@ export function addCard(cards: CardLayout[], device: Device): CardLayout[] {
   return [...cards, { deviceId: device.id, x: 0, y, w: DEFAULT_W, h: DEFAULT_H }]
 }
 
-/** Removes a device's card from the layout (the device itself stays registered). */
+/** Removes a device's card. */
 export function removeCard(cards: CardLayout[], deviceId: number): CardLayout[] {
   return cards.filter((card) => card.deviceId !== deviceId)
 }
 
-/** Maps card placements to a react-grid-layout layout (keyed by device id, with a size floor). */
+/** Maps cards to a react-grid-layout layout. */
 export function toGridLayout(cards: CardLayout[]): Layout {
   return cards.map((card) => ({
     i: String(card.deviceId),
@@ -80,13 +73,8 @@ export function toGridLayout(cards: CardLayout[]): Layout {
 }
 
 /**
- * Maps a react-grid-layout layout back to saveable card placements. The grid layout carries only
- * geometry, so each card's hidden-chart selection is carried over from the previous cards by device
- * id; without this a drag or resize would silently clear it.
- *
- * @param layout the react-grid-layout layout after a drag or resize
- * @param previous the cards before the change, holding each card's hidden-chart selection
- * @returns the saveable cards with geometry from the grid and selections preserved
+ * Maps a grid layout back to cards. The grid carries only geometry, so each card's hidden-chart
+ * selection is carried over by device id; without this a drag or resize would silently clear it.
  */
 export function fromGridLayout(layout: Layout, previous: CardLayout[]): CardLayout[] {
   const hidden = new Map(previous.map((card) => [card.deviceId, card.hiddenSensors ?? []]))
@@ -103,7 +91,7 @@ export function fromGridLayout(layout: Layout, previous: CardLayout[]): CardLayo
   })
 }
 
-/** Hides or shows a device's sensor chart on its card, toggling the key in that card's hidden set. */
+/** Toggles a device's sensor chart in that card's hidden set. */
 export function toggleHiddenSensor(
   cards: CardLayout[],
   deviceId: number,

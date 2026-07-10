@@ -1,8 +1,10 @@
 = 5. Building Block View
 
-The hub is a single Spring Boot backend built from feature packages, with a bundled React SPA as its browser client.
-Level 1 keeps to the essentials: the `device` core, the `integration` seam that plugs in device ecosystems, and the supporting `services` (automation, assistant, telemetry, realtime) built on the core. The hub's external neighbors are in the xref:03-context-and-scope.adoc[context view].
-Level 2 opens up `device`, `integration`, and `telemetry` for their internal structure.
+The hub is a single Spring Boot backend built from feature packages, with a bundled React SPA as its
+browser client. Level 1 shows the `device` core, the `integration` seam that plugs in device
+ecosystems, and the supporting `services` (automation, assistant, telemetry, realtime) built on the
+core; external neighbors are in the xref:03-context-and-scope.adoc[context view]. Level 2 opens up
+`device`, `integration`, and `telemetry`.
 
 == Level 1
 

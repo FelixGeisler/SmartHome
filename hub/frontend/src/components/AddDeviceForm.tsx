@@ -3,9 +3,7 @@ import type { FormEvent } from 'react'
 import type { Device, DeviceRegistration } from '../api/devices'
 import { registerDevice } from '../api/devices'
 
-// A device that must be registered by hand: something the hub cannot discover on its own and
-// reaches over a command adapter at a host you provide. Sensor nodes are not listed here; they
-// auto-provision on their first MQTT reading.
+// Sensor nodes aren't listed here; they auto-provision on their first MQTT reading.
 type DeviceKind = {
   label: string
   type: string
@@ -28,7 +26,6 @@ interface AddDeviceFormProps {
   onRegistered: (device: Device) => void
 }
 
-/** Registration form for a command device the hub cannot discover: its name, address, and kind. */
 export function AddDeviceForm({ onRegistered }: AddDeviceFormProps) {
   const [name, setName] = useState('')
   const [externalId, setExternalId] = useState('')

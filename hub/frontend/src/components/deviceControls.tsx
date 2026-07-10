@@ -3,7 +3,7 @@ import type { Device, DeviceCommand } from '../api/devices'
 import { brightnessOf, colorTemperatureKOf, colorXyOf } from '../api/devices'
 import { hexToXy, xyToHex } from '../color'
 
-/** Hue's tunable-white range, also a sensible window for the color-temperature slider. */
+/** Hue's tunable-white range, reused for the slider. */
 const MIN_KELVIN = 2000
 const MAX_KELVIN = 6500
 const DEFAULT_KELVIN = 2700
@@ -15,7 +15,7 @@ interface ControlProps {
   onCommand: (device: Device, command: DeviceCommand) => void
 }
 
-/** A brightness slider; commits a command to release, not on every step. */
+/** A brightness slider; commits on release, not every step. */
 export function BrightnessControl({ device, onCommand }: ControlProps) {
   const value = brightnessOf(device) ?? DEFAULT_BRIGHTNESS
   return (
@@ -34,7 +34,7 @@ export function BrightnessControl({ device, onCommand }: ControlProps) {
   )
 }
 
-/** A color picker; commits the chosen color as CIE xy. */
+/** A color picker; commits as CIE xy. */
 export function ColorControl({ device, onCommand }: ControlProps) {
   const xy = colorXyOf(device)
   const value = xy === null ? DEFAULT_COLOR : xyToHex(xy.x, xy.y)
@@ -51,7 +51,6 @@ export function ColorControl({ device, onCommand }: ControlProps) {
   )
 }
 
-/** A color-temperature slider in Kelvin. */
 export function ColorTemperatureControl({ device, onCommand }: ControlProps) {
   const value = colorTemperatureKOf(device) ?? DEFAULT_KELVIN
   return (
@@ -80,10 +79,9 @@ interface CommitInputProps {
 }
 
 /**
- * An uncontrolled input that lets the browser handle the live dragging but only commits a command
- * on the native {@code change} event (slider release or color-picker close), so a single gesture
- * sends one command, not one per step. The {@code key} resets the input to the committed value
- * whenever it changes elsewhere (e.g., another client moved it).
+ * Uncontrolled input that commits only on the native change event (slider release / color-picker
+ * close), so one gesture sends one command. The key resets it when the value changes elsewhere
+ * (e.g., another client moved it).
  */
 function CommitInput({ type, value, ariaLabel, min, max, onCommit }: CommitInputProps) {
   const ref = useRef<HTMLInputElement>(null)

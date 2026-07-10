@@ -11,10 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.felixgeisler.smarthome.floor.Floor;
 
-/**
- * A named grouping of devices, in the spirit of a Home Assistant "area": a device belongs to zero
- * or one room. A room carries no behavior of its own; it is organizational metadata.
- */
+/** A named grouping of devices, like a Home Assistant "area". */
 @Entity
 @Table(name = "rooms")
 public class Room {
@@ -26,8 +23,7 @@ public class Room {
   @Column(nullable = false, unique = true)
   private String name;
 
-  // The floor this room belongs to, or null when unassigned. Eagerly fetched because the response
-  // view is built after the session closes.
+  // Eagerly fetched: the response view is built after the session closes.
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "floor_id")
   private Floor floor;
@@ -64,7 +60,7 @@ public class Room {
   }
 
   /**
-   * Returns the floor this room belongs to, or null when it is unassigned.
+   * Returns the floor, or null when unassigned.
    *
    * @return the floor, or null
    */
@@ -84,7 +80,7 @@ public class Room {
   /** Removes this room from its floor, leaving it unassigned. */
   @SuppressWarnings("PMD.NullAssignment")
   public void clearFloor() {
-    // Null is the "unassigned" state for the optional floor association.
+    // Null is the unassigned state for the optional floor.
     this.floor = null;
   }
 }

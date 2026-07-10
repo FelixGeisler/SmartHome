@@ -4,11 +4,9 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { DeviceCard } from './DeviceCard'
 
-// The card's health cues are the concern here, not the chart; stubbing it keeps the sensor tests
-// from reaching for a history fetch.
+// Stub the chart so the sensor tests here don't reach for a history fetch.
 vi.mock('./SensorChart', () => ({ SensorChart: () => null }))
 
-/** A sensor-node device carrying one reading recorded `agoMs` before now. */
 function climateReadAt(agoMs: number): Device {
   return {
     id: 3,
@@ -175,7 +173,7 @@ describe('DeviceCard', () => {
 
     expect(screen.getByText('power')).toBeInTheDocument()
     expect(screen.getByText('12.3 W')).toBeInTheDocument()
-    // The toggle is still there: a metered plug is both switchable and sensing.
+    // A metered plug is both switchable and sensing, so the toggle stays.
     expect(screen.getByRole('button', { name: 'Turn Desk Lamp on' })).toBeInTheDocument()
   })
 })

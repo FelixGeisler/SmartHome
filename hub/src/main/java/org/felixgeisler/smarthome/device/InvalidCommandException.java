@@ -2,10 +2,7 @@ package org.felixgeisler.smarthome.device;
 
 import java.io.Serial;
 
-/**
- * Thrown when a command is malformed for the neutral contract: empty, carrying a value outside an
- * attribute's range, or setting color and color temperature together.
- */
+/** Thrown when a command is malformed for the neutral contract. */
 public class InvalidCommandException extends RuntimeException {
 
   @Serial private static final long serialVersionUID = 1L;

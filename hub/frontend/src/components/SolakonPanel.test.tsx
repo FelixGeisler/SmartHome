@@ -99,7 +99,6 @@ describe('SolakonPanel', () => {
     const user = userEvent.setup()
     render(<SolakonPanel />)
 
-    // The mount-time status query restores the persisted connection.
     expect(await screen.findByText('Connected')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Disconnect' }))

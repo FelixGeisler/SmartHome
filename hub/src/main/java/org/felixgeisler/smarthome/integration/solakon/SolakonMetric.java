@@ -6,9 +6,10 @@ import org.felixgeisler.smarthome.device.SensorType;
 
 /**
  * The Solakon (FoxESS) Modbus registers the hub polls, each mapped to the {@link SensorType} it
- * feeds. Addresses, data types, and scales come from the FoxESS Modbus map as used by the community
- * Home Assistant integration: values are read as holding registers (function 0x03), 32-bit values
- * are in big-endian word order, and the real value is the raw register value divided by the scale.
+ * feeds.
+ *
+ * <p>Values are read as holding registers (function 0x03), 32-bit values are in big-endian word
+ * order, and the real value is the raw register value divided by the scale.
  */
 enum SolakonMetric {
 
@@ -75,19 +76,17 @@ enum SolakonMetric {
   }
 
   /**
-   * Decodes this metric's register words into its scaled value string, applying the data type's
-   * signedness and word order and dividing by the scale. Separated from {@link #read} so the
-   * decoding is unit-testable without a device.
+   * Decodes this metric's register words into its scaled value string.
    *
-   * @param registers the register words read for this metric (one word for 16-bit, two for 32-bit)
+   * @param registers the register words (one word for 16-bit, two for 32-bit)
    * @return the scaled value (e.g. {@code "-100"}, {@code "23.5"})
    */
   String decode(int... registers) {
     return format(type.decode(registers), scale);
   }
 
-  // Divides by the scale and renders without trailing zeros or scientific notation: "230", "23.5".
-  // The scales are powers of ten, so the division is always exact.
+  // Divides by the scale, rendering without trailing zeros or scientific notation. The scales are
+  // powers of ten, so the division is always exact.
   private static String format(long raw, int scale) {
     return BigDecimal.valueOf(raw)
         .divide(BigDecimal.valueOf(scale))

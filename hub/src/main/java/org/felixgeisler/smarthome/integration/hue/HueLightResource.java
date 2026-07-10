@@ -15,10 +15,10 @@ record HueLightResource(String name, State state) {
   }
 
   /**
-   * Tells whether the bridge can currently reach the light. A Hue bulb cut from power (e.g. its
-   * wall switch is off) stays in the bridge's list and is still returned over HTTP, but the bridge
-   * flags it {@code reachable: false}; this is the only signal that it is offline, since the read
-   * itself succeeds. Treated as reachable unless the bridge explicitly says otherwise.
+   * Tells whether the bridge can currently reach the light.
+   *
+   * <p>A bulb cut from power stays in the list and is still returned over HTTP but flagged
+   * {@code reachable: false}; the only offline signal, since the read itself succeeds.
    *
    * @return true unless the bridge reports the light as unreachable
    */
@@ -27,9 +27,7 @@ record HueLightResource(String name, State state) {
   }
 
   /**
-   * Derives the device-neutral capabilities from the fields the bridge reports (ADR 2): a light is
-   * always switchable, and it is dimmable, color-capable, or color-temperature-capable when it
-   * reports brightness, xy, or color-temperature state respectively.
+   * Derives the device-neutral capabilities from the fields the bridge reports (ADR 2).
    *
    * @return the detected capabilities
    */
@@ -50,8 +48,9 @@ record HueLightResource(String name, State state) {
   }
 
   /**
-   * A light's runtime state. The color fields are boxed so an absent one (the light lacks that
-   * ability) is told apart from a present zero.
+   * A light's runtime state.
+   *
+   * <p>The color fields are boxed so an absent one is told apart from a present zero.
    *
    * @param on whether the light is on
    * @param bri native brightness 1..254, or null if the light is not dimmable

@@ -1,21 +1,17 @@
 import { request } from './devices'
 
-/** The hub's view of authentication, used by the login gate. */
 export interface AuthStatus {
   /** Whether an administrator has been set up on first start. */
   configured: boolean
-  /** Whether the caller has a logged-in session. */
   authenticated: boolean
   /** The administrator username, or null before setup. */
   username: string | null
 }
 
-/** Reads whether an administrator exists and whether the caller is logged in. */
 export function getAuthStatus(): Promise<AuthStatus> {
   return request<AuthStatus>('/api/auth/status')
 }
 
-/** Sets up the administrator on first start. */
 export function setupAdmin(username: string, password: string): Promise<void> {
   return request<void>('/api/auth/setup', {
     method: 'POST',
@@ -34,7 +30,6 @@ export function login(username: string, password: string): Promise<void> {
   })
 }
 
-/** Ends the session. */
 export function logout(): Promise<void> {
   return request<void>('/api/auth/logout', { method: 'POST' })
 }

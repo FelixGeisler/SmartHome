@@ -11,9 +11,7 @@ import org.felixgeisler.smarthome.assistant.AnthropicClient.Tool;
 import org.springframework.stereotype.Service;
 
 /**
- * Drives a single chat turn through Claude with tool use: send the message, and while the model
- * asks to call tools, run them against the hub's services and feed the results back, until the
- * model answers in plain text.
+ * Drives a single chat turn through Claude with tool use.
  */
 @Service
 class AssistantService {
@@ -52,7 +50,7 @@ class AssistantService {
    *
    * @param userMessage the user's message
    * @return the assistant's plain-text reply
-   * @throws AssistantException if the assistant is unconfigured, unreachable, or loops too long
+   * @throws AssistantException if unconfigured, unreachable, or looping too long
    */
   String chat(String userMessage) {
     if (!claude.isConfigured()) {
@@ -82,7 +80,7 @@ class AssistantService {
     throw new AssistantException("The assistant did not finish within the tool-call limit.");
   }
 
-  /** Sets the assistant's API key at runtime, as from the Configuration view. */
+  /** Sets the assistant's API key at runtime. */
   void configure(String apiKey) {
     claude.configure(apiKey);
   }

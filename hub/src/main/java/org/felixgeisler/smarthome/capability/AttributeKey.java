@@ -5,10 +5,9 @@ import java.util.Optional;
 /**
  * The device-neutral vocabulary for state values and command arguments (ADR 3).
  *
- * <p>Each key owns its value type, unit, and valid range, plus how to parse, format, and validate
- * its values, so adding a neutral attribute is adding one self-describing constant. Adapters
- * translate between these neutral values and a device's native encoding; vendor scales, color
- * gamut, and the like never appear here.
+ * <p>Each key owns its type, unit, range, and how to parse/format/validate its values. Adapters
+ * translate between these neutral values and a device's native encoding; vendor scales never appear
+ * here.
  */
 public enum AttributeKey {
 
@@ -106,11 +105,10 @@ public enum AttributeKey {
   }
 
   /**
-   * Resolves the attribute a wire key denotes, for turning an adapter's reported state map back
-   * into stored state.
+   * Resolves the attribute a wire key denotes, for reading an adapter's reported state back in.
    *
-   * @param wireKey the wire key (e.g. {@code "brightness"})
-   * @return the matching attribute, or empty if the key is not a known attribute
+   * @param wireKey the wire key
+   * @return the matching attribute, or empty if unknown
    */
   public static Optional<AttributeKey> forWireKey(String wireKey) {
     for (AttributeKey attribute : values()) {
