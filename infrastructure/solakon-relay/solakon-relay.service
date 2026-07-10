@@ -1,0 +1,15 @@
+[Unit]
+Description=Modbus TCP relay to a Solakon inverter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Set <inverter-ip> to the inverter's address on the Pi's shared network.
+# -T 15 reaps a stalled connection after 15s so it cannot hold the inverter's single Modbus slot;
+# connect-timeout and keepalive drop dead peers quickly.
+ExecStart=/usr/bin/socat -T 15 TCP-LISTEN:502,reuseaddr,fork,keepalive TCP:<inverter-ip>:502,connect-timeout=5,keepalive
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
