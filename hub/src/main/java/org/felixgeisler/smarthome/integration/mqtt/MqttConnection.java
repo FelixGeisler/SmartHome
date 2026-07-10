@@ -182,9 +182,10 @@ public class MqttConnection {
   private MqttConnectOptions connectOptions() {
     MqttConnectOptions options = new MqttConnectOptions();
     options.setAutomaticReconnect(true);
-    // Fresh session each connect: the hub resubscribes on every connect, so it needs no server-side
-    // session state, and this keeps the broker from holding an orphaned session per client id.
-    options.setCleanSession(true);
+    // Keep cleanSession false so the broker retains our subscription across Paho's automatic
+    // reconnects: the hub subscribes only on an explicit connect, not on a transparent reconnect,
+    // so a clean session would silently stop delivering readings after any brief disconnect.
+    options.setCleanSession(false);
     if (properties.username() != null && !properties.username().isBlank()) {
       options.setUserName(properties.username());
       options.setPassword(
