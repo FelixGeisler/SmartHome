@@ -24,8 +24,9 @@ trusted network.
 
 == Point the hub at the broker
 
-The broker is connected from the web UI, not from static config: open *Configuration*, enter
-the broker's host under *Connect an MQTT broker*, and connect. The hub remembers the connection
+The broker is connected from the web UI, not from static config: open *Configuration* (the gear
+icon in the top-right), go to the *MQTT* tab, enter the broker's host under *Connect an MQTT
+broker*, and connect. The hub remembers the connection
 and re-establishes it on restart. If the broker requires authentication, supply the credentials
 to the hub as `SMARTHOME_MQTT_USERNAME` / `SMARTHOME_MQTT_PASSWORD` environment variables.
 
@@ -33,19 +34,22 @@ The hub subscribes to `home/+/+`.
 
 == Add a sensor
 
-. *Register the device* on the hub so it has declared sensors to route readings into; see
-xref:adding-devices.adoc[Adding devices]. The device's `externalId` is the node id, and each
-declared sensor `key` matches a published topic key.
-. *Publish readings* from the node to `home/<node-id>/<sensor-key>`, with the value as the
-payload. Any MQTT client can do it; for example, to test:
-+
+There is nothing to register by hand. A node appears on its own the first time it publishes: the hub
+creates the device from the node id in the topic and adds each recognized measurement as a sensor.
+
+Publish readings from the node to `home/<node-id>/<sensor-key>`, with the value as the payload. Any
+MQTT client can do it; for example, to test:
+
 [source,bash]
 ----
 mosquitto_pub -h <broker-host> -t home/living-room/temperature -m 21.6
 ----
-+
-A real node runs a small program that reads its sensors and publishes on an interval. A working
-reference (a Raspberry Pi reading a couple of I²C sensors) is in `infrastructure/sensor-node/`.
+
+The node id and sensor key are the last two topic segments, so this creates a `living-room` node
+with a `temperature` sensor. Only recognized measurement keys (temperature, humidity, pressure, CO2,
+air quality, power, and so on) become sensors; an unknown key is ignored. A real node runs a small
+program that reads its sensors and publishes on an interval. A working reference (a Raspberry Pi
+reading a couple of I²C sensors) is in `infrastructure/sensor-node/`.
 
 The hub stores each reading against the matching sensor, and the dashboard shows it, including a
 chart of each sensor's recent history.

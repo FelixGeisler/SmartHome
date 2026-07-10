@@ -6,7 +6,7 @@ How to run the SmartHome hub, add devices, and set up the hardware that feeds it
 * xref:adding-devices.adoc[Adding devices]: register and control devices from the dashboard or the API.
 * xref:rooms-and-floors.adoc[Rooms and floors]: group devices to match your home.
 * xref:automations.adoc[Automations]: let the hub act on readings and schedules.
-* xref:mqtt-sensors.adoc[MQTT sensors]: run a broker and connect sensor nodes.
+* xref:mqtt-sensors.adoc[MQTT sensors]: run a broker and let sensor nodes appear as they publish.
 * xref:assistant.adoc[The assistant]: run your home in plain language.
 
 For the design behind the system, see the xref:smarthome::01-introduction-and-goals.adoc[Architecture] documentation.

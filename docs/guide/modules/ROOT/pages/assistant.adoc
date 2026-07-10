@@ -11,7 +11,8 @@ The assistant stays off until it has an API key (it is backed by Anthropic's Cla
 calls on your behalf).
 
 . Create an API key in the https://console.anthropic.com/[Anthropic console].
-. Open *Configuration* and paste it under *AI assistant*.
+. Open *Configuration* (the gear icon in the top-right), go to the *Assistant* tab, and paste it
+  under *AI assistant*.
 
 The hub stores the key and it survives restarts; once set, it is masked and never shown again.
 
