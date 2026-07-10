@@ -57,7 +57,7 @@ export function ConfigurationPage({
             role="tab"
             id={`config-tab-${tab.id}`}
             aria-selected={active === tab.id}
-            aria-controls={`config-tabpanel-${tab.id}`}
+            aria-controls="config-tabpanel"
             className={
               active === tab.id
                 ? 'configuration__tab configuration__tab--active'
@@ -73,7 +73,7 @@ export function ConfigurationPage({
       <div
         className="configuration__panels"
         role="tabpanel"
-        id={`config-tabpanel-${active}`}
+        id="config-tabpanel"
         aria-labelledby={`config-tab-${active}`}
       >
         {active === 'devices' && (
