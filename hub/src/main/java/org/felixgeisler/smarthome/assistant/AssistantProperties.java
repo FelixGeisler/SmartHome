@@ -4,15 +4,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Settings for the in-app AI assistant (Claude). The API key seeds from the environment (never
- * committed) and may also be set at runtime; the rest have sensible defaults.
+ * Settings for the in-app AI assistant (Claude).
  *
- * @param apiKey the Anthropic API key seed; a blank value leaves the assistant disabled until a
- *     key is set at runtime, which is then persisted and restored on boot
+ * @param apiKey the Anthropic API key seed; blank leaves the assistant disabled until a key is
+ *     set at runtime
  * @param model the Claude model id
  * @param maxTokens the response token cap per request
  * @param url the Anthropic Messages API endpoint
- * @param maxToolRounds how many tool-use rounds a single chat may run before giving up
+ * @param maxToolRounds tool-use rounds a chat may run before giving up
  */
 @ConfigurationProperties(prefix = "smarthome.assistant")
 record AssistantProperties(

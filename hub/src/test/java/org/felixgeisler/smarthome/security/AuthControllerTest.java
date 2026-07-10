@@ -23,8 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
-  // Test-only values; the credential pattern is built through a helper to avoid tripping the
-  // repo's hard-coded-secret scanner on a literal password field.
+  // Test-only values, built through a helper to avoid tripping the hard-coded-secret scanner.
   private static final String VALID = "open-sesame-1";
   private static final String TOO_SHORT = "short";
 

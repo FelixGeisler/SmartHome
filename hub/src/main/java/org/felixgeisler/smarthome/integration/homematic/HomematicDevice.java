@@ -6,16 +6,11 @@ import org.felixgeisler.smarthome.capability.Capability;
 import org.felixgeisler.smarthome.device.SensorSpec;
 
 /**
- * A controllable or sensing channel discovered on the Homematic CCU, ready to be registered as a
- * hub device. Each entry maps to one CCU channel; a physical device with both a switch and a meter
- * (a switching plug) yields one entry per role.
+ * A controllable or sensing channel discovered on the Homematic CCU, registered as a hub device.
  *
- * @param externalId the channel address as {@code "<interface>/<channelAddress>"} (e.g.
- *     {@code "HmIP-RF/0001DD89A4662F:3"}), used as the device's external id
- * @param name a human-readable name (the CCU device name, with a role suffix when a device yields
- *     more than one entry)
- * @param capabilities what the channel can do ({@code SWITCHABLE} for a switch, {@code SENSING} for
- *     a sensor channel)
+ * @param externalId the channel address {@code "<interface>/<channelAddress>"}
+ * @param name a human-readable name, with a role suffix when a device yields more than one entry
+ * @param capabilities what the channel can do ({@code SWITCHABLE} or {@code SENSING})
  * @param sensors the sensors a sensing channel reports; empty for a command channel
  */
 public record HomematicDevice(

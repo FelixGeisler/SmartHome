@@ -112,7 +112,7 @@ public class DeviceController {
   }
 
   /**
-   * Applies a neutral command to a device, e.g., setting brightness or color.
+   * Applies a neutral command to a device.
    *
    * @param id the device id
    * @param request the neutral attributes to set

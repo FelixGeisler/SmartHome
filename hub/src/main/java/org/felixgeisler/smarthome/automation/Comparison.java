@@ -2,7 +2,7 @@ package org.felixgeisler.smarthome.automation;
 
 /**
  * How a sensor reading is weighed against a threshold in a {@link TriggerKind#SENSOR_THRESHOLD}
- * trigger. Each constant decides whether an actual reading satisfies the configured threshold.
+ * trigger.
  */
 public enum Comparison {
 

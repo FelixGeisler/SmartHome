@@ -23,9 +23,10 @@ public class SmartHomeApplication {
   }
 
   /**
-   * The clock used to timestamp sensor readings and to evaluate schedule automations. It uses the
-   * hub's local zone, so a schedule for "07:00" fires at seven in the morning where the hub runs;
-   * reading timestamps are instants and are unaffected by the zone. Overridable in tests.
+   * The application clock, in the hub's local zone.
+   *
+   * <p>Local zone so a "07:00" schedule fires at local seven in the morning; reading timestamps
+   * are instants, unaffected by the zone.
    *
    * @return the application clock
    */

@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Endpoints for the SPA's authentication gate. Login and logout are handled by the security filter
- * chain ({@code POST /api/auth/login} and {@code /api/auth/logout}); this controller adds the
- * status probe and first-run setup.
+ * Endpoints for the SPA's authentication gate: the status probe and first-run setup.
+ *
+ * <p>Login and logout are handled by the security filter chain, not here.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -37,8 +37,7 @@ public class AuthController {
   }
 
   /**
-   * Reports whether an administrator has been set up and whether the caller is logged in, so the
-   * SPA can show the setup screen, the login screen, or the app.
+   * Reports whether an administrator is set up and whether the caller is logged in.
    *
    * @param authentication the current authentication (anonymous when not logged in)
    * @return the auth status
@@ -53,7 +52,7 @@ public class AuthController {
   }
 
   /**
-   * Sets up the administrator on first start. Rejected once one exists.
+   * Sets up the administrator on first start.
    *
    * @param request the chosen username and password
    */

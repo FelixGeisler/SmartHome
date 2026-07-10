@@ -26,7 +26,7 @@ public class HueController {
   }
 
   /**
-   * Pairs with a bridge. The bridge link button must be pressed first.
+   * Pairs with a bridge, whose link button must be pressed first.
    *
    * @param request the bridge host to pair with
    * @return the pairing result; {@code paired} is false if the link button was not pressed
@@ -50,7 +50,7 @@ public class HueController {
   }
 
   /**
-   * Reports whether a bridge is currently paired, so the UI can show the connection at a glance.
+   * Reports whether a bridge is currently paired.
    *
    * @return the pairing status
    */

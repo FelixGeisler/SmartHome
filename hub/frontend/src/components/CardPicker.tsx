@@ -2,17 +2,12 @@ import type { Device } from '../api/devices'
 
 interface CardPickerProps {
   open: boolean
-  /** Registered devices not yet on the dashboard. */
   devices: Device[]
   onClose: () => void
   onAdd: (device: Device) => void
 }
 
-/**
- * A modal listing the registered devices not on the dashboard, so a card can be added for one.
- * Registering new devices happens on the Configuration page; this only chooses which existing
- * devices to show. It stays open after a pick so several cards can be added in one sitting.
- */
+/** Modal of registered devices not on the dashboard; stays open after a pick so several cards can be added at once. */
 export function CardPicker({ open, devices, onClose, onAdd }: CardPickerProps) {
   if (!open) {
     return null

@@ -9,13 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * HTTP adapter for Shelly Gen2/3 plugs, driven through the RPC API: {@code /rpc/Switch.Set} to
- * switch and {@code /rpc/Switch.GetStatus} to read the relay and the plug's metering, both on
- * switch id 0.
- *
- * <p>The device's {@code externalId} is its host (or {@code host:port}).
- */
+/** HTTP adapter for Shelly Gen2/3 plugs, driven through the RPC API. */
 @Component
 public class ShellyAdapter implements DeviceAdapter {
 
@@ -26,7 +20,7 @@ public class ShellyAdapter implements DeviceAdapter {
 
   private final RestClient restClient;
 
-  /** Creates the adapter with a REST client that has bounded connect and read timeouts. */
+  /** Creates the adapter with a timeout-bounded REST client. */
   public ShellyAdapter() {
     this.restClient = HttpClients.withTimeouts(TIMEOUT, TIMEOUT);
   }
@@ -69,8 +63,8 @@ public class ShellyAdapter implements DeviceAdapter {
     return status;
   }
 
-  // Treat externalId strictly as the authority: replace any path or query it might carry with the
-  // fixed RPC endpoint, so a malformed or hostile externalId cannot inject into the request.
+  // Treat externalId strictly as the authority, so a malformed or hostile one cannot inject
+  // path or query into the request.
   private static UriComponentsBuilder rpc(String externalId, String method) {
     return UriComponentsBuilder.fromUriString("http://" + externalId)
         .replacePath("/rpc/" + method)

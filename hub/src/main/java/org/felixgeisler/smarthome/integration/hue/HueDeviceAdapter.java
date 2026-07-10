@@ -10,12 +10,10 @@ import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.springframework.stereotype.Component;
 
 /**
- * Controls Philips Hue lights through the bridge, addressing each light by its bridge light id
- * ({@code externalId}). Delegates the bridge connection and HTTP to {@link HueBridgeService}.
+ * Controls Philips Hue lights through the bridge (ADR 3) by their bridge light id.
  *
- * <p>This adapter is the only place the neutral contract (ADR 3) meets Hue's native encoding:
- * brightness percentage to {@code bri} 1..254, color temperature in Kelvin to mireds, and CIE xy
- * to the bridge's {@code xy} pair, and back again.
+ * <p>This adapter is the only place the neutral contract meets Hue's native encoding: brightness
+ * percentage to {@code bri} 1..254, Kelvin to mireds, and CIE xy to the bridge's {@code xy} pair.
  */
 @Component
 public class HueDeviceAdapter implements DeviceAdapter {
@@ -66,9 +64,9 @@ public class HueDeviceAdapter implements DeviceAdapter {
     return toNeutral(bridge.getLight(externalId));
   }
 
-  // The default probe (a state read that does not throw) is not enough for Hue: the bridge answers
-  // for a bulb that lost power and only flags it reachable=false, so consult that flag. A broad
-  // catch is deliberate: any failure to reach the bridge means the light is unreachable too.
+  // The default probe is not enough for Hue: the bridge still answers for a bulb that lost power
+  // and only flags reachable=false, so consult that flag. Broad catch is deliberate: any failure
+  // to reach the bridge means the light is unreachable too.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   @Override
   public boolean isReachable(String externalId) {
@@ -79,7 +77,6 @@ public class HueDeviceAdapter implements DeviceAdapter {
     }
   }
 
-  // Translate a neutral payload (wire keys to neutral values) into a Hue state body.
   private static Map<String, Object> toNative(Map<String, Object> neutral) {
     Map<String, Object> state = new LinkedHashMap<>();
     Object on = neutral.get(AttributeKey.ON_OFF.wireKey());
@@ -101,7 +98,6 @@ public class HueDeviceAdapter implements DeviceAdapter {
     return state;
   }
 
-  // Translate the bridge's native state back into neutral attributes for the dashboard.
   private static Map<String, Object> toNeutral(HueLightResource light) {
     Map<String, Object> neutral = new LinkedHashMap<>();
     HueLightResource.State state = light.state();

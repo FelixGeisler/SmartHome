@@ -34,8 +34,7 @@ vi.mock('../api/floors', () => ({
   clearRoomFloor: vi.fn(),
 }))
 
-// Render react-grid-layout as a plain container: these tests exercise our wiring, not RGL's DOM
-// measurement and drag internals, which don't run under jsdom.
+// Render react-grid-layout as a plain container: RGL's DOM measurement and drag internals don't run under jsdom.
 vi.mock('react-grid-layout', () => ({
   __esModule: true,
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -124,7 +123,6 @@ describe('RoomsFloorPlan', () => {
     renderPlan()
 
     expect(await screen.findByRole('heading', { name: 'Kitchen' })).toBeInTheDocument()
-    // The headline temperature and the secondary humidity both show, the latter with its label.
     expect(screen.getByText(/21\.5 °C/)).toBeInTheDocument()
     expect(screen.getByText('Humidity')).toBeInTheDocument()
     expect(screen.getByText(/30 %/)).toBeInTheDocument()
@@ -388,7 +386,6 @@ describe('RoomsFloorPlan', () => {
     await user.click(screen.getByRole('button', { name: 'Edit layout' }))
     await user.click(screen.getByRole('button', { name: 'First' }))
 
-    // The First-floor room renders in edit mode, not the empty-floor hint.
     expect(await screen.findByLabelText('Rename Bedroom')).toBeInTheDocument()
   })
 

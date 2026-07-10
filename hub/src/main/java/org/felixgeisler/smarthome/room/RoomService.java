@@ -10,10 +10,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-/**
- * Creates, lists, renames, and deletes rooms, and assigns a room to a floor. Assigning a device to
- * a room lives in the device service, so this service never depends on the device package.
- */
+/** Creates, lists, renames, and deletes rooms, and assigns a room to a floor. */
 @Service
 public class RoomService {
 
@@ -25,8 +22,8 @@ public class RoomService {
    * Creates the service.
    *
    * @param rooms the room repository
-   * @param floors the floor repository, for resolving a room's floor
-   * @param events publisher for room domain events
+   * @param floors the floor repository
+   * @param events the event publisher
    */
   public RoomService(
       RoomRepository rooms, FloorRepository floors, ApplicationEventPublisher events) {
@@ -69,7 +66,7 @@ public class RoomService {
     try {
       return rooms.save(new Room(name));
     } catch (DataIntegrityViolationException ex) {
-      // Lost a race: another request inserted the same name between the check and the save.
+      // Lost a race: another request inserted the same name after the check.
       throw new RoomAlreadyExistsException(name, ex);
     }
   }
@@ -99,9 +96,8 @@ public class RoomService {
   }
 
   /**
-   * Deletes a room. Any devices in it are unassigned first, through a {@link RoomRemoved} event the
-   * device side handles, so they fall back to unassigned rather than the delete failing on the
-   * foreign key.
+   * Deletes a room, first unassigning its devices via a {@link RoomRemoved} event so the foreign
+   * key does not block the delete.
    *
    * @param id the room id
    * @throws RoomNotFoundException if no room has the given id

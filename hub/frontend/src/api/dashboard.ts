@@ -1,6 +1,5 @@
 import { request } from './devices'
 
-/** One saved card: which device it shows, its position and size, and which charts are hidden. */
 export interface CardLayout {
   deviceId: number
   x: number
@@ -11,27 +10,16 @@ export interface CardLayout {
   hiddenSensors?: string[]
 }
 
-/** A saved dashboard arrangement: each card's device and its grid placement. */
 export interface DashboardLayout {
   cards: CardLayout[]
 }
 
-/**
- * Reads the saved dashboard layout, or null when none has been saved yet. The hub answers a
- * never-arranged dashboard with 204 (an empty body); surfacing that as null lets the caller tell a
- * first-run dashboard apart from one a user intentionally emptied.
- */
+/** Reads the saved dashboard layout, or null when none saved (the hub answers a never-arranged dashboard with 204). */
 export async function getLayout(): Promise<DashboardLayout | null> {
   const layout = await request<DashboardLayout | undefined>('/api/dashboard/layout')
   return layout ?? null
 }
 
-/**
- * Replaces the saved dashboard layout.
- *
- * @param layout the layout to persist
- * @returns the saved layout
- */
 export function saveLayout(layout: DashboardLayout): Promise<DashboardLayout> {
   return request<DashboardLayout>('/api/dashboard/layout', {
     method: 'PUT',

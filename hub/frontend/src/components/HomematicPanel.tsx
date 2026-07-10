@@ -9,7 +9,6 @@ interface HomematicPanelProps {
   onRegistered: (device: Device) => void
 }
 
-/** Connects to a Homematic CCU, discovers its channels, and registers the chosen ones as devices. */
 export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
   const [host, setHost] = useState('')
   const [username, setUsername] = useState('')
@@ -74,8 +73,7 @@ export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
           externalId: device.externalId,
           name: device.name,
           type: 'HOMEMATIC_DEVICE',
-          // Only a controllable channel gets the command adapter; a sensing channel is read by the
-          // hub's sensor poll, never commanded.
+          // Only a controllable channel gets a command adapter; sensing channels are polled, not commanded.
           adapterType: device.capabilities.includes('SWITCHABLE') ? 'homematic' : undefined,
           capabilities: device.capabilities,
           sensors: device.sensors,

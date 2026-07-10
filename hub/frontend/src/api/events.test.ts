@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { openDeviceStream, type DeviceStreamHandlers } from './events'
 
-/** A minimal stand-in for the browser's EventSource, drivable from tests. */
 class FakeEventSource {
   static readonly CONNECTING = 0
   static readonly OPEN = 1
@@ -37,7 +36,7 @@ class FakeEventSource {
     this.onopen?.()
   }
 
-  /** Simulates the browser giving up on the stream: readyState CLOSED plus an error event. */
+  /** The browser gave up: readyState CLOSED plus an error event. */
   die() {
     this.readyState = FakeEventSource.CLOSED
     this.onerror?.()
@@ -104,14 +103,13 @@ describe('openDeviceStream', () => {
     const onSync = vi.fn()
     openDeviceStream(handlers({ onSync }))
 
-    // A reconnect answered with an HTTP error closes the stream for good; the browser stops.
+    // An HTTP error on reconnect closes the stream for good; the browser stops retrying.
     FakeEventSource.last.die()
     expect(FakeEventSource.instances).toHaveLength(1)
 
     vi.advanceTimersByTime(5000)
     expect(FakeEventSource.instances).toHaveLength(2)
 
-    // The rebuilt stream works like the first: its open signals a sync.
     FakeEventSource.last.open()
     expect(onSync).toHaveBeenCalledTimes(1)
   })

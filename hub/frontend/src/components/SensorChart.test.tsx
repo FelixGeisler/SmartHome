@@ -81,7 +81,7 @@ describe('SensorChart', () => {
       />,
     )
 
-    // Same timestamp as the last stored point, so the series stays at two readings.
+    // Same timestamp as the last stored point, so nothing is appended.
     expect(screen.getByRole('img', { name: 'temp history, 2 readings' })).toBeInTheDocument()
   })
 
@@ -134,8 +134,8 @@ describe('SensorChart', () => {
     )
     await screen.findByRole('img', { name: 'temp history, 3 readings' })
 
-    // A reconnect bumps the token; the refetch returns the same two stored points (a live reading
-    // can arrive after the window is read). The appended live reading must survive the merge.
+    // A live reading can land after the window was read, so the refetch on reconnect must merge
+    // rather than replace: the appended live reading must survive.
     rerender(
       <SensorChart
         deviceExternalId="dev-1"
@@ -147,7 +147,7 @@ describe('SensorChart', () => {
     expect(
       await screen.findByRole('img', { name: 'temp history, 3 readings' }),
     ).toBeInTheDocument()
-    // Pins the refetch itself: the token bump must reload the window, not just keep state.
+    // The token bump must reload the window, not just keep state.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   })
 
@@ -168,7 +168,7 @@ describe('SensorChart', () => {
       />,
     )
 
-    // The aged point drops out as the new one comes in: still two readings, not three.
+    // The aged point drops out as the new one comes in, staying at two readings.
     expect(
       await screen.findByRole('img', { name: 'temp history, 2 readings' }),
     ).toBeInTheDocument()

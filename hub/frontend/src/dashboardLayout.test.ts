@@ -32,7 +32,7 @@ describe('placeAll', () => {
 
     expect(cards.map((card) => card.deviceId)).toEqual([1, 2, 3, 4])
     expect(cards[0]).toMatchObject({ x: 0, y: 0 })
-    // Three per row at width 4 in a 12-column grid, so the fourth wraps to a new row.
+    // Three per row in a 12-column grid, so the fourth wraps.
     expect(cards[3].x).toBe(0)
     expect(cards[3].y).toBeGreaterThan(0)
     expect(new Set(cards.map((card) => `${card.x},${card.y}`)).size).toBe(4)

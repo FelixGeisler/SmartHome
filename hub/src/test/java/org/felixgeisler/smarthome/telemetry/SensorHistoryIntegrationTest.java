@@ -10,9 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-// End-to-end through the real context: recording a reading publishes the domain event, the recorder
-// appends it to the embedded history, and the history service reads it back. A throwaway in-memory
-// database keeps it off the file-based development database.
+// End-to-end through the real context: recording a reading flows through the event and recorder
+// into history. In-memory database to keep it off the file-based development database.
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:history-it;DB_CLOSE_DELAY=-1")
 class SensorHistoryIntegrationTest {
 

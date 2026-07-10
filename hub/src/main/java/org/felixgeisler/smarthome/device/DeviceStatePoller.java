@@ -16,15 +16,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Keeps each command device's stored on/off and color state in step with the device's actual state,
- * so a change made outside the hub (another app, a physical switch, or while the hub was down)
- * shows on the dashboard instead of the hub's last command. Once every interval, starting shortly
- * after boot, it reads each command device through its adapter and folds the result back in,
- * pushing only the ones that changed.
+ * Keeps each command device's stored state in step with its actual state, so a change made outside
+ * the hub shows on the dashboard.
  *
- * <p>The reads run on the poller's own thread, never the scheduler's, so a slow or unreachable
- * device cannot delay the scheduler that also drives the reachability sweep and schedule
- * automations; a poll still running when the next is due is skipped.
+ * <p>Reads run on the poller's own thread, never the scheduler's, so a slow or unreachable device
+ * cannot delay the scheduler that also drives the reachability sweep and schedule automations; a
+ * poll still running when the next is due is skipped.
  */
 @Component
 public class DeviceStatePoller {
@@ -82,8 +79,7 @@ public class DeviceStatePoller {
   }
 
   /** Reads every command device's current state and folds the ones that changed back in. */
-  // A broad catch is deliberate: this runs on the state thread and one device's read failing must
-  // neither escape nor abandon the rest of the poll.
+  // Broad catch is deliberate: one device's read failing must not abandon the rest of the poll.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public void poll() {
     for (Device device : devices.getAllDevices()) {
@@ -105,8 +101,8 @@ public class DeviceStatePoller {
    *
    * @param event the context-closed event
    */
-  // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the pool the
-  // bean owns is stopped here (shutdown, not close). Tests inject a plain Executor.
+  // CloseResource flags the pattern variable, but this is the shutdown path: the bean-owned pool is
+  // stopped here, not leaked. Tests inject a plain Executor.
   @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {

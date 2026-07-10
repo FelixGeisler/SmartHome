@@ -19,19 +19,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Keeps each device's reachability current so the dashboard can show what is actually online. Once
- * a minute it probes every command device through its adapter and marks a reporting device stale
- * when nothing has arrived within the freshness window, flipping the device's reachable flag (and
- * pushing it live) only on a transition, so a steadily online or offline device is silent.
+ * Keeps each device's reachability current, flipping the reachable flag only on a transition.
  *
- * <p>The probing runs on its own thread, never the scheduler's, so a slow or hung device cannot
- * delay the scheduler that also drives schedule automations; a sweep still running when the next is
- * due is skipped.
+ * <p>Probing runs on its own thread, never the scheduler's, so a slow or hung device cannot delay
+ * the scheduler that also drives schedule automations; a sweep running when the next is due is
+ * skipped.
  */
 @Component
 public class DeviceReachabilityMonitor {
 
-  // A reporting device (no command adapter) is offline when nothing has arrived within this window.
+  // A reporting device is offline when nothing has arrived within this window.
   private static final Duration STALE_AFTER = Duration.ofMinutes(10);
 
   private static final Logger log = LoggerFactory.getLogger(DeviceReachabilityMonitor.class);
@@ -92,14 +89,12 @@ public class DeviceReachabilityMonitor {
   }
 
   /**
-   * Re-evaluates every device's reachability and pushes the ones that flipped: command devices are
-   * probed through their adapter, reporting devices are checked against the staleness window. Each
-   * device is probed against the snapshot loaded up front (its address does not change), but the
-   * write re-reads the device by id, so the slow probe never leads to persisting a stale snapshot
-   * that would clobber a concurrent reading, command, rename, or room change.
+   * Re-evaluates every device's reachability and pushes the ones that flipped.
+   *
+   * <p>The write re-reads the device by id, so a slow probe never persists a stale snapshot that
+   * would clobber a concurrent reading, command, rename, or room change.
    */
-  // A broad catch is deliberate: this runs on the reachability thread and one device's probe
-  // failing must neither escape nor abandon the rest of the sweep.
+  // Broad catch is deliberate: one device's probe failing must not abandon the rest of the sweep.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public void sweep() {
     Instant freshSince = clock.instant().minus(STALE_AFTER);
@@ -121,7 +116,7 @@ public class DeviceReachabilityMonitor {
     try {
       return adapters.get(device.getAdapterType()).isReachable(device.getExternalId());
     } catch (UnknownAdapterException ex) {
-      // No adapter handles this device's type, so the hub cannot reach it.
+      // No adapter handles this device, so the hub cannot reach it.
       return false;
     }
   }
@@ -131,8 +126,8 @@ public class DeviceReachabilityMonitor {
    *
    * @param event the context-closed event
    */
-  // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the pool the
-  // bean owns is stopped here (shutdown, not close). Tests inject a plain Executor.
+  // CloseResource flags the pattern variable, but this is the shutdown path: the bean-owned pool is
+  // stopped here, not leaked. Tests inject a plain Executor.
   @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {

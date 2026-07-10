@@ -11,33 +11,24 @@ import { GRID_COLS } from '../dashboardLayout'
 export type LoadState = 'loading' | 'ready' | 'error'
 
 interface DashboardPageProps {
-  /** The live devices to render as cards. */
   devices: Device[]
-  /** The grid placement of the shown cards (react-grid-layout layout, keyed by device id). */
   layout: Layout
-  /** The saved card records for the shown cards, carrying each card's hidden-chart selection. */
   cardLayouts: CardLayout[]
   loadState: LoadState
   error: string | null
   busyIds: ReadonlySet<number>
-  /** Bumped on every event-stream (re)connect; charts refetch their history when it changes. */
   syncToken?: number
-  /** Whether the dashboard is in edit mode (cards become draggable and resizable). */
   editing: boolean
-  /** True while a layout save is in flight. */
   saving?: boolean
-  /** Registered devices not on the dashboard, offered by the add-card picker. */
   addable: Device[]
   onToggle: (device: Device) => void
   onCommand: (device: Device, command: DeviceCommand) => void
   onRemoveCard: (device: Device) => void
-  /** Hides or shows one of a device's sensor charts on its card (edit mode only). */
   onToggleSensor: (deviceId: number, sensorKey: string) => void
   onRetry: () => void
   onEnterEdit: () => void
   onSave: () => void
   onCancel: () => void
-  /** Fired as the user drags or resizes a card; carries the whole new grid layout. */
   onLayoutChange: (layout: Layout) => void
   onAddCard: (device: Device) => void
 }
@@ -53,7 +44,6 @@ const FALLBACK_WIDTH = 1200
 // Interactive controls must not start a drag; grabbing the card body or header moves it instead.
 const DRAG_CANCEL = 'button, input, select, a'
 
-/** The dashboard view: a drag-and-drop grid of the chosen device cards, arrangeable in edit mode. */
 export function DashboardPage({
   devices,
   layout,
@@ -77,10 +67,9 @@ export function DashboardPage({
   onAddCard,
 }: DashboardPageProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
-  // Measure the wrapper's own (constrained) width and hand it to the grid: react-grid-layout sizes
-  // its cards from this number, so it must be the container's width, not the grid's overflowing
-  // content width (clientWidth gives exactly that). A ref callback measures once the wrapper
-  // actually appears, which only happens after devices load.
+  // Hand the grid the wrapper's own (constrained) clientWidth, not the grid's overflowing content
+  // width, since react-grid-layout sizes its cards from this number. A ref callback measures once
+  // the wrapper appears, which only happens after devices load.
   const [gridWidth, setGridWidth] = useState(0)
   const observerRef = useRef<ResizeObserver | null>(null)
   const measureRef = useCallback((element: HTMLDivElement | null) => {
@@ -178,7 +167,6 @@ export function DashboardPage({
   )
 }
 
-/** The hint shown when the dashboard has no cards, tailored to why it is empty. */
 function emptyHint(deviceCount: number, editing: boolean): string {
   if (deviceCount === 0) {
     return 'No devices yet. Register one in Configuration.'

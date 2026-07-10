@@ -8,16 +8,10 @@ import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Reads and writes the room floor-plan layout. Like the dashboard layout, it is a UI concern with
- * no device-domain meaning, so it is stored as a single JSON blob in the hub settings, not on the
- * room or device entities; box positions and device placements ride in the blob, which the frontend
- * reconciles against the live rooms and devices.
- */
+/** Reads and writes the room floor-plan layout as a JSON blob in the hub settings. */
 @Service
 public class RoomLayoutService {
 
-  /** Settings key under which the layout blob is stored. */
   private static final String LAYOUT_KEY = "rooms.layout";
 
   /** Maximum serialized length: the {@code hub_setting.setting_value} column width. */
@@ -31,8 +25,8 @@ public class RoomLayoutService {
   /**
    * Creates the service.
    *
-   * @param settings the persisted settings store the layout blob rides on
-   * @param json the mapper used to serialize and parse the layout
+   * @param settings the settings store
+   * @param json the JSON mapper
    */
   public RoomLayoutService(SettingsStore settings, ObjectMapper json) {
     this.settings = settings;
@@ -40,9 +34,7 @@ public class RoomLayoutService {
   }
 
   /**
-   * Reads the saved floor-plan layout, or empty when none is saved. A stored blob that no longer
-   * parses is treated as unsaved, so a bad setting can never keep the floor plan from loading. The
-   * empty result lets the caller tell "not arranged yet" apart from an intentionally empty layout.
+   * Reads the saved floor-plan layout, or empty when none is saved or the blob no longer parses.
    *
    * @return the saved layout, or empty when none is saved
    */
@@ -60,8 +52,7 @@ public class RoomLayoutService {
   }
 
   /**
-   * Replaces the saved floor-plan layout. A layout whose serialized form would exceed the storable
-   * size is rejected rather than silently truncated.
+   * Replaces the saved floor-plan layout.
    *
    * @param layout the layout to store
    * @throws RoomLayoutException if the serialized layout exceeds the storable size

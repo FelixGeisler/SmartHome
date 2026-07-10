@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Prunes sensor history past the retention window once a day, bounding the database's growth. */
+/** Prunes sensor history past the retention window once a day. */
 @Component
 public class TelemetryRetentionJob {
 
@@ -33,7 +33,7 @@ public class TelemetryRetentionJob {
     this.clock = clock;
   }
 
-  /** Deletes readings older than the retention window. Runs daily at 03:30 hub-local time. */
+  /** Deletes readings older than the retention window. */
   @Scheduled(cron = "0 30 3 * * *")
   @Transactional
   public void prune() {

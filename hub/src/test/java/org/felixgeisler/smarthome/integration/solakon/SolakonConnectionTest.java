@@ -61,8 +61,7 @@ class SolakonConnectionTest {
     boolean connected = connection.connect("localhost", inverter.port(), 1);
 
     assertTrue(connected);
-    // ArgumentCaptor.forClass cannot express List<SensorSpec>; the cast is safe because
-    // register() is only ever called here with the metric sensor specs.
+    // ArgumentCaptor.forClass cannot express List<SensorSpec>; the unchecked cast is safe here.
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<SensorSpec>> sensors = ArgumentCaptor.forClass(List.class);
     verify(devices)
@@ -134,7 +133,7 @@ class SolakonConnectionTest {
 
     assertFalse(reconnected);
     assertTrue(connection.isConnected());
-    // The original inverter must still be polled after the failed reconnect, not silently stopped.
+    // The original inverter must still be polled after the failed reconnect.
     clearInvocations(devices);
     verify(devices, timeout(3000).atLeastOnce())
         .recordReading(eq("solakon-one"), anyString(), anyString());
@@ -190,7 +189,7 @@ class SolakonConnectionTest {
           handler.setDaemon(true);
           handler.start();
         } catch (IOException closed) {
-          return; // the server socket was closed; stop accepting connections
+          return; // server socket closed; stop accepting
         }
       }
     }
@@ -206,7 +205,7 @@ class SolakonConnectionTest {
           out.flush();
         }
       } catch (IOException disconnected) {
-        return; // the client closed or reset the connection; this handler is done
+        return; // client closed the connection; this handler is done
       }
     }
 
@@ -215,7 +214,7 @@ class SolakonConnectionTest {
         in.readFully(buffer);
         return true;
       } catch (EOFException closed) {
-        return false; // the client finished and closed the connection cleanly
+        return false; // client closed the connection cleanly
       }
     }
 
@@ -226,7 +225,7 @@ class SolakonConnectionTest {
       frame[6] = 1; // unit id
       frame[7] = 0x03; // function code
       frame[8] = (byte) byteCount;
-      // The register data stays zero; these tests assert on lifecycle, not on values.
+      // Register data stays zero; these tests assert on lifecycle, not values.
       return frame;
     }
 

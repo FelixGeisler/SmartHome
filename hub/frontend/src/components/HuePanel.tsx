@@ -9,7 +9,6 @@ interface HuePanelProps {
   onRegistered: (device: Device) => void
 }
 
-/** Pairs with a Hue bridge, discovers its lights, and registers the chosen ones as devices. */
 export function HuePanel({ onRegistered }: HuePanelProps) {
   const [host, setHost] = useState('')
   const [paired, setPaired] = useState(false)
@@ -29,8 +28,7 @@ export function HuePanel({ onRegistered }: HuePanelProps) {
     setBusy(true)
     setError(null)
     setStatus(null)
-    // Start each attempt from a clean slate: a failed re-pair must not leave a stale
-    // paired flag or the previous bridge's lights on screen.
+    // Clean slate: a failed re-pair must not leave stale paired state on screen.
     setPaired(false)
     setLights([])
     setSelected(new Set())

@@ -5,7 +5,7 @@ A self-hosted smart-home hub: one dashboard for devices from different ecosystem
 [![CI](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml/badge.svg)](https://github.com/FelixGeisler/SmartHome/actions/workflows/ci.yml)
 [![Docs](https://github.com/FelixGeisler/SmartHome/actions/workflows/docs.yml/badge.svg)](https://felixgeisler.github.io/SmartHome/)
 
-SmartHome brings devices from different ecosystems into one web dashboard, running on your own hardware as a single container. No vendor apps and no required cloud account, so your devices and their data stay on your home network.
+It runs as a single container on your own hardware, with no vendor apps and no required cloud account, so your devices and their data stay on your home network.
 
 ![The SmartHome dashboard: device cards with their controls](docs/images/dashboard.png)
 
@@ -30,17 +30,17 @@ SmartHome brings devices from different ecosystems into one web dashboard, runni
 
 ## Quick start
 
-The hub ships as a single container image that bundles its own Java runtime, so nothing else has to
-be installed. With Docker or Podman, from the repository root:
+The hub ships as a single container image that bundles its own Java runtime. With Docker or Podman,
+from the repository root:
 
 ```sh
 docker compose up -d
 ```
 
-The dashboard and API are then on <http://localhost:8080>, and the image is published for both
-`amd64` and `arm64`, so the same command works on a PC, a home server, or a Raspberry Pi. The
-container restarts on boot, keeping the hub running as an always-on service. Building from source and
-first-time setup are covered in the [user guide](https://felixgeisler.github.io/SmartHome/guide/).
+The dashboard and API are then on <http://localhost:8080>. The image is published for both `amd64`
+and `arm64`, so the same command works on a PC, a home server, or a Raspberry Pi, and the container
+restarts on boot. Building from source and first-time setup are in the
+[user guide](https://felixgeisler.github.io/SmartHome/guide/).
 
 ## Documentation
 

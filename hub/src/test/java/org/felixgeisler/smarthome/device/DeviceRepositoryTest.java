@@ -18,8 +18,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
-// @DataJpaTest's slice doesn't include Flyway, so pull it in to run the real migrations against
-// the test database; the repository is then exercised on the same schema the application uses.
+// @DataJpaTest's slice omits Flyway, so pull it in to test against the real migrated schema.
 @DataJpaTest
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 class DeviceRepositoryTest {
@@ -51,8 +50,7 @@ class DeviceRepositoryTest {
     Device device = new Device("ext-2", "Plug", DeviceType.SHELLY_PLUG, "shelly");
     device.putState("on", "true");
     repository.save(device);
-    // Force the reload to hit the device_state table instead of the first-level
-    // cache handing back the same managed instance, otherwise this proves nothing.
+    // Force a real reload instead of the first-level cache returning the same managed instance.
     entityManager.flush();
     entityManager.clear();
 

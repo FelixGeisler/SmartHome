@@ -19,9 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Polls each sensing Homematic channel and records its datapoints as readings on that channel's own
- * device, so a thermostat's temperature or a plug's metering shows on the dashboard. Homematic has
- * no push over JSON-RPC, so the hub reads the channel's current values on a schedule.
+ * Polls each sensing Homematic channel and records its datapoints as readings on its own device.
  *
  * <p>The reads run on the poller's own thread, never the scheduler's, so a slow or unreachable CCU
  * cannot delay the scheduler that also drives the reachability sweep and schedule automations; a
@@ -83,8 +81,7 @@ public class HomematicSensorPoller {
   }
 
   /** Reads and records the datapoints of every sensing Homematic channel. */
-  // A broad catch is deliberate: this runs on the sensor thread and one channel's read failing must
-  // neither escape nor abandon the rest of the poll.
+  // Broad catch is deliberate: one channel's read failing must not abandon the rest of the poll.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public void poll() {
     for (Device device : devices.getAllDevices()) {
@@ -121,7 +118,7 @@ public class HomematicSensorPoller {
    * @param event the context-closed event
    */
   // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the pool the
-  // bean owns is stopped here (shutdown, not close). Tests inject a plain Executor.
+  // bean owns is stopped (shutdown, not close).
   @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {

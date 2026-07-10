@@ -62,7 +62,7 @@ public class ApiExceptionHandler {
 
   @ExceptionHandler(RoomLayoutException.class)
   ProblemDetail handleRoomLayout(RoomLayoutException ex) {
-    // Client-actionable: the submitted room layout is too large to store.
+    // The room layout is too large to store.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
@@ -73,34 +73,32 @@ public class ApiExceptionHandler {
 
   @ExceptionHandler(UnsupportedAdapterTypeException.class)
   ProblemDetail handleUnsupportedAdapterType(UnsupportedAdapterTypeException ex) {
-    // Client-actionable at registration time: this hub has no such integration configured.
+    // No such integration configured on this hub.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(UnsupportedCapabilityException.class)
   ProblemDetail handleUnsupportedCapability(UnsupportedCapabilityException ex) {
-    // Client-actionable: the command addressed a device that cannot perform it.
+    // The device cannot perform this command.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(InvalidCommandException.class)
   ProblemDetail handleInvalidCommand(InvalidCommandException ex) {
-    // Client-actionable: the command is malformed for the neutral contract (empty, out of range,
-    // or setting color and color temperature together).
+    // The command is malformed (empty, out of range, or color plus color temperature).
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
   @ExceptionHandler(DashboardLayoutException.class)
   ProblemDetail handleDashboardLayout(DashboardLayoutException ex) {
-    // Client-actionable: the submitted dashboard layout is too large to store.
+    // The dashboard layout is too large to store.
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
   }
 
   @ExceptionHandler(UnknownAdapterException.class)
   ProblemDetail handleUnknownAdapter(UnknownAdapterException ex) {
-    // Server-side data integrity: a device was persisted with an adapter type no adapter handles.
-    // The condition is well-defined, so log the message (not a full stack trace) and keep it out
-    // of the client response (don't leak internals in 5xx).
+    // Data integrity: a device has an adapter type no adapter handles. Log the message (not a
+    // stack trace) and keep it out of the 5xx body to avoid leaking internals.
     String reason = ex.getMessage();
     log.error("No adapter registered for a device toggle: {}", reason);
     return ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -108,27 +106,26 @@ public class ApiExceptionHandler {
 
   @ExceptionHandler(HueBridgeException.class)
   ProblemDetail handleHueBridge(HueBridgeException ex) {
-    // Client-actionable: the hub could not reach or use the Hue bridge (unreachable, not paired).
+    // The hub could not reach or use the Hue bridge.
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
   }
 
   @ExceptionHandler(HomematicCcuException.class)
   ProblemDetail handleHomematicCcu(HomematicCcuException ex) {
-    // Client-actionable: the hub could not reach or use the Homematic CCU (unreachable, not
-    // connected, or a failed login).
+    // The hub could not reach or use the Homematic CCU.
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
   }
 
   @ExceptionHandler(AuthAlreadyConfiguredException.class)
   ProblemDetail handleAuthAlreadyConfigured(AuthAlreadyConfiguredException ex) {
-    // Client-actionable: first-run setup ran but an administrator already exists.
+    // First-run setup ran but an administrator already exists.
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
   }
 
   @ExceptionHandler(AssistantException.class)
   ProblemDetail handleAssistant(AssistantException ex) {
-    // The assistant depends on the Claude API (an upstream service); surface failures as a bad
-    // gateway. The message is operator-actionable (unconfigured / unreachable), so pass it through.
+    // Claude API is an upstream service, so surface failures as a bad gateway; the message is
+    // operator-actionable, so pass it through.
     String reason = ex.getMessage();
     log.warn("Assistant request failed: {}", reason);
     return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, reason);

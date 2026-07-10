@@ -1,15 +1,11 @@
 import { request } from './devices'
 
-/** Result of a Solakon inverter connection attempt or a status query. */
 export interface ConnectionStatus {
   connected: boolean
   message: string
 }
 
-/**
- * Connects the hub to a Solakon inverter over Modbus TCP. The backend defaults the port to 502 and
- * the unit id to 1 when they are omitted.
- */
+/** Connects the hub to a Solakon inverter over Modbus TCP; the backend defaults port to 502 and unit id to 1 when omitted. */
 export function connectSolakon(
   host: string,
   port?: number,
@@ -29,12 +25,10 @@ export function connectSolakon(
   })
 }
 
-/** Reports whether the hub is currently connected to a Solakon inverter. */
 export function solakonStatus(): Promise<ConnectionStatus> {
   return request<ConnectionStatus>('/api/integrations/solakon/status')
 }
 
-/** Disconnects the hub from its Solakon inverter. */
 export function disconnectSolakon(): Promise<ConnectionStatus> {
   return request<ConnectionStatus>('/api/integrations/solakon/disconnect', { method: 'POST' })
 }

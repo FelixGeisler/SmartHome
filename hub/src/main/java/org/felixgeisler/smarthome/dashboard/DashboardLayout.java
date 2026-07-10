@@ -3,9 +3,7 @@ package org.felixgeisler.smarthome.dashboard;
 import java.util.List;
 
 /**
- * A saved dashboard arrangement: each card's device and its position and size on the grid. This is
- * a UI concern stored verbatim; the hub does not interpret the grid coordinates, which the frontend
- * (a drag-and-drop grid) owns.
+ * A saved dashboard arrangement of placed cards.
  *
  * @param cards the placed cards, never null
  */
@@ -17,16 +15,14 @@ public record DashboardLayout(List<CardLayout> cards) {
   }
 
   /**
-   * One dashboard card's placement: the device it shows, its position and size in grid units, and
-   * which of the device's sensor charts the user hid on this card.
+   * One dashboard card's placement and its hidden sensor charts.
    *
    * @param deviceId the id of the device shown in the card
    * @param x the column of the card's left edge, in grid units
    * @param y the row of the card's top edge, in grid units
    * @param w the card's width in grid units
    * @param h the card's height in grid units
-   * @param hiddenSensors the keys of the device's sensors whose charts are hidden on this card,
-   *     never null; empty means every chart is shown
+   * @param hiddenSensors the sensor keys whose charts are hidden, never null
    */
   public record CardLayout(
       long deviceId, int x, int y, int w, int h, List<String> hiddenSensors) {

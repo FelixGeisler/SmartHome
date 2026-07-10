@@ -8,15 +8,10 @@ import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Reads and writes the dashboard layout. The layout is a UI concern with no device-domain meaning,
- * so it is stored as a single JSON blob in the hub settings rather than modeled as an entity; that
- * keeps it decoupled from the live device set, which the frontend reconciles against on its own.
- */
+/** Reads and writes the dashboard layout as a JSON blob in the hub settings. */
 @Service
 public class DashboardLayoutService {
 
-  /** Settings key under which the layout blob is stored. */
   private static final String LAYOUT_KEY = "dashboard.layout";
 
   /** Maximum serialized length: the {@code hub_setting.setting_value} column width. */
@@ -30,8 +25,8 @@ public class DashboardLayoutService {
   /**
    * Creates the service.
    *
-   * @param settings the persisted settings store the layout blob rides on
-   * @param json the mapper used to serialize and parse the layout
+   * @param settings the settings store
+   * @param json the JSON mapper
    */
   public DashboardLayoutService(SettingsStore settings, ObjectMapper json) {
     this.settings = settings;
@@ -39,10 +34,7 @@ public class DashboardLayoutService {
   }
 
   /**
-   * Reads the saved layout, or empty when none is saved. A stored blob that no longer parses
-   * (written by another version, or corrupted) is treated as unsaved, so a bad setting can never
-   * keep the dashboard from loading. The empty result lets the caller tell "not arranged yet" apart
-   * from an intentionally empty layout.
+   * Reads the saved layout, or empty when none is saved or the blob no longer parses.
    *
    * @return the saved layout, or empty when none is saved
    */
@@ -60,8 +52,7 @@ public class DashboardLayoutService {
   }
 
   /**
-   * Replaces the saved layout. A layout whose serialized form would exceed the storable size is
-   * rejected rather than silently truncated.
+   * Replaces the saved layout.
    *
    * @param layout the layout to store
    * @throws DashboardLayoutException if the serialized layout exceeds the storable size

@@ -5,18 +5,10 @@ import org.felixgeisler.smarthome.capability.AttributeKey;
 import org.felixgeisler.smarthome.integration.DeviceAdapter;
 import org.springframework.stereotype.Component;
 
-/**
- * Adapter for Homematic command channels reached through the CCU (ADR 2). Translates the neutral
- * on/off attribute to and from the channel's {@code STATE} datapoint; all CCU access is delegated
- * to {@link HomematicCcuService}.
- *
- * <p>The device's {@code externalId} is its channel address,
- * {@code "<interface>/<channelAddress>"}.
- */
+/** Adapter for Homematic command channels reached through the CCU (ADR 2). */
 @Component
 public class HomematicDeviceAdapter implements DeviceAdapter {
 
-  /** The boolean datapoint a switchable Homematic channel exposes. */
   private static final String STATE = "STATE";
 
   private final HomematicCcuService ccu;

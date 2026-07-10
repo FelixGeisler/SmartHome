@@ -16,12 +16,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 /**
- * Manages the hub's connection to an MQTT broker as a runtime-configured integration: it holds the
- * broker client and subscribes {@link MqttSensorListener} to the telemetry topic filter.
+ * Manages the hub's MQTT broker connection and subscribes {@link MqttSensorListener} to telemetry.
  *
- * <p>The broker is chosen at runtime via {@link #connect(String, int)} rather than at startup, so
- * the hub boots without a broker and connects only once one is configured, mirroring the Hue
- * integration. This is connection wiring with no parsing logic; that lives in the listener.
+ * <p>The broker is chosen at runtime via {@link #connect(String, int)}, not at startup, so the hub
+ * boots without a broker and connects once one is configured.
  */
 @Service
 @EnableConfigurationProperties(MqttProperties.class)
@@ -29,12 +27,10 @@ public class MqttConnection {
 
   private static final int QOS_AT_LEAST_ONCE = 1;
 
-  /** Settings keys under which a connected broker's host and port are persisted. */
   private static final String HOST_SETTING = "mqtt.host";
 
   private static final String PORT_SETTING = "mqtt.port";
 
-  /** The standard MQTT port, used when no saved port is present or a saved one is unparseable. */
   private static final int DEFAULT_PORT = 1883;
 
   private static final Logger log = LoggerFactory.getLogger(MqttConnection.class);
@@ -43,8 +39,8 @@ public class MqttConnection {
   private final MqttSensorListener listener;
   private final SettingsStore settings;
 
-  // The live broker client, or null when disconnected. Guarded by this monitor (every accessor is
-  // synchronized), so the field carries the connection state across the connect/disconnect calls.
+  // Live broker client, or null when disconnected. Guarded by this monitor: all accessors are
+  // synchronized, so the field carries connection state across connect/disconnect.
   private MqttClient client;
 
   /**
@@ -62,8 +58,7 @@ public class MqttConnection {
   }
 
   /**
-   * Reconnects on startup to the broker last connected, so a configured broker survives a restart.
-   * A failure here is logged and left for the user to retry, never faulting startup.
+   * Reconnects on startup to the last connected broker, so it survives a restart.
    */
   @EventListener(ApplicationReadyEvent.class)
   public void reconnectLastBroker() {
@@ -78,8 +73,8 @@ public class MqttConnection {
             });
   }
 
-  // Parse a saved port, falling back to the default if it was corrupted or hand-edited. The raw
-  // value is kept out of the log to avoid log injection from a tampered setting.
+  // Parse a saved port, defaulting if unparseable. The raw value is kept out of the log to avoid
+  // log injection from a tampered setting.
   private static int parsePort(String raw) {
     try {
       return Integer.parseInt(raw);
@@ -90,13 +85,11 @@ public class MqttConnection {
   }
 
   /**
-   * Connects to the broker at the given host and port and subscribes to the telemetry topic filter,
-   * replacing any existing connection. A connection failure is reported as a false result rather
-   * than thrown, so a wrong host or an unreachable broker does not fault the request.
+   * Connects to the broker and subscribes to the telemetry filter, replacing any live connection.
    *
    * @param host the broker host (IP or hostname)
    * @param port the broker port
-   * @return true if the connection and subscription succeeded; false if the broker was unreachable
+   * @return true if connected and subscribed; false if the broker was unreachable
    */
   public synchronized boolean connect(String host, int port) {
     closeClient();
@@ -125,8 +118,7 @@ public class MqttConnection {
   }
 
   /**
-   * Disconnects from the broker at the user's request and forgets the saved broker, so the hub does
-   * not reconnect to it on the next boot.
+   * Disconnects and forgets the saved broker, so the hub does not reconnect on the next boot.
    */
   public synchronized void disconnect() {
     closeClient();
@@ -135,10 +127,7 @@ public class MqttConnection {
   }
 
   /**
-   * Closes and releases the broker client if present; safe to call when not connected, and used to
-   * clean up a half-open client after a failed {@link #connect(String, int)}. Disconnect and close
-   * run in separate steps so the client's resources are released even if it never finished
-   * connecting. Unlike {@link #disconnect()}, this leaves the saved broker in place.
+   * Closes and releases the broker client if present, leaving the saved broker in place.
    */
   @SuppressWarnings("PMD.NullAssignment")
   private synchronized void closeClient() {
@@ -159,8 +148,7 @@ public class MqttConnection {
       String reason = ex.getMessage();
       log.warn("Error while closing the MQTT client: {}", reason);
     }
-    // Null is the connection state: "no broker connected", so connect()/isConnected() start clean.
-    // (This is why PMD.NullAssignment is suppressed on this method.)
+    // Null marks "no broker connected" so a later connect starts clean (PMD.NullAssignment).
     client = null;
   }
 
@@ -182,9 +170,9 @@ public class MqttConnection {
   private MqttConnectOptions connectOptions() {
     MqttConnectOptions options = new MqttConnectOptions();
     options.setAutomaticReconnect(true);
-    // Keep cleanSession false so the broker retains our subscription across Paho's automatic
-    // reconnects: the hub subscribes only on an explicit connect, not on a transparent reconnect,
-    // so a clean session would silently stop delivering readings after any brief disconnect.
+    // cleanSession false so the broker keeps our subscription across Paho's automatic reconnects:
+    // the hub subscribes only on an explicit connect, so a clean session would silently stop
+    // delivering readings after any brief disconnect.
     options.setCleanSession(false);
     if (properties.username() != null && !properties.username().isBlank()) {
       options.setUserName(properties.username());
@@ -195,9 +183,8 @@ public class MqttConnection {
   }
 
   /**
-   * The client id the hub registers under: the configured value if set, otherwise a host-unique
-   * default so a second hub sharing the id (a dev box beside the live one, or an overlapping
-   * redeploy) cannot evict it. Package-private and pure so it can be unit-tested without a broker.
+   * The client id to register under: the configured value, else a host-unique default so a second
+   * hub sharing the id cannot evict it.
    *
    * @param configured the configured client id, or null/blank to derive one
    * @param host this machine's host name, or null when it cannot be resolved

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Subset of a Shelly Gen2/3 {@code Switch.GetStatus} RPC response: the relay output plus the plug's
- * metering. The metering fields are boxed so a model that lacks that channel is told apart from a
- * genuine zero.
+ * Subset of a Shelly Gen2/3 {@code Switch.GetStatus} RPC response: relay output plus metering.
+ *
+ * <p>The metering fields are boxed so a model that lacks that channel is told apart from a zero.
  *
  * @param output whether the relay output is on
  * @param apower active power in watts, or null if the model does not meter

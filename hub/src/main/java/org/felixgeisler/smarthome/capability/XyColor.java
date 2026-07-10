@@ -17,12 +17,11 @@ public record XyColor(double x, double y) {
   private static final double BLACK_LUMINANCE = 0.0;
 
   /**
-   * Converts an sRGB hex color (e.g. {@code "#0000FF"}) to CIE xy chromaticity, so a named or
-   * picked color can drive a CIE-xy light. Black has no chromaticity and maps to the origin.
+   * Converts an sRGB hex color to CIE xy chromaticity; black maps to the origin.
    *
    * @param hex the color as {@code #RRGGBB} or {@code RRGGBB}
    * @return the equivalent chromaticity
-   * @throws IllegalArgumentException if the string is not a six-digit hex color
+   * @throws IllegalArgumentException if not a six-digit hex color
    */
   public static XyColor fromHex(String hex) {
     String digits = hex.startsWith("#") ? hex.substring(1) : hex;

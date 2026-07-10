@@ -2,8 +2,7 @@
 
 The dashboard includes an AI assistant: ask about your home in plain language and it answers from
 live device state and sensor history, or acts when you ask it to switch or adjust something. It
-works through the same operations as the dashboard, so it can never do more than you could
-yourself.
+works through the same operations as the dashboard, so it can never do more than you could.
 
 == Enable it
 
@@ -14,7 +13,7 @@ calls on your behalf).
 . Open *Configuration* (the gear icon in the top-right), go to the *Assistant* tab, and paste it
   under *AI assistant*.
 
-The hub stores the key and it survives restarts; once set, it is masked and never shown again.
+The hub stores the key across restarts; once set, it is masked and never shown again.
 
 == Use it
 

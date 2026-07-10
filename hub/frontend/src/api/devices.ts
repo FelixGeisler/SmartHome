@@ -1,4 +1,3 @@
-/** A device as returned by the SmartHome REST API. */
 export interface Device {
   id: number
   externalId: string
@@ -11,9 +10,7 @@ export interface Device {
   state: Record<string, string>
   /** Declared sensors and their latest readings; empty for non-sensing devices. */
   sensors: Sensor[]
-  /** The id of the room the device belongs to, or null when unassigned. */
   roomId?: number | null
-  /** The name of the room the device belongs to, or null when unassigned. */
   roomName?: string | null
   /** Whether the hub currently finds the device reachable; absent is treated as reachable. */
   reachable?: boolean
@@ -21,7 +18,6 @@ export interface Device {
   lastSeenAt?: string | null
 }
 
-/** One measurement channel on a device. */
 export interface Sensor {
   key: string
   type: string
@@ -32,43 +28,35 @@ export interface Sensor {
   updatedAt: string | null
 }
 
-/** True when the device can be switched on and off. */
 export function isSwitchable(device: Device): boolean {
   return device.capabilities.includes('SWITCHABLE')
 }
 
-/** True when the device's brightness can be set as a percentage. */
 export function isDimmable(device: Device): boolean {
   return device.capabilities.includes('DIMMABLE')
 }
 
-/** True when the device's color can be set as CIE xy. */
 export function hasColor(device: Device): boolean {
   return device.capabilities.includes('COLOR')
 }
 
-/** True when the device's color temperature can be set. */
 export function hasColorTemperature(device: Device): boolean {
   return device.capabilities.includes('COLOR_TEMPERATURE')
 }
 
-/** True when the device reports sensor readings. */
 export function isSensing(device: Device): boolean {
   return device.capabilities.includes('SENSING')
 }
 
-/** True, when a switchable device reports itself switched on. */
 export function isOn(device: Device): boolean {
   return device.state.on === 'true'
 }
 
-/** The device's last known brightness percentage, or null before one is set. */
 export function brightnessOf(device: Device): number | null {
   const raw = device.state.brightness
   return raw === undefined ? null : Number(raw)
 }
 
-/** The device's last known color as CIE xy, or null before one is set. */
 export function colorXyOf(device: Device): { x: number; y: number } | null {
   const raw = device.state.colorXy
   if (raw === undefined) {
@@ -78,7 +66,6 @@ export function colorXyOf(device: Device): { x: number; y: number } | null {
   return { x, y }
 }
 
-/** The device's last known color temperature in Kelvin, or null before one is set. */
 export function colorTemperatureKOf(device: Device): number | null {
   const raw = device.state.colorTemperatureK
   return raw === undefined ? null : Number(raw)
@@ -89,14 +76,12 @@ export function formatReading(sensor: Sensor): string {
   return sensor.value === null ? 'n/a' : `${sensor.value} ${sensor.unit}`
 }
 
-/** A sensor a device declares at registration. */
 export interface SensorSpec {
   key: string
   type: string
   unit: string
 }
 
-/** Request body for registering a device. */
 export interface DeviceRegistration {
   externalId: string
   name: string
@@ -122,17 +107,10 @@ interface ProblemDetail {
   detail?: string
 }
 
-/** Lists all registered devices. */
 export function listDevices(): Promise<Device[]> {
   return request<Device[]>('/api/devices')
 }
 
-/**
- * Registers a new device.
- *
- * @param registration the device to register
- * @returns the persisted device
- */
 export function registerDevice(registration: DeviceRegistration): Promise<Device> {
   return request<Device>('/api/devices', {
     method: 'POST',
@@ -141,23 +119,10 @@ export function registerDevice(registration: DeviceRegistration): Promise<Device
   })
 }
 
-/**
- * Toggles a device on or off.
- *
- * @param id the device id
- * @returns the device's updated state
- */
 export function toggleDevice(id: number): Promise<Device> {
   return request<Device>(`/api/devices/${id}/toggle`, { method: 'POST' })
 }
 
-/**
- * Applies a neutral command to a device, e.g. setting brightness or color.
- *
- * @param id the device id
- * @param command the neutral attributes to set
- * @returns the device's updated state
- */
 export function sendCommand(id: number, command: DeviceCommand): Promise<Device> {
   return request<Device>(`/api/devices/${id}/command`, {
     method: 'POST',
@@ -166,13 +131,6 @@ export function sendCommand(id: number, command: DeviceCommand): Promise<Device>
   })
 }
 
-/**
- * Renames a device.
- *
- * @param id the device id
- * @param name the new name
- * @returns the renamed device
- */
 export function renameDevice(id: number, name: string): Promise<Device> {
   return request<Device>(`/api/devices/${id}`, {
     method: 'PATCH',
@@ -181,11 +139,7 @@ export function renameDevice(id: number, name: string): Promise<Device> {
   })
 }
 
-/**
- * Deletes a device. A still-publishing sensor node reappears on its next reading.
- *
- * @param id the device id
- */
+/** Deletes a device; a still-publishing sensor node reappears on its next reading. */
 export function deleteDevice(id: number): Promise<void> {
   return request<void>(`/api/devices/${id}`, { method: 'DELETE' })
 }
@@ -193,20 +147,14 @@ export function deleteDevice(id: number): Promise<void> {
 /** Notified when a request is refused for want of a session, so the app can show the login gate. */
 let unauthorizedHandler: (() => void) | null = null
 
-/**
- * Registers a callback invoked when an API request returns 401 (no session, or it expired). The
- * auth endpoints themselves are excluded, since a failed login is expected there.
- *
- * @param handler the callback, or null to clear it
- */
+/** Registers a callback invoked when an API request returns 401 (no session, or it expired). */
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler
 }
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
-// Spring issues a CSRF token in the XSRF-TOKEN cookie; it must be echoed in a header on any
-// state-changing request. Read it here so no caller has to.
+// Spring issues a CSRF token in the XSRF-TOKEN cookie; echo it in a header on state-changing requests.
 function csrfToken(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
   return match !== null ? decodeURIComponent(match[1]) : null

@@ -26,7 +26,7 @@ describe('placeAllRooms', () => {
 
     expect(boxes.map((box) => box.roomId)).toEqual([1, 2, 3])
     expect(boxes[0]).toMatchObject({ x: 0, y: 0 })
-    // Two per row at width 6 in a 12-column grid, so the third wraps to a new row.
+    // Two per row in a 12-column grid, so the third wraps.
     expect(boxes[2].x).toBe(0)
     expect(boxes[2].y).toBeGreaterThan(0)
     expect(new Set(boxes.map((box) => `${box.x},${box.y}`)).size).toBe(3)
@@ -54,9 +54,7 @@ describe('displayBoxes', () => {
 
     const boxes = displayBoxes([room(1), room(2)], saved)
 
-    // The room that has a saved box keeps its exact placement...
     expect(boxes.find((box) => box.roomId === 1)).toEqual({ roomId: 1, x: 3, y: 4, w: 6, h: 8 })
-    // ...and the room added after the layout was saved still gets a box (below the kept ones).
     const appended = boxes.find((box) => box.roomId === 2)
     expect(appended).toBeDefined()
     expect(appended?.y).toBeGreaterThanOrEqual(4 + 8)
@@ -221,11 +219,10 @@ describe('placementsToSave', () => {
 
   it('keeps an unmoved device in place when a lower-indexed device leaves the room', () => {
     const roomDevices = [{ id: 1 }, { id: 2 }]
-    // Move device 1; device 2 stays at its default slot but is now persisted explicitly.
     const saved = placementsToSave(roomDevices, [{ deviceId: 1, fx: 0.9, fy: 0.9 }])
     const twoBefore = reconcilePlacements(roomDevices, saved).find((p) => p.deviceId === 2)
 
-    // Device 1 leaves the room; device 2 must not shift to a different default slot.
+    // Default slots are index-based, so device 1 leaving must not shift device 2's slot.
     const twoAfter = reconcilePlacements([{ id: 2 }], saved).find((p) => p.deviceId === 2)
 
     expect(twoAfter).toEqual(twoBefore)

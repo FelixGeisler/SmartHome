@@ -6,10 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-/**
- * Creates, lists, renames, and deletes floors. Assigning a room to a floor lives in the room
- * service, so this service never depends on the room package.
- */
+/** Creates, lists, renames, and deletes floors. */
 @Service
 public class FloorService {
 
@@ -20,7 +17,7 @@ public class FloorService {
    * Creates the service.
    *
    * @param floors the floor repository
-   * @param events publisher for floor domain events
+   * @param events the event publisher
    */
   public FloorService(FloorRepository floors, ApplicationEventPublisher events) {
     this.floors = floors;
@@ -33,7 +30,7 @@ public class FloorService {
    * @return every floor
    */
   public List<Floor> getAllFloors() {
-    // Sort by level, then id, so two floors that ever share a level still have a stable order.
+    // Sort by level, then id, for a stable order when two floors share a level.
     return floors.findAll(Sort.by("level", "id"));
   }
 
@@ -59,13 +56,12 @@ public class FloorService {
     if (floors.findByName(name).isPresent()) {
       throw new FloorAlreadyExistsException(name);
     }
-    // Place the new floor above the current highest. Using max+1 rather than the row count keeps
-    // levels collision-free even after a middle floor is deleted.
+    // max+1 (not row count) keeps levels collision-free after a middle floor is deleted.
     int level = floors.findFirstByOrderByLevelDesc().map(top -> top.getLevel() + 1).orElse(0);
     try {
       return floors.save(new Floor(name, level));
     } catch (DataIntegrityViolationException ex) {
-      // Lost a race: another request inserted the same name between the check and the save.
+      // Lost a race: another request inserted the same name after the check.
       throw new FloorAlreadyExistsException(name, ex);
     }
   }
@@ -95,9 +91,8 @@ public class FloorService {
   }
 
   /**
-   * Deletes a floor. Any rooms on it are unassigned first, through a {@link FloorRemoved} event the
-   * room side handles, so they fall back to unassigned rather than the delete failing on the
-   * foreign key.
+   * Deletes a floor, first unassigning its rooms via a {@link FloorRemoved} event so the foreign
+   * key does not block the delete.
    *
    * @param id the floor id
    * @throws FloorNotFoundException if no floor has the given id

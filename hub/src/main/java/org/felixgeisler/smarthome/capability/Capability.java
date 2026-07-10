@@ -6,11 +6,9 @@ import java.util.Set;
 /**
  * Something a class of devices can do.
  *
- * <p>Each command capability is a typed contract that owns the neutral {@link AttributeKey
- * attributes} it accepts, so the command gate, the adapter, and the dashboard all read the same
- * source of truth. Capabilities compose and are stored per device; they are not inherited from a
- * category. {@link #SENSING} is a measurement channel, not a command, and owns no command
- * attributes.
+ * <p>Each command capability owns the {@link AttributeKey attributes} it accepts, the single
+ * source of truth for the command gate, adapter, and dashboard. Capabilities are stored per device.
+ * {@link #SENSING} is a measurement channel, not a command, and owns no command attributes.
  */
 public enum Capability {
 
@@ -41,7 +39,7 @@ public enum Capability {
    * @return the command attributes (immutable, empty for {@link #SENSING})
    */
   public Set<AttributeKey> commandAttributes() {
-    // No-op on the already-immutable field; proves to static analysis nothing leaks.
+    // Defensive copy proves to static analysis that nothing leaks.
     return Set.copyOf(attributes);
   }
 
@@ -58,7 +56,7 @@ public enum Capability {
    * Finds the capability that owns a command attribute, so the gate can check a device has it.
    *
    * @param attribute the neutral attribute a command sets
-   * @return the owning capability, or empty if no capability accepts the attribute as a command
+   * @return the owning capability, or empty if none accepts it
    */
   public static Optional<Capability> forAttribute(AttributeKey attribute) {
     for (Capability capability : values()) {

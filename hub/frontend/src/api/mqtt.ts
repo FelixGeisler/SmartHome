@@ -1,6 +1,5 @@
 import { request } from './devices'
 
-/** Result of an MQTT broker connection attempt or a status query. */
 export interface ConnectionStatus {
   connected: boolean
   message: string
@@ -16,12 +15,10 @@ export function connectMqtt(host: string, port?: number): Promise<ConnectionStat
   })
 }
 
-/** Reports whether the hub is currently connected to an MQTT broker. */
 export function mqttStatus(): Promise<ConnectionStatus> {
   return request<ConnectionStatus>('/api/integrations/mqtt/status')
 }
 
-/** Disconnects the hub from its MQTT broker. */
 export function disconnectMqtt(): Promise<ConnectionStatus> {
   return request<ConnectionStatus>('/api/integrations/mqtt/disconnect', { method: 'POST' })
 }

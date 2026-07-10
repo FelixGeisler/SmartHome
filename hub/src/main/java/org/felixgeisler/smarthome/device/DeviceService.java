@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DeviceService {
 
-  /** State key under which switchable devices keep their power state. */
   private static final String ON_STATE = "on";
 
   private static final Logger log = LoggerFactory.getLogger(DeviceService.class);
@@ -42,10 +41,10 @@ public class DeviceService {
    * Creates the service.
    *
    * @param devices the device repository
-   * @param adapters the adapter registry used to reach command devices
-   * @param events publisher for domain events such as recorded readings
-   * @param clock the clock used to timestamp sensor readings
-   * @param rooms the room repository, used when assigning a device to a room
+   * @param adapters the adapter registry
+   * @param events domain event publisher
+   * @param clock the clock
+   * @param rooms the room repository
    */
   public DeviceService(
       DeviceRepository devices,
@@ -84,28 +83,24 @@ public class DeviceService {
    * Finds a device by its external id.
    *
    * @param externalId the device's address within its integration
-   * @return the device, or empty if none has that external id
+   * @return the device, or empty if none matches
    */
   public Optional<Device> findByExternalId(String externalId) {
     return devices.findByExternalId(externalId);
   }
 
   /**
-   * Registers a new device with the capabilities detected for it (ADR 2). A command device (one
-   * with any {@link Capability#isCommand() command} capability) needs an adapter that this hub
-   * supports; a sensing device has no command adapter and declares its sensors instead.
+   * Registers a device with its detected capabilities (ADR 2).
    *
    * @param externalId the device's address within its integration
    * @param name human-readable device name
    * @param type the device category
-   * @param adapterType identifier of the command adapter, required for a command device and
-   *     ignored for a sensing one
-   * @param capabilities what the device can do; when null or empty the {@code type}'s defaults are
-   *     used, so a simple device need not spell them out
-   * @param sensors the sensors a sensing device declares; ignored for non-sensing devices
+   * @param adapterType command adapter id, required only for a command device
+   * @param capabilities what the device can do; null or empty uses the type's defaults
+   * @param sensors sensors a sensing device declares; ignored otherwise
    * @return the persisted device
-   * @throws UnsupportedAdapterTypeException if a command device names an adapter no adapter handles
-   * @throws DeviceAlreadyExistsException if a device with the external id already exists
+   * @throws UnsupportedAdapterTypeException if a command device names an unknown adapter
+   * @throws DeviceAlreadyExistsException if the external id already exists
    */
   public Device register(
       String externalId,
@@ -131,22 +126,17 @@ public class DeviceService {
     try {
       return saveAndPublish(device);
     } catch (DataIntegrityViolationException ex) {
-      // Lost a race: another request inserted the same externalId between the check and the save.
+      // Lost a race: another request inserted the same externalId first.
       throw new DeviceAlreadyExistsException(externalId, ex);
     }
   }
 
   /**
-   * Records a sensor reading received as inbound telemetry, auto-provisioning as needed: an unknown
-   * device is created as a {@link DeviceType#SENSOR_NODE}, and a reading for a recognized but
-   * not-yet-seen sensor key adds that sensor with its default unit. A reading whose key is not a
-   * known measurement is logged and dropped, so an unrecognized topic cannot create junk sensors.
+   * Records inbound telemetry, auto-provisioning an unknown device or sensor key and dropping
+   * unrecognized keys.
    *
-   * <p>Runs in a transaction so the device is a managed entity: combined with
-   * {@code @DynamicUpdate} on {@link Device}, the write touches only the reading's own columns (the
-   * sensor and the freshness fields), never the on/off state, name, or room a concurrent toggle or
-   * edit may have just changed. This matters because the Shelly meter poll records readings against
-   * switchable plugs.
+   * <p>Transactional so that, with {@code @DynamicUpdate} on {@link Device}, the write touches only
+   * the reading's columns and cannot clobber a concurrent toggle or edit.
    *
    * @param externalId the reporting device's external id
    * @param sensorKey the key of the sensor the reading is for
@@ -167,10 +157,9 @@ public class DeviceService {
       device.recordReading(sensorKey, value, at);
     }
     device.markSeen(at);
-    // Saving also pushes the device's new latest values to any live dashboard (surfacing a freshly
-    // auto-provisioned node without a reload).
+    // Save also pushes latest values to the live dashboard.
     Device saved = saveAndPublish(device);
-    // Record the reading into the sensor history store, decoupled through the domain event.
+    // History store is fed via the domain event.
     saved.getSensors().stream()
         .filter(sensor -> sensor.getKey().equals(sensorKey))
         .findFirst()
@@ -221,17 +210,15 @@ public class DeviceService {
   }
 
   /**
-   * Applies a neutral command to a device (ADR 3): validates every requested attribute against the
-   * device's capabilities and the neutral contract, dispatches the translated command through the
-   * adapter, and records the resulting state.
+   * Applies a neutral command to a device (ADR 3), validating, dispatching, and recording state.
    *
    * @param id the device id
-   * @param command the neutral attributes to set; only the attributes it carries are changed
+   * @param command the neutral attributes to set
    * @return the updated device
    * @throws DeviceNotFoundException if no device has the given id
-   * @throws UnsupportedCapabilityException if an attribute needs a capability, the device lacks
-   * @throws InvalidCommandException if the command is empty, out of range, or sets color and
-   *     color temperature together
+   * @throws UnsupportedCapabilityException if an attribute needs a capability the device lacks
+   * @throws InvalidCommandException if empty, out of range, or sets color and color temperature
+   *     together
    */
   public Device applyCommand(Long id, CommandRequest command) {
     Device device = getById(id);
@@ -268,14 +255,13 @@ public class DeviceService {
   }
 
   /**
-   * Folds a command device's actually-reported state (read from the device by the state poller)
-   * back into the hub, so a change made outside the hub (another app, a physical switch, or while
-   * the hub was down) shows on the dashboard. Runs in a transaction and rewrites only the keys that
-   * differ, so with {@code @DynamicUpdate} it neither clobbers a concurrent command nor pushes when
-   * nothing changed.
+   * Folds a command device's polled state back into the hub, rewriting only differing keys.
+   *
+   * <p>Transactional and diff-only, with {@code @DynamicUpdate}, it neither clobbers a concurrent
+   * command nor pushes when nothing changed.
    *
    * @param id the device id
-   * @param reported the device's current state as neutral, wire-keyed values from its adapter
+   * @param reported the device's current state as wire-keyed values from its adapter
    */
   @Transactional
   public void syncState(Long id, Map<String, Object> reported) {
@@ -345,11 +331,10 @@ public class DeviceService {
   }
 
   /**
-   * Applies a freshly probed reachability result to a command device, pushing to live clients only
-   * when the flag flips so a steady device causes no writes or events. The device is re-read by id
-   * inside this call, so a result computed during a slow probe cannot overwrite state, a name, or a
-   * room another thread persisted in the meantime, and a device deleted during the sweep is not
-   * resurrected.
+   * Applies a probed reachability result to a command device, pushing only when the flag flips.
+   *
+   * <p>Re-reads the device by id so a slow probe cannot overwrite state persisted meanwhile or
+   * resurrect a device deleted during the sweep.
    *
    * @param id the device id
    * @param reachable whether the probe found the device reachable
@@ -359,11 +344,10 @@ public class DeviceService {
   }
 
   /**
-   * Re-evaluates a reporting device's reachability from its latest reading, pushing to live clients
-   * only when the flag flips. The device is re-read by id, so the decision uses the freshest
-   * {@code lastSeenAt} rather than a snapshot captured before slower devices were probed, no write
-   * clobbers a reading that arrived meanwhile, and a device deleted during the sweep is not
-   * resurrected.
+   * Re-evaluates a reporting device's reachability from its latest reading, pushing only on a flip.
+   *
+   * <p>Re-reads the device by id so the decision uses the freshest {@code lastSeenAt} and cannot
+   * clobber a reading that arrived meanwhile or resurrect a deleted device.
    *
    * @param id the device id
    * @param freshSince the earliest reading time still counted as reachable
@@ -386,8 +370,7 @@ public class DeviceService {
   }
 
   /**
-   * Unassigns every device in a room when that room is being removed, so the delete does not fail
-   * on the foreign key and each freed device is pushed to live clients.
+   * Unassigns every device in a removed room so the delete does not fail on the foreign key.
    *
    * @param event the room-removed event
    */
@@ -400,9 +383,7 @@ public class DeviceService {
   }
 
   /**
-   * The single choke point for device mutations: persists the device and pushes its new view to
-   * live clients. Every state-changing path must save through here, so a future mutation cannot
-   * silently skip the live-update push.
+   * Single choke point for device mutations: persists and pushes the new view to live clients.
    *
    * @param device the mutated device
    * @return the persisted device

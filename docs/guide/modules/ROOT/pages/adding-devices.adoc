@@ -1,13 +1,13 @@
 = Adding devices
 
-A device is registered once; from then on the dashboard presents the controls and readings its
-capabilities call for.
+A device is registered once; the dashboard then presents the controls and readings its capabilities
+call for.
 
 A device reaches the hub one of two ways:
 
-* *Through a bridge*: A broker or hub fronts many devices over one connection;
-  you connect the hub to the bridge once, and it brings in the devices behind it.
-* *Directly*: The device exposes its own network API, so the hub talks to it directly.
+* *Through a bridge*: a broker or hub fronts many devices over one connection; connect the hub to the
+  bridge once, and it brings in the devices behind it.
+* *Directly*: the device exposes its own network API.
 
 Devices and integrations are set up on the *Configuration* page, opened from the gear icon in the
 top-right; each integration has its own tab.
@@ -45,10 +45,10 @@ The CCU password is connection state, never committed to source.
 
 === An MQTT broker
 
-A broker can't list what publishes through it, and sensor nodes aren't added by hand: connect the
-hub to the broker, and each node appears on its own the first time it publishes. The hub creates the
-device from the node id in the topic and adds each recognized measurement as a sensor. See
-xref:mqtt-sensors.adoc[MQTT sensors] for the broker setup and topic conventions.
+A broker can't list what publishes through it, so sensor nodes aren't added by hand: connect the
+hub to the broker, and each node appears the first time it publishes. The hub creates the device
+from the node id in the topic and adds each recognized measurement as a sensor. See
+xref:mqtt-sensors.adoc[MQTT sensors] for broker setup and topic conventions.
 
 == Direct devices
 
@@ -62,5 +62,5 @@ network (for example, no Ethernet drop nearby), you can bridge it with a Raspber
 
 == From the API
 
-Every registration the dashboard performs is also a plain REST call. The exact request shapes are documented live and always in sync at the hub's
-API reference, `/swagger-ui.html` (see xref:getting-started.adoc[Getting started]).
+Every registration the dashboard performs is also a plain REST call. The exact request shapes are in
+the hub's API reference, `/swagger-ui.html` (see xref:getting-started.adoc[Getting started]).

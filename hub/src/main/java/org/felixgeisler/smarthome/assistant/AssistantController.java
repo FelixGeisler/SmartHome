@@ -20,7 +20,7 @@ class AssistantController {
   }
 
   /**
-   * Answers a chat message, controlling devices and reading telemetry as needed.
+   * Answers a chat message.
    *
    * @param request the user's message
    * @return the assistant's reply
@@ -44,7 +44,7 @@ class AssistantController {
    * Sets the assistant's Anthropic API key at runtime.
    *
    * @param request the API key to use
-   * @return the configuration status, now configured
+   * @return the configuration status
    */
   @PostMapping("/key")
   StatusResponse configure(@Valid @RequestBody KeyRequest request) {

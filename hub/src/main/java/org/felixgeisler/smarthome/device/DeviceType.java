@@ -16,8 +16,8 @@ public enum DeviceType {
   HUE_LIGHT(Set.of(Capability.SWITCHABLE)),
 
   /**
-   * A Homematic channel reached through the CCU: a switch, or a channel that reports sensors. Its
-   * capabilities are detected per channel at discovery, so the type declares none of its own.
+   * A Homematic channel reached through the CCU; its capabilities are detected per channel at
+   * discovery, so the type declares none of its own.
    */
   HOMEMATIC_DEVICE(Set.of()),
 
@@ -36,7 +36,7 @@ public enum DeviceType {
    * @return the type's capabilities (immutable)
    */
   public Set<Capability> getCapabilities() {
-    // No-op on the already-immutable field; proves to static analysis nothing leaks.
+    // Defensive copy proves to static analysis that nothing leaks.
     return Set.copyOf(capabilities);
   }
 

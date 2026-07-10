@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react'
 import { connectSolakon, disconnectSolakon, solakonStatus } from '../api/solakon'
 import { StatusBadge } from './StatusBadge'
 
-/**
- * Connects the hub to a Solakon ONE inverter over Modbus TCP. Once connected, its power and battery
- * readings appear on the dashboard as live charts, so there is nothing to register by hand here.
- */
 export function SolakonPanel() {
   const [host, setHost] = useState('')
   const [port, setPort] = useState('502')
@@ -30,8 +26,7 @@ export function SolakonPanel() {
       const parsedUnitId = parseNumericField(unitId, 'Unit ID', 1, 247)
       const result = await connectSolakon(host.trim(), parsedPort, parsedUnitId)
       setConnected(result.connected)
-      // A "not connected" result is a failed attempt, so surface it as an error, not a neutral
-      // status line where it reads like a hint.
+      // A "not connected" result is a failed attempt; surface it as an error.
       if (result.connected) {
         setStatus(result.message)
       } else {
@@ -123,11 +118,7 @@ function messageOf(cause: unknown): string {
   return cause instanceof Error ? cause.message : 'Something went wrong'
 }
 
-/**
- * Parses an optional numeric field: a blank value returns undefined so the backend applies its
- * default, while a non-blank value must be a whole number within range, otherwise it throws so the
- * caller surfaces the error instead of sending NaN (which JSON encodes as null and silently defaults).
- */
+/** Blank returns undefined (backend default); NaN would encode as null and silently default, so out-of-range throws. */
 function parseNumericField(
   raw: string,
   label: string,

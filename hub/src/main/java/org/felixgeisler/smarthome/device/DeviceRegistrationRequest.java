@@ -14,11 +14,9 @@ import org.felixgeisler.smarthome.capability.Capability;
  * @param externalId the device's address within its integration
  * @param name human-readable device name
  * @param type the device category
- * @param adapterType identifier of the command adapter; required for a command device, omitted for
- *     a sensing one
- * @param capabilities what the device can do, as detected at discovery (ADR 2); omitted to fall
- *     back to the type's defaults
- * @param sensors the sensors a sensing device declares; omitted for non-sensing types
+ * @param adapterType command adapter id; required for a command device
+ * @param capabilities what the device can do (ADR 2); omitted to use the type's defaults
+ * @param sensors the sensors a sensing device declares
  */
 public record DeviceRegistrationRequest(
     @NotBlank String externalId,
@@ -35,13 +33,13 @@ public record DeviceRegistrationRequest(
   }
 
   /**
-   * Requires a non-blank adapter type for a command device (one that is
-   * {@link Capability#SWITCHABLE}); a sensing device has none. Surfaces a missing adapter as a 400
-   * instead of a misleading "unsupported adapter type" 422.
+   * Requires a non-blank adapter type for a command device ({@link Capability#SWITCHABLE}).
    *
-   * @return true if the adapter type is consistent with the device's capabilities
+   * <p>Surfaces a missing adapter as a 400 rather than a misleading 422.
+   *
+   * @return true if the adapter type is consistent with the capabilities
    */
-  // Invoked reflectively by Bean Validation (@AssertTrue), so it has no direct caller.
+  // Invoked reflectively by Bean Validation (@AssertTrue); no direct caller.
   @SuppressWarnings("unused")
   @AssertTrue(message = "adapterType is required for a command device")
   boolean isAdapterTypeValid() {

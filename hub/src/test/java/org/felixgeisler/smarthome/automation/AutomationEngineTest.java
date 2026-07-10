@@ -50,7 +50,7 @@ class AutomationEngineTest {
 
   @BeforeEach
   void setUp() {
-    // A same-thread executor makes the fan-out deterministic to assert against.
+    // Same-thread executor makes the fan-out deterministic to assert against.
     engine = new AutomationEngine(automations, devices, conditions, actions, Runnable::run, CLOCK);
   }
 
@@ -214,8 +214,8 @@ class AutomationEngineTest {
   @DisplayName("skips an incomplete trigger instead of poisoning the other automations")
   @Test
   void skipsIncompleteTrigger() {
-    // A malformed threshold trigger (null comparison/threshold) that the API would reject but a
-    // hand-inserted row could hold; it must be skipped, not abort evaluating the valid automation.
+    // A malformed threshold trigger the API would reject but a hand-inserted row could hold; it
+    // must be skipped, not abort evaluating the valid automation.
     AutomationTrigger broken =
         new AutomationTrigger(
             TriggerKind.SENSOR_THRESHOLD, SENSOR_DEVICE_ID, "temperature", null, null);

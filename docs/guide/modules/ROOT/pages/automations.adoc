@@ -14,4 +14,4 @@ image::automations.png[The automation builder]
   or toggle it on or off.
 
 Automations use the same commands the dashboard does, so anything you can control by hand, an
-automation can control for you. Toggle one off to keep it without letting it run.
+automation can too. Toggle one off to keep it without letting it run.

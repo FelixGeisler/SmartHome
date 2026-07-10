@@ -9,9 +9,8 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * One historical sensor reading kept for the trend charts: a numeric value for a device's sensor at
- * a point in time. Rows are append-only, written by {@link SensorReadingRecorder} and pruned by
- * {@link TelemetryRetentionJob}.
+ * One historical sensor reading kept for the trend charts: a device sensor's value at a point in
+ * time.
  */
 @Entity
 @Table(name = "sensor_reading_history")

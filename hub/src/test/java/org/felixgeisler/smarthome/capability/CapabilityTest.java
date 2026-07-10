@@ -29,7 +29,7 @@ class CapabilityTest {
   @DisplayName("forAttribute returns empty for a reported-only attribute")
   @Test
   void forAttribute_isEmptyForReportedOnlyAttribute() {
-    // COLOR_MODE is derived and reported, never commanded, so no capability accepts it.
+    // COLOR_MODE is reported, never commanded, so no capability owns it.
     assertTrue(Capability.forAttribute(AttributeKey.COLOR_MODE).isEmpty());
   }
 

@@ -7,9 +7,8 @@ import './index.css'
 import App from './App.tsx'
 import { AuthGate } from './components/AuthGate.tsx'
 
-// BrowserRouter gives clean URLs (/dashboard, /configuration). In production Spring forwards
-// unmatched non-API routes to index.html (see SpaResourceConfig) so deep links and reloads
-// resolve to the SPA shell; in development the Vite dev server does the same.
+// Spring (see SpaResourceConfig), and Vite in dev, forward unmatched non-API routes to index.html
+// so deep links and reloads resolve to the SPA shell.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

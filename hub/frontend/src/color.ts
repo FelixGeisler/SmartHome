@@ -1,15 +1,9 @@
 /**
- * Color math for the color picker: convert between the browser's sRGB hex colors and the
- * device-neutral CIE 1931 xy chromaticity the API speaks. Uses the standard sRGB primaries
- * and the D65 white point.
+ * Color math for the color picker: convert between sRGB hex and the CIE 1931 xy chromaticity the API
+ * speaks (standard sRGB primaries, D65 white point).
  */
 
-/**
- * Converts an sRGB hex color (e.g. {@code "#ff8800"}) to CIE xy chromaticity.
- *
- * @param hex the color as a {@code #rrggbb} string
- * @returns the chromaticity, with x and y in 0..1
- */
+/** Converts an sRGB hex color to CIE xy chromaticity. */
 export function hexToXy(hex: string): { x: number; y: number } {
   const { r, g, b } = toLinearRgb(hex)
   const cieX = 0.4124 * r + 0.3576 * g + 0.1805 * b
@@ -23,12 +17,8 @@ export function hexToXy(hex: string): { x: number; y: number } {
 }
 
 /**
- * Converts a CIE xy chromaticity to an sRGB hex color for display. Out-of-gamut colors are
- * scaled back into range, so the swatch keeps the hue even when the exact color is not displayable.
- *
- * @param x the x chromaticity coordinate (0..1)
- * @param y the y chromaticity coordinate (0..1)
- * @returns the color as a {@code #rrggbb} string
+ * Converts a CIE xy chromaticity to an sRGB hex color. Out-of-gamut colors are scaled back into
+ * range, so the swatch keeps the hue even when the exact color is not displayable.
  */
 export function xyToHex(x: number, y: number): string {
   if (y === 0) {

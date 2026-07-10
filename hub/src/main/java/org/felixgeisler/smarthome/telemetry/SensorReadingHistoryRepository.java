@@ -9,8 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SensorReadingHistoryRepository extends JpaRepository<SensorReadingHistory, Long> {
 
   /**
-   * Returns a sensor's readings from a start time, newest first and capped, so the cap keeps the
-   * most recent readings when a busy sensor exceeds it.
+   * Returns a sensor's readings from a start time, newest first and capped.
    *
    * @param deviceId the reporting device's external id
    * @param sensorKey the sensor's key within its device
@@ -23,7 +22,7 @@ public interface SensorReadingHistoryRepository extends JpaRepository<SensorRead
           String deviceId, String sensorKey, Instant from, Limit limit);
 
   /**
-   * Deletes readings older than a cutoff, bounding the table's growth.
+   * Deletes readings older than a cutoff.
    *
    * @param cutoff the oldest reading time to keep
    * @return the number of rows deleted

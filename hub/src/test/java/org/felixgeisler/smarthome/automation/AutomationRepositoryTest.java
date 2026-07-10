@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
-// @DataJpaTest's slice doesn't include Flyway, so pull it in to run the real migrations against
-// the test database; the repository is then exercised on the same schema the application uses.
+// @DataJpaTest's slice doesn't include Flyway, so pull it in to exercise the repository on the
+// same schema the application uses.
 @DataJpaTest
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 class AutomationRepositoryTest {
@@ -39,7 +39,7 @@ class AutomationRepositoryTest {
             new AutomationAction(ActionKind.DEVICE_COMMAND, 3L, true, 40, null)));
 
     Automation saved = repository.save(automation);
-    // Force a real reload so the eager, ordered child collections are fetched from the database.
+    // Force a real reload so the ordered child collections come from the database.
     entityManager.flush();
     entityManager.clear();
     Automation found = repository.findById(saved.getId()).orElseThrow();

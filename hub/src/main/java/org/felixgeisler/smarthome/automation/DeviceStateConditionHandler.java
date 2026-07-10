@@ -34,9 +34,8 @@ public class DeviceStateConditionHandler implements ConditionHandler {
       // A condition that names a removed device cannot hold, so the automation does not run.
       return false;
     }
-    // An absent value means the device has never reported that state (e.g. a switch never actuated
-    // through the hub); treat it as off/false, matching how the rest of the app reads power state,
-    // so an "is off" check holds instead of silently never matching.
+    // Absent value means the device never reported that state; treat it as "false", matching how
+    // the app reads power state, so an "is off" check holds instead of never matching.
     String actual = device.getState().getOrDefault(condition.getStateKey(), "false");
     return actual.equals(condition.getExpected());
   }

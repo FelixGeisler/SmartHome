@@ -7,24 +7,19 @@ import type { Sensor } from '../api/devices'
 import { fetchSensorHistory, type ReadingPoint } from '../api/telemetry'
 
 interface SensorChartProps {
-  /** The device's external id the readings are keyed by. */
   deviceExternalId: string
-  /** The charted sensor; its latest reading is appended live as it updates. */
   sensor: Sensor
   /** Bumped on every event-stream (re)connect; the history window is refetched to fill the gap. */
   syncToken?: number
 }
 
-/** One plotted reading: a numeric value at a moment in time. */
 interface Point {
   t: Date
   v: number
 }
 
-/** How far back the chart reads and keeps points, in hours. */
 const LOOKBACK_HOURS = 24
 const LOOKBACK_MS = LOOKBACK_HOURS * 60 * 60 * 1000
-/** How long to wait before retrying a failed history load. */
 const RETRY_MS = 15_000
 
 const HEIGHT = 150
@@ -35,13 +30,9 @@ const formatTime = timeFormat('%H:%M')
 const bisectTime = bisector<Point, Date>((point) => point.t).left
 
 /**
- * An always-on, d3-powered line chart of a sensor's persisted history. d3 owns the maths (time and
- * value scales, the line and area generators, axis ticks, nearest-point lookup) while React renders
- * the SVG, so the two never fight over the DOM. The 24-hour window is loaded from the history API
- * and the series then grows by appending the sensor's live readings as they are pushed; the window
- * is reloaded (and merged, never clobbering newer live points) after a stream reconnect, and a
- * failed load retries on its own. Hovering reveals the reading under the cursor. Until two readings
- * exist it shows a baseline placeholder, since one point is not a line.
+ * Always-on d3 line chart of a sensor's history. d3 owns the maths and React renders the SVG so the
+ * two never fight over the DOM. Loads a 24-hour window, then appends live readings; a reconnect
+ * reloads and merges without clobbering newer live points. Shows a placeholder until two points exist.
  */
 export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorChartProps) {
   const [points, setPoints] = useState<ReadingPoint[]>([])
@@ -54,9 +45,8 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
   const latestValue = sensor.value
   const latestAt = sensor.updatedAt
 
-  // Load the history window on mount and again after every stream reconnect (readings that
-  // arrived during a gap were never pushed). The result is merged: live points newer than the
-  // fetched window survive a load that raced them. A failed load retries itself.
+  // Reload after every reconnect: readings that arrived during a gap were never pushed. Merge so
+  // live points that raced the fetch survive; a failed load retries.
   useEffect(() => {
     let cancelled = false
     let retryTimer: ReturnType<typeof setTimeout> | undefined
@@ -80,10 +70,8 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
     }
   }, [deviceExternalId, sensorKey, syncToken])
 
-  // Append each new reading pushed from the device stream (the reading arrives as a prop change,
-  // so this is the render-time adjust-state-from-props pattern): blank or non-numeric values and
-  // anything no newer than the last point are ignored, and appending prunes points that have left
-  // the lookback window, so a long-lived dashboard doesn't grow the series without bound.
+  // Append each pushed reading via the render-time adjust-state-from-props pattern; pruning old
+  // points keeps a long-lived dashboard from growing the series without bound.
   const [appendedAt, setAppendedAt] = useState<string | null>(null)
   if (latestAt !== appendedAt) {
     setAppendedAt(latestAt)
@@ -93,7 +81,7 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
     }
   }
 
-  // Track the container width so the chart fills the card without distorting its ticks and labels.
+  // Track container width so the chart stays responsive.
   useEffect(() => {
     const element = wrapperRef.current
     if (element === null) {
@@ -109,8 +97,8 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
     return () => observer.disconnect()
   }, [])
 
-  // The series and the d3 geometry are memoized so re-renders caused by other devices' events
-  // (the whole device list is replaced on every push) don't re-run the generators over the series.
+  // Memoized so re-renders from other devices' events (the whole list is replaced on every push)
+  // don't re-run the generators.
   const series: Point[] = useMemo(
     () =>
       points
@@ -231,18 +219,13 @@ export function SensorChart({ deviceExternalId, sensor, syncToken = 0 }: SensorC
   )
 }
 
-/**
- * Merges a freshly loaded history window with the current series: the window wins for its own
- * span, and live-appended points newer than its last reading survive, since a live reading can
- * arrive between the history fetch request and its response.
- */
+/** Merges a loaded window with the current series, keeping live points that landed between the fetch request and its response. */
 function mergeSeries(loaded: ReadingPoint[], current: ReadingPoint[]): ReadingPoint[] {
   const lastLoaded =
     loaded.length > 0 ? Date.parse(loaded[loaded.length - 1].timestamp) : Number.NEGATIVE_INFINITY
   return [...loaded, ...current.filter((point) => Date.parse(point.timestamp) > lastLoaded)]
 }
 
-/** Parses a pushed reading, or returns null for a blank value or an unparseable value/timestamp. */
 function parseReading(value: string | null, at: string | null): ReadingPoint | null {
   if (at == null || value == null || value.trim() === '') {
     return null

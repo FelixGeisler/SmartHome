@@ -68,7 +68,7 @@ public class FloorController {
   }
 
   /**
-   * Deletes a floor; any rooms on it are unassigned first so they fall back to unassigned.
+   * Deletes a floor, unassigning any rooms on it first.
    *
    * @param id the floor id
    * @return 204 No Content

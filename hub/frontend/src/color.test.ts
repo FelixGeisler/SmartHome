@@ -21,8 +21,7 @@ describe('color conversion', () => {
   it('round-trips a color through xy and back to a near-identical hue', () => {
     const xy = hexToXy('#3366cc')
 
-    // The exact color may be out of gamut after the round trip, but the hue is preserved:
-    // blue stays the dominant channel.
+    // The round trip may fall out of gamut, but blue stays the dominant channel.
     const hex = xyToHex(xy.x, xy.y)
     const blue = parseInt(hex.slice(5, 7), 16)
     const red = parseInt(hex.slice(1, 3), 16)

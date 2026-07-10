@@ -7,7 +7,7 @@ Accepted
 Ecosystems differ in direction (some take commands, some only report) and topology (some per device, some behind a bridge). The core must absorb a new one without reshaping.
 
 == Decision
-Each ecosystem lives in its own integration package, and both directions pass through the neutral contract, so the core absorbs a new ecosystem without reshaping.
+Each ecosystem lives in its own integration package, and both directions pass through the neutral contract.
 
 [cols="1,2,1",options="header"]
 |===

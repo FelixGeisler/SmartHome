@@ -9,8 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The hub's single administrator account, persisted in the settings store. The username and a
- * bcrypt hash of the password are set once, on first start; this version has no per-user accounts.
+ * The hub's single administrator account, persisted in the settings store; set once on first start.
  */
 @Service
 public class AdminAccount {
@@ -51,8 +50,7 @@ public class AdminAccount {
   }
 
   /**
-   * Sets up the administrator on first start, storing the username and a bcrypt hash of the
-   * password.
+   * Sets up the administrator on first start, storing a bcrypt hash of the password.
    *
    * @param username the administrator username
    * @param rawPassword the plain password to hash and store

@@ -2,12 +2,7 @@ package org.felixgeisler.smarthome.integration;
 
 import java.util.Map;
 
-/**
- * Port for one device-integration technology (HTTP, MQTT, …).
- *
- * <p>Add a new integration by implementing this interface and annotating it with
- * {@code @Component}; {@link DeviceAdapterRegistry} discovers it automatically.
- */
+/** Port for one device-integration technology (HTTP, MQTT, …). */
 public interface DeviceAdapter {
 
   /**
@@ -34,13 +29,12 @@ public interface DeviceAdapter {
   Map<String, Object> getState(String externalId);
 
   /**
-   * Tells whether the device currently answers. The default probes it by reading its state and
-   * treats any failure as unreachable; an adapter may override with a cheaper check.
+   * Tells whether the device currently answers, by default probing its state.
    *
    * @param externalId the device's address within this integration
    * @return true if the device answered
    */
-  // A broad catch is deliberate: any failure to read the device's state means it is not reachable.
+  // Broad catch is deliberate: any failure to read the state means the device is unreachable.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
   default boolean isReachable(String externalId) {
     try {

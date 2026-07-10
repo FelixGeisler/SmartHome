@@ -7,9 +7,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Records each numeric sensor reading into the history store for the trend charts. Listening for
- * the domain event keeps this decoupled from the device service; it runs inside that service's
- * {@code recordReading} transaction, so a reading and its history row commit together.
+ * Records each numeric sensor reading into the history store for the trend charts.
+ *
+ * <p>It runs inside the device service's {@code recordReading} transaction, so a reading and its
+ * history row commit together.
  */
 @Component
 public class SensorReadingRecorder {
@@ -28,8 +29,7 @@ public class SensorReadingRecorder {
   }
 
   /**
-   * Appends a numeric reading to the history. A reading that is not a finite number (a textual
-   * status, or NaN or infinity from a sensor fault) is not chartable and is skipped.
+   * Appends a numeric reading to the history, skipping non-finite values.
    *
    * @param event the recorded-reading event
    */
@@ -46,9 +46,8 @@ public class SensorReadingRecorder {
       log.debug("Skipping a non-numeric reading for history.");
       return;
     }
-    // Double.parseDouble accepts "NaN" and "Infinity", and an overflowing magnitude becomes
-    // infinity; a non-finite value would corrupt the chart and the assistant's summaries, so drop
-    // it like a non-numeric reading. Untrusted values arrive over the open MQTT boundary.
+    // Double.parseDouble accepts "NaN"/"Infinity" and overflow becomes infinity; a non-finite
+    // value would corrupt charts, and these arrive over the untrusted MQTT boundary, so drop it.
     if (!Double.isFinite(value)) {
       log.debug("Skipping a non-finite reading for history.");
       return;

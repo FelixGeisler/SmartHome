@@ -3,28 +3,20 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { sendChat } from '../api/assistant'
 
-/** One line in the chat transcript. */
 interface ChatMessage {
   id: number
   role: 'user' | 'assistant'
   text: string
 }
 
-/** The canned prompt behind the "Check my home" quick action. */
 const REVIEW_PROMPT = 'Review my home and flag anything that looks off, with concrete suggestions.'
 
-/** One-tap starter commands, shown until the conversation begins. */
 const EXAMPLE_PROMPTS = [
   'How is the air in the living room?',
   'Which devices are on right now?',
   'Turn the table lamp blue',
 ]
 
-/**
- * A floating assistant: a chat button anchored bottom-right on every view that pops a chat window.
- * The assistant can answer about the home, control devices, and proactively flag issues; each turn
- * calls the hub, which runs the model's tool calls. Assistant replies are rendered as Markdown.
- */
 export function AssistantWidget() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -168,7 +160,6 @@ export function AssistantWidget() {
   )
 }
 
-/** A speech-bubble glyph for the floating button. */
 function ChatIcon() {
   return (
     <svg
