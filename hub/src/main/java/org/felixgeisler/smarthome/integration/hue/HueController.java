@@ -50,11 +50,28 @@ public class HueController {
   }
 
   /**
+   * Reports whether a bridge is currently paired, so the UI can show the connection at a glance.
+   *
+   * @return the pairing status
+   */
+  @GetMapping("/status")
+  public StatusResult status() {
+    return new StatusResult(bridge.isPaired());
+  }
+
+  /**
    * Request to pair with a bridge.
    *
    * @param host the bridge host (IP or host[:port])
    */
   public record PairRequest(@NotBlank String host) {}
+
+  /**
+   * Status of the Hue bridge connection.
+   *
+   * @param paired whether a bridge is currently paired
+   */
+  public record StatusResult(boolean paired) {}
 
   /**
    * Result of a pairing attempt.

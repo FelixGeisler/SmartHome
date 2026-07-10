@@ -68,6 +68,18 @@ class HomematicCcuServiceTest {
             .willReturn(okJson("{\"result\":" + resultJson + ",\"error\":null}")));
   }
 
+  @DisplayName("isConnected() is true when a host and credentials are held")
+  @Test
+  void isConnected_trueWhenCredentialsHeld() {
+    assertTrue(connected().isConnected());
+  }
+
+  @DisplayName("isConnected() is false when no CCU has been connected")
+  @Test
+  void isConnected_falseWhenUnconnected() {
+    assertFalse(unconnected().isConnected());
+  }
+
   @DisplayName("connect() logs in and persists the host and credentials")
   @Test
   void connect_persistsCredentials() {

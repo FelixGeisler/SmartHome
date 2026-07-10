@@ -110,6 +110,15 @@ public class HomematicCcuService {
   }
 
   /**
+   * Reports whether a CCU connection is currently held.
+   *
+   * @return true if a host and credentials are set, so the CCU can be reached
+   */
+  public boolean isConnected() {
+    return host.get() != null && username.get() != null && password.get() != null;
+  }
+
+  /**
    * Connects to the CCU at the given host with the given WebUI credentials, persisting them on
    * success.
    *

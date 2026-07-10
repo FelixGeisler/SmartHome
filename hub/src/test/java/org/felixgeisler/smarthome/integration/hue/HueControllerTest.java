@@ -86,4 +86,14 @@ class HueControllerTest {
 
     mvc.perform(get("/api/integrations/hue/lights")).andExpect(status().isBadGateway());
   }
+
+  @DisplayName("status endpoint reports whether a bridge is paired")
+  @Test
+  void status_reportsWhetherPaired() throws Exception {
+    when(bridge.isPaired()).thenReturn(true);
+
+    mvc.perform(get("/api/integrations/hue/status"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.paired").value(true));
+  }
 }

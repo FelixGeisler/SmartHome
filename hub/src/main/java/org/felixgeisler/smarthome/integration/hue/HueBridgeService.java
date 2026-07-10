@@ -73,6 +73,15 @@ public class HueBridgeService {
   }
 
   /**
+   * Reports whether a bridge is currently paired.
+   *
+   * @return true if an application key is held, so the bridge can be reached
+   */
+  public boolean isPaired() {
+    return appKey.get() != null;
+  }
+
+  /**
    * Pairs with the bridge at the given host. The bridge link button must be pressed first.
    *
    * @param host the bridge host (IP or host[:port])
