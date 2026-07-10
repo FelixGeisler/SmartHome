@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Routes inbound MQTT messages to the device service as sensor readings.
  *
- * <p>Topics follow {@code <prefix>/<device-externalId>/<sensor-key>}; the last two segments are the
- * device's external id and the sensor key. Topics missing both are logged and dropped.
+ * <p>The last two topic segments are the device's external id and the sensor key (e.g.
+ * {@code <prefix>/<id>/<key>}); a topic with fewer than two segments is dropped.
  */
 @Component
 public class MqttSensorListener implements MqttCallback {
