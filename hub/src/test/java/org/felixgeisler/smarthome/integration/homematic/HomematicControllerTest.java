@@ -97,4 +97,14 @@ class HomematicControllerTest {
 
     mvc.perform(get("/api/integrations/homematic/devices")).andExpect(status().isBadGateway());
   }
+
+  @DisplayName("status endpoint reports whether a CCU is connected")
+  @Test
+  void status_reportsWhetherConnected() throws Exception {
+    when(ccu.isConnected()).thenReturn(true);
+
+    mvc.perform(get("/api/integrations/homematic/status"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.connected").value(true));
+  }
 }

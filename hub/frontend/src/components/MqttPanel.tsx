@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { connectMqtt, disconnectMqtt, mqttStatus } from '../api/mqtt'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * Connects the hub to an MQTT broker. Sensor nodes that publish to the broker then appear on the
@@ -28,7 +29,13 @@ export function MqttPanel() {
       const parsedPort = trimmedPort === '' ? undefined : Number(trimmedPort)
       const result = await connectMqtt(host.trim(), parsedPort)
       setConnected(result.connected)
-      setStatus(result.message)
+      // A "not connected" result is a failed attempt, so surface it as an error, not a neutral
+      // status line where it reads like a hint.
+      if (result.connected) {
+        setStatus(result.message)
+      } else {
+        setError(result.message)
+      }
     } catch (cause) {
       setError(messageOf(cause))
     } finally {
@@ -52,20 +59,22 @@ export function MqttPanel() {
   }
 
   return (
-    <section className="mqtt-panel">
+    <section className="config-panel">
       <h2>Connect an MQTT broker</h2>
-      <p className="mqtt-panel__hint">
+      <p className="config-panel__hint">
         Point the hub at your broker. Sensor nodes publishing to it appear on the dashboard
         automatically.
       </p>
       {error !== null && (
-        <p className="mqtt-panel__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
-      {status !== null && <p className="mqtt-panel__status">{status}</p>}
-      <p className="mqtt-panel__state">Status: {connected ? 'connected' : 'not connected'}</p>
-      <div className="mqtt-panel__connect">
+      {status !== null && <p className="config-panel__status">{status}</p>}
+      <div className="config-panel__state">
+        <StatusBadge on={connected} onLabel="Connected" offLabel="Not connected" />
+      </div>
+      <div className="config-panel__row">
         <label className="add-device__field">
           Broker host
           <input

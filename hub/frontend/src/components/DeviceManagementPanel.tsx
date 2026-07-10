@@ -75,19 +75,19 @@ export function DeviceManagementPanel({
   }
 
   return (
-    <section className="device-admin">
+    <section className="config-panel device-admin">
       <h2>Manage devices</h2>
-      <p className="device-admin__hint">
+      <p className="config-panel__hint">
         Rename a device, or remove one you no longer use. A sensor node that is still publishing
         reappears on its next reading.
       </p>
       {error !== null && (
-        <p className="device-admin__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
       {devices.length === 0 ? (
-        <p className="device-admin__hint">No devices yet.</p>
+        <p className="config-panel__hint">No devices yet.</p>
       ) : (
         <ul className="device-admin__list">
           {devices.map((device) => (

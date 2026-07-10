@@ -9,8 +9,11 @@ A device reaches the hub one of two ways:
   you connect the hub to the bridge once, and it brings in the devices behind it.
 * *Directly*: The device exposes its own network API, so the hub talks to it directly.
 
-.Devices and integrations are set up on the *Configuration* page.
-image::configuration.png[The Configuration page with its device and integration panels]
+Devices and integrations are set up on the *Configuration* page, opened from the gear icon in the
+top-right; each integration has its own tab.
+
+.The Configuration page
+image::configuration.png[The Configuration page]
 
 == Devices behind a bridge
 
@@ -42,20 +45,20 @@ The CCU password is connection state, never committed to source.
 
 === An MQTT broker
 
-A broker can't list what publishes through it, so you declare each sensor node yourself.
-
-. Use *Add device* → *Sensor Node*, enter its node id, and declare the sensors it reports
-  (key, type, unit).
-. Its readings then flow in over the broker. See xref:mqtt-sensors.adoc[MQTT sensors] for the
-  broker setup and topic conventions.
+A broker can't list what publishes through it, and sensor nodes aren't added by hand: connect the
+hub to the broker, and each node appears on its own the first time it publishes. The hub creates the
+device from the node id in the topic and adds each recognized measurement as a sensor. See
+xref:mqtt-sensors.adoc[MQTT sensors] for the broker setup and topic conventions.
 
 == Direct devices
 
-A Shelly Plug is reached straight over HTTP, with no bridge. Use *Add device* → *Shelly Plug* and
-enter its host.
+A Shelly Plug is reached straight over HTTP, with no bridge. Use *Add device*, enter a name and its
+host, and register it.
 
 A Solakon inverter is reached over Modbus TCP. Use *Connect a Solakon inverter* and enter its host,
-port, and unit id; its power and energy readings then flow in.
+port, and unit id; its power and energy readings then flow in. If the inverter is not on your
+network (for example, no Ethernet drop nearby), you can bridge it with a Raspberry Pi; see the
+`infrastructure/solakon-relay/` reference.
 
 == From the API
 

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Device } from '../api/devices'
 import { registerDevice } from '../api/devices'
 import type { HomematicDevice } from '../api/homematic'
-import { connectCcu, discoverDevices } from '../api/homematic'
+import { connectCcu, discoverDevices, homematicStatus } from '../api/homematic'
+import { StatusBadge } from './StatusBadge'
 
 interface HomematicPanelProps {
   onRegistered: (device: Device) => void
@@ -20,6 +21,12 @@ export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    homematicStatus()
+      .then((result) => setConnected(result.connected))
+      .catch(() => setConnected(false))
+  }, [])
+
   async function connect() {
     setBusy(true)
     setError(null)
@@ -31,7 +38,8 @@ export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
     try {
       const result = await connectCcu(host.trim(), username.trim(), password)
       if (!result.connected) {
-        setStatus(result.message)
+        // Rejected credentials are a failed attempt, so surface the reason as an error.
+        setError(result.message)
         return
       }
       setConnected(true)
@@ -87,19 +95,22 @@ export function HomematicPanel({ onRegistered }: HomematicPanelProps) {
     !busy && host.trim() !== '' && username.trim() !== '' && password !== ''
 
   return (
-    <section className="homematic-panel">
+    <section className="config-panel homematic-panel">
       <h2>Connect a Homematic CCU</h2>
-      <p className="homematic-panel__hint">
+      <p className="config-panel__hint">
         Enter the CCU host and a WebUI login. Its switches, thermostats, and sensors can then be
         added as devices.
       </p>
       {error !== null && (
-        <p className="homematic-panel__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
-      {status !== null && <p className="homematic-panel__status">{status}</p>}
-      <div className="homematic-panel__connect">
+      {status !== null && <p className="config-panel__status">{status}</p>}
+      <div className="config-panel__state">
+        <StatusBadge on={connected} onLabel="Connected" offLabel="Not connected" />
+      </div>
+      <div className="config-panel__row">
         <label className="add-device__field">
           CCU host
           <input

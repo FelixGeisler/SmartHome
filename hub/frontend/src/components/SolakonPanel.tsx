@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { connectSolakon, disconnectSolakon, solakonStatus } from '../api/solakon'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * Connects the hub to a Solakon ONE inverter over Modbus TCP. Once connected, its power and battery
@@ -29,7 +30,13 @@ export function SolakonPanel() {
       const parsedUnitId = parseNumericField(unitId, 'Unit ID', 1, 247)
       const result = await connectSolakon(host.trim(), parsedPort, parsedUnitId)
       setConnected(result.connected)
-      setStatus(result.message)
+      // A "not connected" result is a failed attempt, so surface it as an error, not a neutral
+      // status line where it reads like a hint.
+      if (result.connected) {
+        setStatus(result.message)
+      } else {
+        setError(result.message)
+      }
     } catch (cause) {
       setError(messageOf(cause))
     } finally {
@@ -53,21 +60,23 @@ export function SolakonPanel() {
   }
 
   return (
-    <section className="solakon-panel">
+    <section className="config-panel">
       <h2>Connect a Solakon inverter</h2>
-      <p className="solakon-panel__hint">
+      <p className="config-panel__hint">
         Point the hub at your Solakon ONE over Modbus TCP. Enable Modbus TCP in the Solakon app and
         connect the inverter by wired Ethernet; its power and battery readings then chart on the
         dashboard.
       </p>
       {error !== null && (
-        <p className="solakon-panel__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
-      {status !== null && <p className="solakon-panel__status">{status}</p>}
-      <p className="solakon-panel__state">Status: {connected ? 'connected' : 'not connected'}</p>
-      <div className="solakon-panel__connect">
+      {status !== null && <p className="config-panel__status">{status}</p>}
+      <div className="config-panel__state">
+        <StatusBadge on={connected} onLabel="Connected" offLabel="Not connected" />
+      </div>
+      <div className="config-panel__row">
         <label className="add-device__field">
           Inverter host
           <input

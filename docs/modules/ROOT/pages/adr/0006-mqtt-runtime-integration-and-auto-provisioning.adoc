@@ -15,7 +15,7 @@ The MQTT broker is a runtime-configured integration, connected and disconnected 
 skinparam defaultTextAlignment center
 start
 :reading arrives\n<prefix>/<node>/<key>;
-if (key in vocabulary?\ntemperature, humidity,\npressure, CO2) then (no)
+if (key in vocabulary?\ne.g. temperature,\nhumidity, CO2, power) then (no)
   :drop the reading;
   stop
 endif

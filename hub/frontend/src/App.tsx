@@ -246,17 +246,21 @@ function App() {
           <NavLink to="/automations" className={navClass}>
             Automations
           </NavLink>
-          <NavLink to="/configuration" className={navClass}>
-            Configuration
-          </NavLink>
         </nav>
-        <button
-          type="button"
-          className="app__logout"
-          onClick={() => void logout().then(() => window.location.reload())}
-        >
-          Log out
-        </button>
+        <div className="app__actions">
+          <NavLink to="/configuration" className={iconNavClass} aria-label="Configuration">
+            <GearIcon />
+          </NavLink>
+          <button
+            type="button"
+            className="app__logout"
+            aria-label="Log out"
+            title="Log out"
+            onClick={() => void logout().then(() => window.location.reload())}
+          >
+            <LogoutIcon />
+          </button>
+        </div>
       </header>
 
       <main className="app__main">
@@ -324,6 +328,51 @@ function App() {
 
 function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'app__nav-link app__nav-link--active' : 'app__nav-link'
+}
+
+function iconNavClass({ isActive }: { isActive: boolean }): string {
+  return isActive ? 'app__icon-link app__icon-link--active' : 'app__icon-link'
+}
+
+/** The gear that opens Configuration; a settings area reached from the corner, not the main nav. */
+function GearIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+/** Signs the single administrator out; an icon in the corner, like the Configuration gear. */
+function LogoutIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
 }
 
 /** One pushed stream event, kept for replay when it arrives during an in-flight sync. */

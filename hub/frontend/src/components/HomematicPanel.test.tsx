@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { registerDevice } from '../api/devices'
-import { connectCcu, discoverDevices } from '../api/homematic'
+import { connectCcu, discoverDevices, homematicStatus } from '../api/homematic'
 import { HomematicPanel } from './HomematicPanel'
 
 vi.mock('../api/homematic')
@@ -32,6 +32,14 @@ async function fillCredentials(user: ReturnType<typeof userEvent.setup>) {
 describe('HomematicPanel', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(homematicStatus).mockResolvedValue({ connected: false })
+  })
+
+  it('reflects the connected status reported on mount', async () => {
+    vi.mocked(homematicStatus).mockResolvedValue({ connected: true })
+    render(<HomematicPanel onRegistered={vi.fn()} />)
+
+    expect(await screen.findByText('Connected')).toBeInTheDocument()
   })
 
   it('connects, discovers devices, and registers the selected one', async () => {
@@ -102,9 +110,9 @@ describe('HomematicPanel', () => {
     await fillCredentials(user)
     await user.click(screen.getByRole('button', { name: 'Connect' }))
 
-    expect(
-      await screen.findByText('The CCU rejected those credentials.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The CCU rejected those credentials.',
+    )
     expect(discoverDevices).not.toHaveBeenCalled()
   })
 

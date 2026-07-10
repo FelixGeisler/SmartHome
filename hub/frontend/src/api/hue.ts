@@ -15,6 +15,16 @@ export interface PairResult {
   message: string
 }
 
+/** Whether a Hue bridge is currently paired. */
+export interface HueStatus {
+  paired: boolean
+}
+
+/** Reports whether a Hue bridge is currently paired. */
+export function hueStatus(): Promise<HueStatus> {
+  return request<HueStatus>('/api/integrations/hue/status')
+}
+
 /** Pairs with a Hue bridge. The bridge link button must be pressed first. */
 export function pairBridge(host: string): Promise<PairResult> {
   return request<PairResult>('/api/integrations/hue/pair', {

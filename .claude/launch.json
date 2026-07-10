@@ -4,7 +4,7 @@
     {
       "name": "smarthome-jar",
       "runtimeExecutable": "java",
-      "runtimeArgs": ["-jar", "hub/target/smarthome-0.0.1-SNAPSHOT.jar", "--server.port=18080"],
+      "runtimeArgs": ["-jar", "hub/target/smarthome-1.1.0-SNAPSHOT.jar", "--server.port=18080"],
       "port": 18080
     },
     {

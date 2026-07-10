@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Device } from '../api/devices'
 import { registerDevice } from '../api/devices'
-import { discoverLights, pairBridge } from '../api/hue'
+import { discoverLights, hueStatus, pairBridge } from '../api/hue'
 import { HuePanel } from './HuePanel'
 
 vi.mock('../api/hue')
@@ -26,6 +26,14 @@ const lamp: Device = {
 describe('HuePanel', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(hueStatus).mockResolvedValue({ paired: false })
+  })
+
+  it('reflects the paired status reported on mount', async () => {
+    vi.mocked(hueStatus).mockResolvedValue({ paired: true })
+    render(<HuePanel onRegistered={vi.fn()} />)
+
+    expect(await screen.findByText('Paired')).toBeInTheDocument()
   })
 
   it('pairs, discovers lights, and registers the selected one', async () => {

@@ -134,7 +134,9 @@ describe('App', () => {
 
     await user.click(screen.getByRole('link', { name: 'Configuration' }))
 
+    // The Devices tab is shown first; the integration panels live behind their own tabs.
     expect(screen.getByRole('heading', { name: 'Add device' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Hue' }))
     expect(screen.getByRole('heading', { name: 'Pair a Hue bridge' })).toBeInTheDocument()
   })
 

@@ -1,6 +1,8 @@
 package org.felixgeisler.smarthome.integration.mqtt;
 
 import jakarta.annotation.PreDestroy;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -101,13 +103,18 @@ public class MqttConnection {
     String brokerUrl = "tcp://" + host + ":" + port;
     String topicFilter = properties.topicFilter();
     try {
-      client = new MqttClient(brokerUrl, properties.clientId(), new MemoryPersistence());
+      String clientId = effectiveClientId(properties.clientId(), localHostName());
+      client = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
       client.setCallback(listener);
       client.connect(connectOptions());
       client.subscribe(topicFilter, QOS_AT_LEAST_ONCE);
       settings.save(HOST_SETTING, host);
       settings.save(PORT_SETTING, Integer.toString(port));
-      log.info("Connected MQTT integration to {} (filter '{}')", brokerUrl, topicFilter);
+      log.info(
+          "Connected MQTT integration to {} as '{}' (filter '{}')",
+          brokerUrl,
+          clientId,
+          topicFilter);
       return true;
     } catch (MqttException ex) {
       String reason = ex.getMessage();
@@ -175,6 +182,9 @@ public class MqttConnection {
   private MqttConnectOptions connectOptions() {
     MqttConnectOptions options = new MqttConnectOptions();
     options.setAutomaticReconnect(true);
+    // Keep cleanSession false so the broker retains our subscription across Paho's automatic
+    // reconnects: the hub subscribes only on an explicit connect, not on a transparent reconnect,
+    // so a clean session would silently stop delivering readings after any brief disconnect.
     options.setCleanSession(false);
     if (properties.username() != null && !properties.username().isBlank()) {
       options.setUserName(properties.username());
@@ -182,5 +192,33 @@ public class MqttConnection {
           properties.password() == null ? new char[0] : properties.password().toCharArray());
     }
     return options;
+  }
+
+  /**
+   * The client id the hub registers under: the configured value if set, otherwise a host-unique
+   * default so a second hub sharing the id (a dev box beside the live one, or an overlapping
+   * redeploy) cannot evict it. Package-private and pure so it can be unit-tested without a broker.
+   *
+   * @param configured the configured client id, or null/blank to derive one
+   * @param host this machine's host name, or null when it cannot be resolved
+   * @return the client id to connect with
+   */
+  static String effectiveClientId(String configured, String host) {
+    if (configured != null && !configured.isBlank()) {
+      return configured;
+    }
+    if (host == null || host.isBlank()) {
+      return "smarthome-hub";
+    }
+    String shortHost = host.split("\\.", 2)[0].replaceAll("[^A-Za-z0-9-]", "");
+    return shortHost.isBlank() ? "smarthome-hub" : "smarthome-hub-" + shortHost;
+  }
+
+  private static String localHostName() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException ex) {
+      return null;
+    }
   }
 }

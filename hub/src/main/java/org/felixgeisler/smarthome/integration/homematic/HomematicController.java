@@ -50,6 +50,16 @@ public class HomematicController {
   }
 
   /**
+   * Reports whether a CCU is currently connected, so the UI can show the connection at a glance.
+   *
+   * @return the connection status
+   */
+  @GetMapping("/status")
+  public StatusResult status() {
+    return new StatusResult(ccu.isConnected());
+  }
+
+  /**
    * Request to connect to a CCU.
    *
    * @param host the CCU host (IP or host[:port])
@@ -58,6 +68,13 @@ public class HomematicController {
    */
   public record ConnectRequest(
       @NotBlank String host, @NotBlank String username, @NotBlank String password) {}
+
+  /**
+   * Status of the Homematic CCU connection.
+   *
+   * @param connected whether a CCU is currently connected
+   */
+  public record StatusResult(boolean connected) {}
 
   /**
    * Result of a connection attempt.

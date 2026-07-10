@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Device } from '../api/devices'
 import { registerDevice } from '../api/devices'
 import type { HueLight } from '../api/hue'
-import { discoverLights, pairBridge } from '../api/hue'
+import { discoverLights, hueStatus, pairBridge } from '../api/hue'
+import { StatusBadge } from './StatusBadge'
 
 interface HuePanelProps {
   onRegistered: (device: Device) => void
@@ -17,6 +18,12 @@ export function HuePanel({ onRegistered }: HuePanelProps) {
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    hueStatus()
+      .then((result) => setPaired(result.paired))
+      .catch(() => setPaired(false))
+  }, [])
 
   async function pair() {
     setBusy(true)
@@ -80,15 +87,18 @@ export function HuePanel({ onRegistered }: HuePanelProps) {
   }
 
   return (
-    <section className="hue-panel">
+    <section className="config-panel hue-panel">
       <h2>Pair a Hue bridge</h2>
       {error !== null && (
-        <p className="hue-panel__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
-      {status !== null && <p className="hue-panel__status">{status}</p>}
-      <div className="hue-panel__pair">
+      {status !== null && <p className="config-panel__status">{status}</p>}
+      <div className="config-panel__state">
+        <StatusBadge on={paired} onLabel="Paired" offLabel="Not paired" />
+      </div>
+      <div className="config-panel__row">
         <label className="add-device__field">
           Bridge host
           <input

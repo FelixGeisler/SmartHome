@@ -18,6 +18,16 @@ export interface ConnectResult {
   message: string
 }
 
+/** Whether a Homematic CCU is currently connected. */
+export interface HomematicStatus {
+  connected: boolean
+}
+
+/** Reports whether a Homematic CCU is currently connected. */
+export function homematicStatus(): Promise<HomematicStatus> {
+  return request<HomematicStatus>('/api/integrations/homematic/status')
+}
+
 /** Connects to a Homematic CCU with its WebUI credentials. */
 export function connectCcu(host: string, username: string, password: string): Promise<ConnectResult> {
   return request<ConnectResult>('/api/integrations/homematic/connect', {

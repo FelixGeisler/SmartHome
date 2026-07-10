@@ -25,7 +25,7 @@ describe('SolakonPanel', () => {
 
     expect(connectSolakon).toHaveBeenCalledWith('192.168.1.50', 502, 1)
     expect(await screen.findByText('Connected to the inverter.')).toBeInTheDocument()
-    expect(screen.getByText('Status: connected')).toBeInTheDocument()
+    expect(screen.getByText('Connected')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Disconnect' })).toBeInTheDocument()
   })
 
@@ -72,7 +72,22 @@ describe('SolakonPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Connect' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not reach the inverter')
-    expect(screen.getByText('Status: not connected')).toBeInTheDocument()
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
+  })
+
+  it('shows a not-connected result as an error, not a neutral status', async () => {
+    vi.mocked(connectSolakon).mockResolvedValue({
+      connected: false,
+      message: 'Could not reach the inverter.',
+    })
+    const user = userEvent.setup()
+    render(<SolakonPanel />)
+
+    await user.type(screen.getByLabelText('Inverter host'), '192.168.178.114')
+    await user.click(screen.getByRole('button', { name: 'Connect' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not reach the inverter.')
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
   })
 
   it('restores the connected state on mount and disconnects on request', async () => {
@@ -85,13 +100,13 @@ describe('SolakonPanel', () => {
     render(<SolakonPanel />)
 
     // The mount-time status query restores the persisted connection.
-    expect(await screen.findByText('Status: connected')).toBeInTheDocument()
+    expect(await screen.findByText('Connected')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Disconnect' }))
 
     expect(disconnectSolakon).toHaveBeenCalled()
     expect(await screen.findByText('Disconnected from the inverter.')).toBeInTheDocument()
-    expect(screen.getByText('Status: not connected')).toBeInTheDocument()
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Disconnect' })).not.toBeInTheDocument()
   })
 })
