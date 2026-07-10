@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { assistantStatus, setAssistantKey } from '../api/assistant'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * Sets the assistant's Anthropic API key at runtime, the way the MQTT broker and Hue bridge are
@@ -33,19 +34,21 @@ export function AssistantPanel() {
   }
 
   return (
-    <section className="mqtt-panel">
+    <section className="config-panel">
       <h2>AI assistant</h2>
-      <p className="mqtt-panel__hint">
+      <p className="config-panel__hint">
         Set an Anthropic API key to enable the assistant. The key is stored in the hub&apos;s local
         settings and survives a restart; it is never shown again.
       </p>
       {error !== null && (
-        <p className="mqtt-panel__error" role="alert">
+        <p className="config-panel__error" role="alert">
           {error}
         </p>
       )}
-      <p className="mqtt-panel__state">Status: {configured ? 'key set' : 'no key set'}</p>
-      <div className="mqtt-panel__connect">
+      <div className="config-panel__state">
+        <StatusBadge on={configured} onLabel="Key set" offLabel="No key set" />
+      </div>
+      <div className="config-panel__row">
         <label className="add-device__field">
           API key
           <input

@@ -15,6 +15,9 @@
   --danger-bg: #fef2f2;
   --danger-border: #fecaca;
   --danger-text: #b91c1c;
+  --ok-bg: #ecfdf5;
+  --ok-border: #bbf7d0;
+  --ok-text: #15803d;
   --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -41,6 +44,9 @@
     --danger-bg: #2a1517;
     --danger-border: #7f1d1d;
     --danger-text: #fca5a5;
+    --ok-bg: #0e2a1f;
+    --ok-border: #14532d;
+    --ok-text: #4ade80;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
@@ -58,7 +64,7 @@ body {
 
 .app__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
@@ -99,17 +105,47 @@ body {
 }
 
 .app__logout {
-  font: inherit;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   background: none;
   border: none;
-  padding: 8px 10px;
+  padding: 8px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
 .app__logout:hover {
+  background: var(--surface);
   color: var(--text);
+}
+
+.app__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app__icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  padding: 8px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.app__icon-link:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.app__icon-link--active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .auth {
@@ -453,6 +489,77 @@ body {
 .configuration {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.configuration__intro h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.configuration__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.configuration__tab {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.configuration__tab:hover {
+  color: var(--text);
+}
+
+.configuration__tab--active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.configuration__panels {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-badge--on {
+  color: var(--ok-text);
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+}
+
+.status-badge--off {
+  color: var(--text-muted);
+  background: var(--bg);
+  border-color: var(--border);
 }
 
 .dashboard__hint {
@@ -775,8 +882,9 @@ body {
   cursor: pointer;
 }
 
-.add-device {
-  margin-top: 32px;
+/* Shared chrome for every card on the Configuration view. Panel-specific layout
+   (the add-device form, the discovered-device pick lists) keeps its own classes. */
+.config-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -784,18 +892,61 @@ body {
   padding: 16px;
 }
 
-.add-device h2 {
+.config-panel h2 {
   font-size: 16px;
   margin: 0 0 12px;
 }
 
-.add-device__error {
+.config-panel__hint {
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.config-panel__error {
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
   color: var(--danger-text);
   border-radius: 8px;
   padding: 10px 14px;
   margin: 0 0 12px;
+}
+
+.config-panel__status {
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.config-panel__state {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.config-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.config-panel__row button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.config-panel__row button:hover:enabled {
+  background: var(--accent-hover);
+}
+
+.config-panel__row button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .add-device__fields {
@@ -888,97 +1039,13 @@ body {
   cursor: default;
 }
 
-.add-device__sensors {
-  margin-top: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px 14px;
-}
-
-.add-device__sensors legend {
-  font-size: 13px;
-  color: var(--text-muted);
-  padding: 0 6px;
-}
-
-.add-device__sensor {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.add-device__sensor-remove {
-  font: inherit;
-  font-size: 16px;
-  line-height: 1;
-  color: var(--text-muted);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
-  cursor: pointer;
-}
-
-.add-device__sensor-remove:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.add-device__sensor-add {
-  font: inherit;
-  font-size: 14px;
-  color: var(--accent);
-  background: none;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
 .add-device__actions {
   display: flex;
   margin-top: 16px;
 }
 
-.hue-panel {
-  margin-top: 32px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 16px;
-}
-
-.hue-panel h2 {
-  font-size: 16px;
-  margin: 0 0 12px;
-}
-
-.hue-panel__error {
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-text);
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin: 0 0 12px;
-}
-
-.hue-panel__status {
-  color: var(--text-muted);
-  margin: 0 0 12px;
-}
-
-.hue-panel__pair {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.hue-panel__pair button,
-.hue-panel__lights button {
+.hue-panel__lights button,
+.homematic-panel__devices button {
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -990,13 +1057,13 @@ body {
   cursor: pointer;
 }
 
-.hue-panel__pair button:hover:enabled,
-.hue-panel__lights button:hover:enabled {
+.hue-panel__lights button:hover:enabled,
+.homematic-panel__devices button:hover:enabled {
   background: var(--accent-hover);
 }
 
-.hue-panel__pair button:disabled,
-.hue-panel__lights button:disabled {
+.hue-panel__lights button:disabled,
+.homematic-panel__devices button:disabled {
   opacity: 0.55;
   cursor: default;
 }
@@ -1020,94 +1087,6 @@ body {
   gap: 8px;
 }
 
-.mqtt-panel,
-.solakon-panel,
-.homematic-panel,
-.device-admin {
-  margin-top: 32px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 16px;
-}
-
-.mqtt-panel h2,
-.solakon-panel h2,
-.homematic-panel h2,
-.device-admin h2 {
-  font-size: 16px;
-  margin: 0 0 12px;
-}
-
-.mqtt-panel__hint,
-.solakon-panel__hint,
-.homematic-panel__hint,
-.device-admin__hint {
-  color: var(--text-muted);
-  margin: 0 0 12px;
-}
-
-.mqtt-panel__error,
-.solakon-panel__error,
-.homematic-panel__error,
-.device-admin__error {
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-text);
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin: 0 0 12px;
-}
-
-.mqtt-panel__status,
-.solakon-panel__status,
-.homematic-panel__status {
-  color: var(--text-muted);
-  margin: 0 0 12px;
-}
-
-.mqtt-panel__state,
-.solakon-panel__state {
-  font-size: 14px;
-  margin: 0 0 12px;
-}
-
-.mqtt-panel__connect,
-.solakon-panel__connect,
-.homematic-panel__connect {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.mqtt-panel__connect button,
-.solakon-panel__connect button,
-.homematic-panel__connect button {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  background: var(--accent);
-  border: none;
-  border-radius: 8px;
-  padding: 9px 16px;
-}
-
-.mqtt-panel__connect button:hover:enabled,
-.solakon-panel__connect button:hover:enabled,
-.homematic-panel__connect button:hover:enabled {
-  background: var(--accent-hover);
-}
-
-.mqtt-panel__connect button:disabled,
-.solakon-panel__connect button:disabled,
-.homematic-panel__connect button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
 .homematic-panel__devices {
   margin-top: 12px;
 }
@@ -1125,22 +1104,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.homematic-panel__devices button {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  background: var(--accent);
-  border: none;
-  border-radius: 8px;
-  padding: 9px 16px;
-}
-
-.homematic-panel__devices button:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 
 .rooms-page {

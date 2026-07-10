@@ -47,38 +47,6 @@ describe('AddDeviceForm', () => {
     expect(screen.getByLabelText('Host')).toHaveValue('')
   })
 
-  it('registers a sensor node with its declared sensors', async () => {
-    const sensorNode: Device = {
-      ...heater,
-      id: 4,
-      externalId: 'living-room',
-      name: 'Climate',
-      type: 'SENSOR_NODE',
-      capabilities: ['SENSING'],
-      adapterType: null,
-      state: {},
-      sensors: [{ key: 'temperature', type: 'TEMPERATURE', unit: '°C', value: null, updatedAt: null }],
-    }
-    vi.mocked(registerDevice).mockResolvedValue(sensorNode)
-    const user = userEvent.setup()
-    render(<AddDeviceForm onRegistered={vi.fn()} />)
-
-    await user.selectOptions(
-      screen.getByLabelText('Kind'),
-      screen.getByRole('option', { name: 'Sensor Node (MQTT)' }),
-    )
-    await user.type(screen.getByLabelText('Name'), 'Climate')
-    await user.type(screen.getByLabelText('Node ID'), 'living-room')
-    await user.click(screen.getByRole('button', { name: 'Add device' }))
-
-    expect(registerDevice).toHaveBeenCalledWith({
-      externalId: 'living-room',
-      name: 'Climate',
-      type: 'SENSOR_NODE',
-      sensors: [{ key: 'temperature', type: 'TEMPERATURE', unit: '°C' }],
-    })
-  })
-
   it('shows the API error when registration fails and keeps the input', async () => {
     vi.mocked(registerDevice).mockRejectedValue(
       new Error("Device with external id '192.168.1.50' already exists"),

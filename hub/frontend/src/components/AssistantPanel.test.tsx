@@ -25,12 +25,12 @@ describe('AssistantPanel', () => {
     const user = userEvent.setup()
     render(<AssistantPanel />)
 
-    expect(await screen.findByText('Status: no key set')).toBeInTheDocument()
+    expect(await screen.findByText('No key set')).toBeInTheDocument()
 
     await user.type(screen.getByLabelText('Anthropic API key'), 'paste-it-here')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect(await screen.findByText('Status: key set')).toBeInTheDocument()
+    expect(await screen.findByText('Key set')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/assistant/key',
       expect.objectContaining({ method: 'POST' }),

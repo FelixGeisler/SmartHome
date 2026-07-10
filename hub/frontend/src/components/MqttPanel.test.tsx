@@ -25,7 +25,7 @@ describe('MqttPanel', () => {
 
     expect(connectMqtt).toHaveBeenCalledWith('192.168.1.21', 1883)
     expect(await screen.findByText('Connected to 192.168.1.21:1883')).toBeInTheDocument()
-    expect(screen.getByText('Status: connected')).toBeInTheDocument()
+    expect(screen.getByText('Connected')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Disconnect' })).toBeInTheDocument()
   })
 
@@ -56,7 +56,7 @@ describe('MqttPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Connect' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('The broker refused the connection')
-    expect(screen.getByText('Status: not connected')).toBeInTheDocument()
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
   })
 
   it('restores the connected state on mount and disconnects on request', async () => {
@@ -66,13 +66,13 @@ describe('MqttPanel', () => {
     render(<MqttPanel />)
 
     // The mount-time status query restores the persisted connection.
-    expect(await screen.findByText('Status: connected')).toBeInTheDocument()
+    expect(await screen.findByText('Connected')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Disconnect' }))
 
     expect(disconnectMqtt).toHaveBeenCalled()
     expect(await screen.findByText('Disconnected')).toBeInTheDocument()
-    expect(screen.getByText('Status: not connected')).toBeInTheDocument()
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Disconnect' })).not.toBeInTheDocument()
   })
 })
