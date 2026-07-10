@@ -112,10 +112,14 @@ public class HomematicCcuService {
   /**
    * Reports whether a CCU connection is currently held.
    *
-   * @return true if a host and credentials are set, so the CCU can be reached
+   * @return true if a host and credentials are all set, so the CCU can be reached
    */
   public boolean isConnected() {
-    return host.get() != null && username.get() != null && password.get() != null;
+    return present(host.get()) && present(username.get()) && present(password.get());
+  }
+
+  private static boolean present(String value) {
+    return value != null && !value.isBlank();
   }
 
   /**

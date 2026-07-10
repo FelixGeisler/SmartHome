@@ -70,6 +70,14 @@ class HueBridgeServiceTest {
     assertFalse(unpaired().isPaired());
   }
 
+  @DisplayName("isPaired() is false when the application key is blank")
+  @Test
+  void isPaired_falseWhenKeyBlank() {
+    HueBridgeService service =
+        new HueBridgeService(new HueProperties(host, "", "smarthome#hub"), settings);
+    assertFalse(service.isPaired());
+  }
+
   @DisplayName("pair() succeeds when the link button was pressed")
   @Test
   void pair_succeedsWhenLinkButtonPressed() {

@@ -80,6 +80,14 @@ class HomematicCcuServiceTest {
     assertFalse(unconnected().isConnected());
   }
 
+  @DisplayName("isConnected() is false when a credential is blank")
+  @Test
+  void isConnected_falseWhenCredentialBlank() {
+    HomematicCcuService service =
+        new HomematicCcuService(new HomematicProperties(host, "Admin", ""), settings, json);
+    assertFalse(service.isConnected());
+  }
+
   @DisplayName("connect() logs in and persists the host and credentials")
   @Test
   void connect_persistsCredentials() {

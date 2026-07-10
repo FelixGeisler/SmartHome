@@ -75,10 +75,14 @@ public class HueBridgeService {
   /**
    * Reports whether a bridge is currently paired.
    *
-   * @return true if an application key is held, so the bridge can be reached
+   * @return true if a host and application key are both held, so the bridge can be reached
    */
   public boolean isPaired() {
-    return appKey.get() != null;
+    return present(bridgeHost.get()) && present(appKey.get());
+  }
+
+  private static boolean present(String value) {
+    return value != null && !value.isBlank();
   }
 
   /**
