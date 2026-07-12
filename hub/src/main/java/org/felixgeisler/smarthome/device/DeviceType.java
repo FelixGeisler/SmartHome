@@ -22,7 +22,10 @@ public enum DeviceType {
   HOMEMATIC_DEVICE(Set.of()),
 
   /** A solar inverter with battery storage reporting power/energy readings (e.g. Solakon ONE). */
-  SOLAR_INVERTER(Set.of(Capability.SENSING));
+  SOLAR_INVERTER(Set.of(Capability.SENSING)),
+
+  /** A grid meter reporting grid import/export power and energy (e.g. a Solakon IR head). */
+  GRID_METER(Set.of(Capability.SENSING));
 
   private final Set<Capability> capabilities;
 

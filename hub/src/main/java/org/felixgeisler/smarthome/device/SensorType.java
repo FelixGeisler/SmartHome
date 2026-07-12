@@ -55,6 +55,18 @@ public enum SensorType {
   /** Cumulative energy, in kilowatt-hours. */
   ENERGY_TOTAL("energyTotal", "kWh"),
 
+  /** Power drawn from the utility grid, in watts. */
+  GRID_IMPORT_POWER("gridImportPower", "W"),
+
+  /** Power fed back into the utility grid, in watts. */
+  GRID_EXPORT_POWER("gridExportPower", "W"),
+
+  /** Cumulative energy drawn from the utility grid, in kilowatt-hours. */
+  GRID_IMPORT_ENERGY("gridImportEnergy", "kWh"),
+
+  /** Cumulative energy fed back into the utility grid, in kilowatt-hours. */
+  GRID_EXPORT_ENERGY("gridExportEnergy", "kWh"),
+
   /** Battery temperature, in degrees Celsius. */
   BATTERY_TEMPERATURE("batteryTemp", "°C"),
 
