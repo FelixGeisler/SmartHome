@@ -3,8 +3,8 @@ import { hasColor, hasColorTemperature, isDimmable, isSensing, isSwitchable } fr
 
 export type IconKind = 'bulb' | 'plug' | 'solar' | 'thermometer' | 'humidity' | 'power' | 'gauge'
 
-/** Headline reading types in priority order: produced power, then climate. */
-const PRIMARY_ORDER = ['PV_POWER', 'OUTPUT_POWER', 'TEMPERATURE', 'HUMIDITY']
+/** Headline reading types in priority order: produced power, then grid draw, then climate. */
+const PRIMARY_ORDER = ['PV_POWER', 'OUTPUT_POWER', 'GRID_IMPORT_POWER', 'TEMPERATURE', 'HUMIDITY']
 
 /** The device's headline reading: produced power, else temperature, else humidity, else the first sensor. Null for a non-sensor. */
 export function primarySensor(device: Device): Sensor | null {
@@ -63,6 +63,10 @@ export function deviceIconKind(device: Device): IconKind {
       case 'BATTERY_POWER':
       case 'OUTPUT_POWER':
       case 'ENERGY_TOTAL':
+      case 'GRID_IMPORT_POWER':
+      case 'GRID_EXPORT_POWER':
+      case 'GRID_IMPORT_ENERGY':
+      case 'GRID_EXPORT_ENERGY':
         return 'power'
       default:
         return 'gauge'

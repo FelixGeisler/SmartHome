@@ -6,6 +6,7 @@ import { DeviceManagementPanel } from '../components/DeviceManagementPanel'
 import { HomematicPanel } from '../components/HomematicPanel'
 import { HuePanel } from '../components/HuePanel'
 import { MqttPanel } from '../components/MqttPanel'
+import { SolakonIrPanel } from '../components/SolakonIrPanel'
 import { SolakonPanel } from '../components/SolakonPanel'
 
 interface ConfigurationPageProps {
@@ -15,12 +16,13 @@ interface ConfigurationPageProps {
   onDeviceDeleted: (id: number) => void
 }
 
-type TabId = 'devices' | 'mqtt' | 'solakon' | 'hue' | 'homematic' | 'assistant'
+type TabId = 'devices' | 'mqtt' | 'solakon' | 'solakonIr' | 'hue' | 'homematic' | 'assistant'
 
 const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
   { id: 'devices', label: 'Devices' },
   { id: 'mqtt', label: 'MQTT' },
   { id: 'solakon', label: 'Solakon' },
+  { id: 'solakonIr', label: 'Grid meter' },
   { id: 'hue', label: 'Hue' },
   { id: 'homematic', label: 'Homematic' },
   { id: 'assistant', label: 'Assistant' },
@@ -80,6 +82,7 @@ export function ConfigurationPage({
         )}
         {active === 'mqtt' && <MqttPanel />}
         {active === 'solakon' && <SolakonPanel />}
+        {active === 'solakonIr' && <SolakonIrPanel />}
         {active === 'hue' && <HuePanel onRegistered={onRegistered} />}
         {active === 'homematic' && <HomematicPanel onRegistered={onRegistered} />}
         {active === 'assistant' && <AssistantPanel />}
