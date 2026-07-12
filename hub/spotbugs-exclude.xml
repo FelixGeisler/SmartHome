@@ -31,6 +31,8 @@
             <Class name="org.felixgeisler.smarthome.integration.shelly.ShellyMeterPoller"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonConnection"/>
             <Class name="org.felixgeisler.smarthome.integration.solakon.SolakonController"/>
+            <Class name="org.felixgeisler.smarthome.integration.solakonir.SolakonIrConnection"/>
+            <Class name="org.felixgeisler.smarthome.integration.solakonir.SolakonIrController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomController"/>
             <Class name="org.felixgeisler.smarthome.room.RoomLayoutService"/>
             <Class name="org.felixgeisler.smarthome.security.AdminAccount"/>
