@@ -8,10 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.felixgeisler.smarthome.SingleThreadTaskRunner;
 import org.felixgeisler.smarthome.device.Device;
 import org.felixgeisler.smarthome.device.DeviceService;
 import org.felixgeisler.smarthome.device.SensorReadingRecorded;
@@ -67,7 +64,16 @@ public class AutomationEngine {
       ConditionHandlerRegistry conditions,
       ActionHandlerRegistry actions,
       Clock clock) {
-    this(automations, devices, conditions, actions, newActionExecutor(), clock);
+    this(
+        automations,
+        devices,
+        conditions,
+        actions,
+        SingleThreadTaskRunner.queueing(
+            "automation-actions",
+            QUEUE_CAPACITY,
+            "Automation action queue is full or shutting down; dropping a run"),
+        clock);
   }
 
   AutomationEngine(
@@ -83,29 +89,6 @@ public class AutomationEngine {
     this.actions = actions;
     this.actionRunner = actionRunner;
     this.clock = clock;
-  }
-
-  private static Executor newActionExecutor() {
-    return new ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(QUEUE_CAPACITY),
-        runnable -> {
-          Thread thread = new Thread(runnable, "automation-actions");
-          thread.setDaemon(true);
-          return thread;
-        },
-        new DropAndWarn());
-  }
-
-  /** Drops the run and warns when the action thread cannot keep up. */
-  private static final class DropAndWarn implements RejectedExecutionHandler {
-    @Override
-    public void rejectedExecution(Runnable dropped, ThreadPoolExecutor pool) {
-      log.warn("Automation action queue is full or shutting down; dropping a run");
-    }
   }
 
   /**
@@ -256,13 +239,10 @@ public class AutomationEngine {
    *
    * @param event the context-closed event
    */
-  // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the bean-owned
-  // pool is stopped here (shutdown, not close). Tests inject a plain Executor.
-  @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {
-    if (actionRunner instanceof ThreadPoolExecutor pool) {
-      pool.shutdown();
+    if (actionRunner instanceof SingleThreadTaskRunner runner) {
+      runner.shutdown();
     }
   }
 }

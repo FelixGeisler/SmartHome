@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.felixgeisler.smarthome.SingleThreadTaskRunner;
 import org.felixgeisler.smarthome.device.DeviceChanged;
 import org.felixgeisler.smarthome.device.DeviceRemoved;
 import org.slf4j.Logger;
@@ -55,40 +52,17 @@ public class DeviceEventBroadcaster {
    */
   @Autowired
   public DeviceEventBroadcaster(ObjectMapper json) {
-    this(json, newBroadcastExecutor());
+    this(
+        json,
+        SingleThreadTaskRunner.queueing(
+            "sse-broadcast",
+            QUEUE_CAPACITY,
+            "Live-update queue is full or shutting down; dropping an event (clients re-sync)"));
   }
 
   DeviceEventBroadcaster(ObjectMapper json, Executor broadcasts) {
     this.json = json;
     this.broadcasts = broadcasts;
-  }
-
-  /**
-   * Builds the single broadcast thread, dropping events rather than blocking when its queue fills.
-   *
-   * @return the broadcast executor
-   */
-  private static Executor newBroadcastExecutor() {
-    return new ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(QUEUE_CAPACITY),
-        runnable -> {
-          Thread thread = new Thread(runnable, "sse-broadcast");
-          thread.setDaemon(true);
-          return thread;
-        },
-        new DropAndWarn());
-  }
-
-  /** Drops the event and warns when the broadcast thread cannot keep up; clients re-sync. */
-  private static final class DropAndWarn implements RejectedExecutionHandler {
-    @Override
-    public void rejectedExecution(Runnable dropped, ThreadPoolExecutor pool) {
-      log.warn("Live-update queue is full or shutting down; dropping an event (clients re-sync)");
-    }
   }
 
   /**
@@ -138,13 +112,10 @@ public class DeviceEventBroadcaster {
    *
    * @param event the context-closed event
    */
-  // PMD CloseResource flags the pattern variable, but this IS the shutdown path: the bean's pool is
-  // stopped here (shutdown, not close, so it never waits on the broadcast thread).
-  @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void completeAll(ContextClosedEvent event) {
-    if (broadcasts instanceof ThreadPoolExecutor pool) {
-      pool.shutdown();
+    if (broadcasts instanceof SingleThreadTaskRunner runner) {
+      runner.shutdown();
     }
     for (SseEmitter emitter : emitters) {
       try {

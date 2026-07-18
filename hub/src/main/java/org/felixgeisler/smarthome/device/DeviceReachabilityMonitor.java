@@ -4,10 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.felixgeisler.smarthome.SingleThreadTaskRunner;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.felixgeisler.smarthome.integration.UnknownAdapterException;
 import org.slf4j.Logger;
@@ -48,7 +45,13 @@ public class DeviceReachabilityMonitor {
   @Autowired
   public DeviceReachabilityMonitor(
       DeviceService devices, DeviceAdapterRegistry adapters, Clock clock) {
-    this(devices, adapters, clock, newSweepExecutor());
+    this(
+        devices,
+        adapters,
+        clock,
+        SingleThreadTaskRunner.skipping(
+            "device-reachability",
+            "A device reachability sweep is still running; skipping this one"));
   }
 
   DeviceReachabilityMonitor(
@@ -57,29 +60,6 @@ public class DeviceReachabilityMonitor {
     this.adapters = adapters;
     this.clock = clock;
     this.sweeper = sweeper;
-  }
-
-  private static Executor newSweepExecutor() {
-    return new ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new SynchronousQueue<>(),
-        runnable -> {
-          Thread thread = new Thread(runnable, "device-reachability");
-          thread.setDaemon(true);
-          return thread;
-        },
-        new DropAndWarn());
-  }
-
-  /** Drops the sweep and warns when the previous one has not finished. */
-  private static final class DropAndWarn implements RejectedExecutionHandler {
-    @Override
-    public void rejectedExecution(Runnable dropped, ThreadPoolExecutor pool) {
-      log.warn("A device reachability sweep is still running; skipping this one");
-    }
   }
 
   /** Kicks off a sweep on the reachability thread, off the scheduler's. */
@@ -126,13 +106,10 @@ public class DeviceReachabilityMonitor {
    *
    * @param event the context-closed event
    */
-  // CloseResource flags the pattern variable, but this is the shutdown path: the bean-owned pool is
-  // stopped here, not leaked. Tests inject a plain Executor.
-  @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {
-    if (sweeper instanceof ThreadPoolExecutor pool) {
-      pool.shutdown();
+    if (sweeper instanceof SingleThreadTaskRunner runner) {
+      runner.shutdown();
     }
   }
 }

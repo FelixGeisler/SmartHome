@@ -2,10 +2,7 @@ package org.felixgeisler.smarthome.device;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.felixgeisler.smarthome.SingleThreadTaskRunner;
 import org.felixgeisler.smarthome.integration.DeviceAdapterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,36 +37,17 @@ public class DeviceStatePoller {
    */
   @Autowired
   public DeviceStatePoller(DeviceService devices, DeviceAdapterRegistry adapters) {
-    this(devices, adapters, newPollExecutor());
+    this(
+        devices,
+        adapters,
+        SingleThreadTaskRunner.skipping(
+            "device-state", "A device state poll is still running; skipping this one"));
   }
 
   DeviceStatePoller(DeviceService devices, DeviceAdapterRegistry adapters, Executor poller) {
     this.devices = devices;
     this.adapters = adapters;
     this.poller = poller;
-  }
-
-  private static Executor newPollExecutor() {
-    return new ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new SynchronousQueue<>(),
-        runnable -> {
-          Thread thread = new Thread(runnable, "device-state");
-          thread.setDaemon(true);
-          return thread;
-        },
-        new DropAndWarn());
-  }
-
-  /** Drops the poll and warns when the previous one has not finished. */
-  private static final class DropAndWarn implements RejectedExecutionHandler {
-    @Override
-    public void rejectedExecution(Runnable dropped, ThreadPoolExecutor pool) {
-      log.warn("A device state poll is still running; skipping this one");
-    }
   }
 
   /** Kicks off a poll on the state thread, off the scheduler's. */
@@ -101,13 +79,10 @@ public class DeviceStatePoller {
    *
    * @param event the context-closed event
    */
-  // CloseResource flags the pattern variable, but this is the shutdown path: the bean-owned pool is
-  // stopped here, not leaked. Tests inject a plain Executor.
-  @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {
-    if (poller instanceof ThreadPoolExecutor pool) {
-      pool.shutdown();
+    if (poller instanceof SingleThreadTaskRunner runner) {
+      runner.shutdown();
     }
   }
 }
