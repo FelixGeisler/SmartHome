@@ -32,7 +32,7 @@ build/
 .vscode/
 
 ### Antora / docs toolchain ###
-/node_modules/
+/docs/node_modules/
 
 ### JVM crash dumps ###
 hs_err_pid*.log
