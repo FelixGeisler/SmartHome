@@ -1,7 +1,7 @@
 = ADR 14: Embed sensor history in the hub database
 
 == Status
-Accepted. Supersedes xref:0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10].
+Accepted. Supersedes xref:./0010-stream-telemetry-through-a-broker-into-a-search-index.adoc[ADR 10].
 
 == Context
 The dashboard charts a sensor's recent readings. ADR 10 served that history from a search index filled by a separate streaming stack beside the hub: a Kafka-API broker, a sink connector, the index, and an exploration UI. For a single-container home hub, that stack is a large operating burden for a small amount of data: dozens of sensors reporting every few minutes, queried only as a per-sensor, time-window lookup that uses none of the index's search or aggregation power.
