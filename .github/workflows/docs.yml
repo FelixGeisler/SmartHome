@@ -5,9 +5,6 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'antora-playbook.yml'
-      - 'package.json'
-      - 'package-lock.json'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -35,8 +32,10 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: docs/package-lock.json
 
       - name: Install dependencies
+        working-directory: docs
         run: npm ci
 
       - name: Configure Pages
@@ -46,12 +45,13 @@ jobs:
       - name: Build Antora site
         # base_url carries the correct project sub-path (…github.io/SmartHome),
         # so links and assets resolve under GitHub Pages without hardcoding it.
+        working-directory: docs
         run: npx antora --fetch --url "${{ steps.pages.outputs.base_url }}" antora-playbook.yml
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: build/site
+          path: docs/build/site
 
   deploy:
     name: Deploy to Pages

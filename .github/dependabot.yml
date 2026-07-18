@@ -4,13 +4,15 @@
 version: 2
 updates:
   - package-ecosystem: maven
-    directory: /
+    directory: /hub
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
 
   - package-ecosystem: npm
-    directory: /frontend
+    directories:
+      - /hub/frontend
+      - /docs
     schedule:
       interval: weekly
     open-pull-requests-limit: 5

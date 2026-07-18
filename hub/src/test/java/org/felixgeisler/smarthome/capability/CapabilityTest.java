@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +13,8 @@ class CapabilityTest {
   @DisplayName("the DIMMABLE capability owns the brightness command attribute")
   @Test
   void dimmable_ownsTheBrightnessAttribute() {
-    assertEquals(Set.of(AttributeKey.BRIGHTNESS), Capability.DIMMABLE.commandAttributes());
+    assertEquals(
+        Optional.of(Capability.DIMMABLE), Capability.forAttribute(AttributeKey.BRIGHTNESS));
   }
 
   @DisplayName("forAttribute finds the capability that owns a command attribute")
@@ -38,6 +38,5 @@ class CapabilityTest {
   void isCommand_distinguishesSensingFromCommandCapabilities() {
     assertTrue(Capability.SWITCHABLE.isCommand());
     assertFalse(Capability.SENSING.isCommand());
-    assertTrue(Capability.SENSING.commandAttributes().isEmpty());
   }
 }

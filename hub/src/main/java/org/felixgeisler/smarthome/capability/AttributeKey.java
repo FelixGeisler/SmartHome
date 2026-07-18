@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * The device-neutral vocabulary for state values and command arguments (ADR 3).
  *
- * <p>Each key owns its type, unit, range, and how to parse/format/validate its values. Adapters
+ * <p>Each key owns its type, unit, range, and how to format/validate its values. Adapters
  * translate between these neutral values and a device's native encoding; vendor scales never appear
  * here.
  */
@@ -13,11 +13,6 @@ public enum AttributeKey {
 
   /** Whether a switchable device is on. */
   ON_OFF("on", null) {
-    @Override
-    public Object parse(String raw) {
-      return Boolean.parseBoolean(raw);
-    }
-
     @Override
     public Optional<String> validate(Object value) {
       return requireType(value, Boolean.class, "a boolean");
@@ -27,11 +22,6 @@ public enum AttributeKey {
   /** Brightness percentage; 0 is not off (use {@link #ON_OFF}), so the range is 1..100. */
   BRIGHTNESS("brightness", "%") {
     @Override
-    public Object parse(String raw) {
-      return Integer.valueOf(raw);
-    }
-
-    @Override
     public Optional<String> validate(Object value) {
       return integerInRange(value, 1, 100);
     }
@@ -39,14 +29,6 @@ public enum AttributeKey {
 
   /** Color as CIE 1931 xy chromaticity. */
   COLOR_XY("colorXy", "CIE1931") {
-    @Override
-    public Object parse(String raw) {
-      int comma = raw.indexOf(',');
-      double x = Double.parseDouble(raw.substring(0, comma));
-      double y = Double.parseDouble(raw.substring(comma + 1));
-      return new XyColor(x, y);
-    }
-
     @Override
     public String format(Object value) {
       XyColor xy = (XyColor) value;
@@ -68,11 +50,6 @@ public enum AttributeKey {
   /** Color temperature in absolute Kelvin; a sanity-bound, real limit lives in the adapter. */
   COLOR_TEMPERATURE_K("colorTemperatureK", "K") {
     @Override
-    public Object parse(String raw) {
-      return Integer.valueOf(raw);
-    }
-
-    @Override
     public Optional<String> validate(Object value) {
       return integerInRange(value, 1000, 10000);
     }
@@ -80,11 +57,6 @@ public enum AttributeKey {
 
   /** The active color mode; reported (derived from the last color writing), never commanded. */
   COLOR_MODE("colorMode", null) {
-    @Override
-    public Object parse(String raw) {
-      return ColorMode.valueOf(raw);
-    }
-
     @Override
     public Optional<String> validate(Object value) {
       return requireType(value, ColorMode.class, "a color mode");
@@ -123,14 +95,6 @@ public enum AttributeKey {
   public Optional<String> unit() {
     return Optional.ofNullable(unitSymbol);
   }
-
-  /**
-   * Parses a stored string into this attribute's value type.
-   *
-   * @param raw the stored representation
-   * @return the typed value
-   */
-  public abstract Object parse(String raw);
 
   /**
    * Formats a typed value into its stored string representation.

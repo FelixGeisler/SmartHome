@@ -8,10 +8,9 @@ import org.junit.jupiter.api.Test;
 
 class AttributeKeyTest {
 
-  @DisplayName("ON_OFF parses and validates booleans")
+  @DisplayName("ON_OFF validates booleans and rejects other types")
   @Test
-  void onOff_parsesAndValidatesBooleans() {
-    assertEquals(true, AttributeKey.ON_OFF.parse("true"));
+  void onOff_validatesBooleansAndRejectsOtherTypes() {
     assertTrue(AttributeKey.ON_OFF.validate(true).isEmpty());
     assertTrue(AttributeKey.ON_OFF.validate("nope").isPresent());
   }
@@ -32,14 +31,14 @@ class AttributeKeyTest {
     assertEquals("%", AttributeKey.BRIGHTNESS.unit().orElseThrow());
   }
 
-  @DisplayName("COLOR_XY round-trips through its string form")
+  @DisplayName("COLOR_XY formats as a comma-separated xy pair")
   @Test
-  void colorXy_roundTripsThroughString() {
+  void colorXy_formatsAsCommaSeparatedPair() {
     XyColor warm = new XyColor(0.4571, 0.4097);
 
     String formatted = AttributeKey.COLOR_XY.format(warm);
 
-    assertEquals(warm, AttributeKey.COLOR_XY.parse(formatted));
+    assertEquals("0.4571,0.4097", formatted);
   }
 
   @DisplayName("COLOR_XY rejects coordinates outside the unit interval")
@@ -58,10 +57,10 @@ class AttributeKeyTest {
     assertEquals("K", AttributeKey.COLOR_TEMPERATURE_K.unit().orElseThrow());
   }
 
-  @DisplayName("COLOR_MODE round-trips and validates its values")
+  @DisplayName("COLOR_MODE accepts only color-mode values")
   @Test
-  void colorMode_roundTripsAndValidates() {
-    assertEquals(ColorMode.COLOR_TEMP, AttributeKey.COLOR_MODE.parse("COLOR_TEMP"));
+  void colorMode_acceptsOnlyColorModeValues() {
     assertTrue(AttributeKey.COLOR_MODE.validate(ColorMode.XY).isEmpty());
+    assertTrue(AttributeKey.COLOR_MODE.validate("XY").isPresent());
   }
 }

@@ -2,10 +2,7 @@ package org.felixgeisler.smarthome.integration.shelly;
 
 import java.math.BigDecimal;
 import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.felixgeisler.smarthome.SingleThreadTaskRunner;
 import org.felixgeisler.smarthome.device.Device;
 import org.felixgeisler.smarthome.device.DeviceService;
 import org.felixgeisler.smarthome.device.SensorType;
@@ -41,36 +38,17 @@ public class ShellyMeterPoller {
    */
   @Autowired
   public ShellyMeterPoller(DeviceService devices, ShellyAdapter adapter) {
-    this(devices, adapter, newPollExecutor());
+    this(
+        devices,
+        adapter,
+        SingleThreadTaskRunner.skipping(
+            "shelly-meter", "A Shelly meter poll is still running; skipping this one"));
   }
 
   ShellyMeterPoller(DeviceService devices, ShellyAdapter adapter, Executor poller) {
     this.devices = devices;
     this.adapter = adapter;
     this.poller = poller;
-  }
-
-  private static Executor newPollExecutor() {
-    return new ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new SynchronousQueue<>(),
-        runnable -> {
-          Thread thread = new Thread(runnable, "shelly-meter");
-          thread.setDaemon(true);
-          return thread;
-        },
-        new DropAndWarn());
-  }
-
-  /** Drops the poll and warns when the previous one has not finished. */
-  private static final class DropAndWarn implements RejectedExecutionHandler {
-    @Override
-    public void rejectedExecution(Runnable dropped, ThreadPoolExecutor pool) {
-      log.warn("A Shelly meter poll is still running; skipping this one");
-    }
   }
 
   /** Kicks off a poll on the meter thread, off the scheduler's. */
@@ -136,13 +114,10 @@ public class ShellyMeterPoller {
    *
    * @param event the context-closed event
    */
-  // PMD's CloseResource flags the pattern variable, but this is the shutdown path: the pool the
-  // bean owns is stopped (shutdown, not close).
-  @SuppressWarnings("PMD.CloseResource")
   @EventListener
   void shutdown(ContextClosedEvent event) {
-    if (poller instanceof ThreadPoolExecutor pool) {
-      pool.shutdown();
+    if (poller instanceof SingleThreadTaskRunner runner) {
+      runner.shutdown();
     }
   }
 }

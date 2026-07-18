@@ -4,11 +4,11 @@ site:
 
 content:
   sources:
-    - url: .
+    - url: ..
       branches: HEAD
       start_path: docs
       edit_url: https://github.com/FelixGeisler/SmartHome/edit/{refname}/{path}
-    - url: .
+    - url: ..
       branches: HEAD
       start_path: docs/guide
       edit_url: https://github.com/FelixGeisler/SmartHome/edit/{refname}/{path}
@@ -18,7 +18,7 @@ ui:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
     snapshot: true
   # Trim the stock UI's placeholder navbar (Home/Products/Services/Download).
-  supplemental_files: ./docs/supplemental-ui
+  supplemental_files: ./supplemental-ui
 
 asciidoc:
   attributes:

@@ -34,16 +34,6 @@ public enum Capability {
   }
 
   /**
-   * Returns the neutral attributes a command may set through this capability.
-   *
-   * @return the command attributes (immutable, empty for {@link #SENSING})
-   */
-  public Set<AttributeKey> commandAttributes() {
-    // Defensive copy proves to static analysis that nothing leaks.
-    return Set.copyOf(attributes);
-  }
-
-  /**
    * Tells whether this capability is commanded (rather than only reported, like {@link #SENSING}).
    *
    * @return true if a device with only this capability still needs a command adapter
