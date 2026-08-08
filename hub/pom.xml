@@ -25,7 +25,7 @@
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <wiremock.version>3.13.2</wiremock.version>
         <paho.version>1.2.5</paho.version>
-        <springdoc.version>3.0.3</springdoc.version>
+        <springdoc.version>3.1.0</springdoc.version>
         <frontend.plugin.version>2.0.1</frontend.plugin.version>
         <node.version>v24.13.0</node.version>
         <!-- Backend-only iteration: -Dskip.frontend=true skips the npm lifecycle. -->
